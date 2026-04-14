@@ -14,6 +14,11 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
         public DbSet<TipoEquipo> TiposEquipo { get; set; }
         public DbSet<TipoEventoMetrologico> TiposEventoMetrologico { get; set; }
         public DbSet<TipoDocumento> TiposDocumento { get; set; }
+        public DbSet<Proveedor> Proveedores { get; set; }
+        public DbSet<Ubicacion> Ubicaciones { get; set; }
+        public DbSet<ResponsableInterno> ResponsablesInternos { get; set; }
+        public DbSet<SubtipoEvento> SubtiposEvento { get; set; }
+        public DbSet<TipoMantenimiento> TiposMantenimiento { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
