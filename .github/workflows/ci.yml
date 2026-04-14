@@ -27,10 +27,10 @@ jobs:
         run: dotnet --version
 
       - name: Restaurar dependencias
-        run: dotnet restore ./CGA.MetrologySystem/CGA.MetrologySystem.sln
+        run: dotnet restore ./CGA.MetrologySystem/CGA.MetrologySystem.csproj
 
       - name: Compilar solución
-        run: dotnet build ./CGA.MetrologySystem/CGA.MetrologySystem.sln --no-restore --configuration Release
+        run: dotnet build ./CGA.MetrologySystem/CGA.MetrologySystem.csproj --no-restore --configuration Release
 
       - name: Ejecutar pruebas
-        run: dotnet test ./CGA.MetrologySystem/CGA.MetrologySystem.sln --no-build --configuration Release
+        run: dotnet test ./CGA.MetrologySystem/CGA.MetrologySystem.csproj --no-build --configuration Release
