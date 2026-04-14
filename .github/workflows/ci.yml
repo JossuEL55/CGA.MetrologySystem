@@ -30,7 +30,7 @@ jobs:
         run: dotnet restore ./CGA.MetrologySystem/CGA.MetrologySystem.sln
 
       - name: Compilar solución
-  	run: dotnet build ./CGA.MetrologySystem/CGA.MetrologySystem.sln --no-restore --configuration Release
+        run: dotnet build ./CGA.MetrologySystem/CGA.MetrologySystem.sln --no-restore --configuration Release
 
-       - name: Ejecutar pruebas
-  	run: dotnet test ./CGA.MetrologySystem/CGA.MetrologySystem.sln --no-build --configuration Release
+      - name: Ejecutar pruebas
+        run: dotnet test ./CGA.MetrologySystem/CGA.MetrologySystem.sln --no-build --configuration Release
