@@ -14,5 +14,7 @@ namespace CGA.MetrologySystem.Domain.Entities
         public string? Telefono { get; set; }
 
         public bool Activo { get; set; } = true;
+
+        public ICollection<Equipo> Equipos { get; set; } = new List<Equipo>();
     }
 }
