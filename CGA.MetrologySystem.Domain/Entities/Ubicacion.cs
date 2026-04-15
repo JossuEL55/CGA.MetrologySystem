@@ -12,5 +12,8 @@ namespace CGA.MetrologySystem.Domain.Entities
         public string? Descripcion { get; set; }
 
         public bool Activo { get; set; } = true;
+
+        public ICollection<Equipo> Equipos { get; set; } = new List<Equipo>();
+
     }
 }
