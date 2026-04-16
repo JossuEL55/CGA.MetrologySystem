@@ -1,0 +1,104 @@
+﻿@model CGA.MetrologySystem.Models.EquipoViewModel
+
+@{
+    ViewData["Title"] = "Editar Equipo";
+}
+
+<h2>Editar Equipo</h2>
+
+<form asp-action="Edit" method="post">
+    <input asp-for="EquipoId" type="hidden" />
+
+    <div class="form-group">
+        <label asp-for="Codigo"></label>
+        <input asp-for="Codigo" class="form-control" />
+        <span asp-validation-for="Codigo" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Nombre"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TipoEquipoId"></label>
+        <select asp-for="TipoEquipoId" asp-items="Model.TiposEquipo" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ProveedorId"></label>
+        <select asp-for="ProveedorId" asp-items="Model.Proveedores" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="UbicacionId"></label>
+        <select asp-for="UbicacionId" asp-items="Model.Ubicaciones" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ResponsableInternoId"></label>
+        <select asp-for="ResponsableInternoId" asp-items="Model.ResponsablesInternos" class="form-control"></select>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Marca"></label>
+        <input asp-for="Marca" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Modelo"></label>
+        <input asp-for="Modelo" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Serie"></label>
+        <input asp-for="Serie" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Identificacion"></label>
+        <input asp-for="Identificacion" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="FechaAdquisicion"></label>
+        <input asp-for="FechaAdquisicion" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="FechaPuestaFuncionamiento"></label>
+        <input asp-for="FechaPuestaFuncionamiento" class="form-control" type="date" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="FabricanteLugarOrigen"></label>
+        <input asp-for="FabricanteLugarOrigen" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CatalogoManejoOperacion"></label>
+        <input asp-for="CatalogoManejoOperacion" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="MantenimientoFabricante"></label>
+        <input asp-for="MantenimientoFabricante" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="CondicionesOperacion"></label>
+        <input asp-for="CondicionesOperacion" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>
+            <input asp-for="Activo" type="checkbox" /> Activo
+        </label>
+    </div>
+
+    <br />
+
+    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
