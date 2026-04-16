@@ -1,0 +1,67 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.Equipo
+
+@{
+    ViewData["Title"] = "Detalles del Equipo";
+}
+
+<h2>Detalles del Equipo</h2>
+
+<div>
+    <dl class="row">
+        <dt class="col-sm-3">Código</dt>
+        <dd class="col-sm-9">@Model.Codigo</dd>
+
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Nombre</dd>
+
+        <dt class="col-sm-3">Tipo de equipo</dt>
+        <dd class="col-sm-9">@Model.TipoEquipo?.Nombre</dd>
+
+        <dt class="col-sm-3">Proveedor</dt>
+        <dd class="col-sm-9">@Model.Proveedor?.Nombre</dd>
+
+        <dt class="col-sm-3">Ubicación</dt>
+        <dd class="col-sm-9">@Model.Ubicacion?.Nombre</dd>
+
+        <dt class="col-sm-3">Responsable interno</dt>
+        <dd class="col-sm-9">@Model.ResponsableInterno?.NombreCompleto</dd>
+
+        <dt class="col-sm-3">Marca</dt>
+        <dd class="col-sm-9">@Model.Marca</dd>
+
+        <dt class="col-sm-3">Modelo</dt>
+        <dd class="col-sm-9">@Model.Modelo</dd>
+
+        <dt class="col-sm-3">Serie</dt>
+        <dd class="col-sm-9">@Model.Serie</dd>
+
+        <dt class="col-sm-3">Identificación</dt>
+        <dd class="col-sm-9">@Model.Identificacion</dd>
+
+        <dt class="col-sm-3">Fecha de adquisición</dt>
+        <dd class="col-sm-9">@Model.FechaAdquisicion?.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Fecha de puesta en funcionamiento</dt>
+        <dd class="col-sm-9">@Model.FechaPuestaFuncionamiento?.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Fabricante / Lugar de origen</dt>
+        <dd class="col-sm-9">@Model.FabricanteLugarOrigen</dd>
+
+        <dt class="col-sm-3">Catálogo de manejo u operación</dt>
+        <dd class="col-sm-9">@Model.CatalogoManejoOperacion</dd>
+
+        <dt class="col-sm-3">Mantenimiento fabricante</dt>
+        <dd class="col-sm-9">@Model.MantenimientoFabricante</dd>
+
+        <dt class="col-sm-3">Condiciones de operación</dt>
+        <dd class="col-sm-9">@Model.CondicionesOperacion</dd>
+
+        <dt class="col-sm-3">Activo</dt>
+        <dd class="col-sm-9">@(Model.Activo ? "Sí" : "No")</dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.EquipoId" class="btn btn-warning">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</div>

@@ -1,0 +1,49 @@
+﻿@model IEnumerable<CGA.MetrologySystem.Domain.Entities.Equipo>
+
+@{
+    ViewData["Title"] = "Equipos";
+}
+
+<h2>Gestión de Equipos</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Crear nuevo equipo</a>
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Tipo de Equipo</th>
+            <th>Proveedor</th>
+            <th>Ubicación</th>
+            <th>Responsable Interno</th>
+            <th>Marca</th>
+            <th>Modelo</th>
+            <th>Activo</th>
+            <th style="width: 220px;">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var equipo in Model)
+        {
+            <tr>
+                <td>@equipo.Codigo</td>
+                <td>@equipo.Nombre</td>
+                <td>@equipo.TipoEquipo?.Nombre</td>
+                <td>@equipo.Proveedor?.Nombre</td>
+                <td>@equipo.Ubicacion?.Nombre</td>
+                <td>@equipo.ResponsableInterno?.NombreCompleto</td>
+                <td>@equipo.Marca</td>
+                <td>@equipo.Modelo</td>
+                <td>@(equipo.Activo ? "Sí" : "No")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@equipo.EquipoId" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-action="Details" asp-route-id="@equipo.EquipoId" class="btn btn-info btn-sm">Detalles</a>
+                    <a asp-action="Delete" asp-route-id="@equipo.EquipoId" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
