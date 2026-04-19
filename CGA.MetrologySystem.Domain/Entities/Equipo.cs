@@ -32,7 +32,6 @@ namespace CGA.MetrologySystem.Domain.Entities
         public string? MantenimientoFabricante { get; set; }
         public string? CondicionesOperacion { get; set; }
         public bool Activo { get; set; } = true;
-        public string? GoogleDriveFolderId { get; set; }
         public TipoEquipo TipoEquipo { get; set; } = null!;
         public Proveedor Proveedor { get; set; } = null!;
         public Ubicacion Ubicacion { get; set; } = null!;
