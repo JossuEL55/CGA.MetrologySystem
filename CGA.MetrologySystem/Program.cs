@@ -1,3 +1,6 @@
+using CGA.MetrologySystem.Application.DTOs;
+using CGA.MetrologySystem.Application.Interfaces;
+using CGA.MetrologySystem.Application.Services;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,6 +10,11 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<GoogleDriveSettings>(
+    builder.Configuration.GetSection("GoogleDriveSettings"));
+
+builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 
 var app = builder.Build();
 
