@@ -1,0 +1,48 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.Laboratorio
+
+@{
+    ViewData["Title"] = "Eliminar laboratorio";
+}
+
+<h1>Eliminar laboratorio</h1>
+
+<h3>¿Estás seguro de que deseas eliminar este laboratorio?</h3>
+
+<div>
+    <h4>Laboratorio</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Nombre</dt>
+        <dd class="col-sm-9">@Model.Nombre</dd>
+
+        <dt class="col-sm-3">Dirección</dt>
+        <dd class="col-sm-9">@Model.Direccion</dd>
+
+        <dt class="col-sm-3">Ciudad</dt>
+        <dd class="col-sm-9">@Model.Ciudad</dd>
+
+        <dt class="col-sm-3">País</dt>
+        <dd class="col-sm-9">@Model.Pais</dd>
+
+        <dt class="col-sm-3">Teléfono</dt>
+        <dd class="col-sm-9">@Model.Telefono</dd>
+
+        <dt class="col-sm-3">Correo electrónico</dt>
+        <dd class="col-sm-9">@Model.Email</dd>
+
+        <dt class="col-sm-3">Sitio web</dt>
+        <dd class="col-sm-9">@Model.SitioWeb</dd>
+
+        <dt class="col-sm-3">Norma de acreditación</dt>
+        <dd class="col-sm-9">@Model.NormaAcreditacion</dd>
+
+        <dt class="col-sm-3">Activo</dt>
+        <dd class="col-sm-9">@(Model.Activo ? "Sí" : "No")</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="LaboratorioId" />
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>

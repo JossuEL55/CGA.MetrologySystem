@@ -1,4 +1,6 @@
-﻿namespace CGA.MetrologySystem.Domain.Entities
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CGA.MetrologySystem.Domain.Entities
 
 {
     public class EventoCalibracionDato
@@ -9,8 +11,8 @@
 
         public string? NumeroCertificado { get; set; }
 
+        [Column(TypeName = "date")]
         public DateTime? FechaCalibracion { get; set; }
-
         public int? LaboratorioId { get; set; }
 
         public Laboratorio? Laboratorio { get; set; }
