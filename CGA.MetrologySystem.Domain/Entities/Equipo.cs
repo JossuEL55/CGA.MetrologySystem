@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
 
 namespace CGA.MetrologySystem.Domain.Entities
@@ -21,16 +22,17 @@ namespace CGA.MetrologySystem.Domain.Entities
         public string? Serie { get; set; }
         public string? Identificacion { get; set; }
 
+        [Column(TypeName = "date")]
         public DateTime? FechaAdquisicion { get; set; }
-        public DateTime? FechaPuestaFuncionamiento { get; set; }
 
+        [Column(TypeName = "date")]
+        public DateTime? FechaPuestaFuncionamiento { get; set; }
         public string? FabricanteLugarOrigen { get; set; }
         public string? CatalogoManejoOperacion { get; set; }
         public string? MantenimientoFabricante { get; set; }
         public string? CondicionesOperacion { get; set; }
-
         public bool Activo { get; set; } = true;
-
+        public string? GoogleDriveFolderId { get; set; }
         public TipoEquipo TipoEquipo { get; set; } = null!;
         public Proveedor Proveedor { get; set; } = null!;
         public Ubicacion Ubicacion { get; set; } = null!;
