@@ -13,8 +13,6 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
         }
 
         //Revisar las dos entidades siguientes, no se si es necesario tener ambas (IMPORTANTE)
-        // public DbSet<Rol> Roles { get; set; }
-        // public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<AuditoriaUsuario> AuditoriasUsuario { get; set; }
         public DbSet<TipoEquipo> TiposEquipo { get; set; }
         public DbSet<TipoEventoMetrologico> TiposEventoMetrologico { get; set; }

@@ -1,19 +1,21 @@
-﻿using CGA.MetrologySystem.Domain.Entities;
+﻿using CGA.MetrologySystem.Application.Interfaces;
+using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-
 namespace CGA.MetrologySystem.Controllers
 {
     public class EquiposController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IGoogleDriveService _googleDriveService;
 
-        public EquiposController(AppDbContext context)
+        public EquiposController(AppDbContext context, IGoogleDriveService googleDriveService)
         {
             _context = context;
+            _googleDriveService = googleDriveService;
         }
 
         // GET: Equipos
@@ -70,6 +72,12 @@ namespace CGA.MetrologySystem.Controllers
             };
 
             _context.Equipos.Add(equipo);
+            await _context.SaveChangesAsync();
+
+            var folderId = await _googleDriveService.EnsureEquipoFolderAsync(equipo.Codigo);
+            equipo.GoogleDriveFolderId = folderId;
+
+            _context.Equipos.Update(equipo);
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
