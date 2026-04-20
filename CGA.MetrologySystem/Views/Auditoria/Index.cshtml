@@ -1,0 +1,33 @@
+﻿@model List<CGA.MetrologySystem.Models.Auditoria.AuditoriaUsuarioListadoViewModel>
+
+@{
+    ViewData["Title"] = "Auditoría de usuarios";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Auditoría de usuarios</h2>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>Fecha</th>
+                <th>Administrador</th>
+                <th>Acción</th>
+                <th>Usuario afectado</th>
+                <th>Detalle</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Fecha.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
+                    <td>@item.AdministradorCorreo</td>
+                    <td>@item.Accion</td>
+                    <td>@item.UsuarioAfectadoCorreo</td>
+                    <td>@item.Detalle</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

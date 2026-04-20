@@ -1,16 +1,21 @@
 ﻿using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 
 namespace CGA.MetrologySystem.Infrastructure.Persistence
 {
-    public class AppDbContext : DbContext
+    public class AppDbContext : IdentityDbContext<UsuarioSistema, IdentityRole, string>
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
-        public DbSet<Rol> Roles { get; set; }
-        public DbSet<Usuario> Usuarios { get; set; }
+
+        //Revisar las dos entidades siguientes, no se si es necesario tener ambas (IMPORTANTE)
+        // public DbSet<Rol> Roles { get; set; }
+        // public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<AuditoriaUsuario> AuditoriasUsuario { get; set; }
         public DbSet<TipoEquipo> TiposEquipo { get; set; }
         public DbSet<TipoEventoMetrologico> TiposEventoMetrologico { get; set; }
         public DbSet<TipoDocumento> TiposDocumento { get; set; }
@@ -27,6 +32,7 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
         public DbSet<EventoVerificacionResultado> EventosVerificacionResultado { get; set; }
         public DbSet<EventoMantenimientoActividad> EventosMantenimientoActividad { get; set; }
         public DbSet<EventoCalibracionDato> EventosCalibracionDato { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

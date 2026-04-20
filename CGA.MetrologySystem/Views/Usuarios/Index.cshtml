@@ -1,0 +1,86 @@
+﻿@model List<CGA.MetrologySystem.Models.Usuarios.UsuarioListadoViewModel>
+
+@{
+    ViewData["Title"] = "Usuarios del sistema";
+}
+
+<div class="container mt-4">
+
+    @if (TempData["MensajeExito"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["MensajeExito"]
+        </div>
+    }
+    @if (TempData["MensajeError"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["MensajeError"]
+        </div>
+    }
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Usuarios del sistema</h2>
+        <a asp-action="Crear" class="btn btn-primary">Crear usuario</a>
+    </div>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>Correo</th>
+                <th>Nombre completo</th>
+                <th>Activo</th>
+                <th>Rol</th>
+                <th>Acciones</th> <!-- NUEVA COLUMNA -->
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var usuario in Model)
+            {
+                <tr>
+                    <td>@usuario.Correo</td>
+                    <td>@usuario.NombreCompleto</td>
+                    <td>
+
+                        @if (usuario.Activo)
+                        {
+                            <span class="badge bg-success">Sí</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">No</span>
+                        }
+                    </td>
+                    <td>@usuario.Rol</td>
+                    <td>
+                        <a asp-action="Editar" asp-route-id="@usuario.Id" class="btn btn-primary btn-sm">
+                            Editar
+                        </a>
+
+                        <a asp-action="ResetPassword" asp-route-id="@usuario.Id"
+                               class="btn btn-secondary btn-sm"
+                               onclick="return confirm('¿Está seguro de que desea restablecer la contraseña de este usuario?');">
+                            Reset clave
+                        </a>
+
+                        @if (usuario.Activo)
+                        {
+                            <a asp-action="CambiarEstado" asp-route-id="@usuario.Id"
+                                   class="btn btn-warning btn-sm"
+                                   onclick="return confirm('¿Está seguro de que desea desactivar este usuario?');">
+                                Desactivar
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-action="CambiarEstado" asp-route-id="@usuario.Id"
+                                   class="btn btn-success btn-sm"
+                                   onclick="return confirm('¿Está seguro de que desea activar este usuario?');">
+                                Activar
+                            </a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

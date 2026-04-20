@@ -1,0 +1,48 @@
+﻿@model CGA.MetrologySystem.Models.Perfil.PerfilViewModel
+
+@{
+    ViewData["Title"] = "Mi perfil";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Mi perfil</h2>
+
+    @if (TempData["MensajeExito"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["MensajeExito"]
+        </div>
+    }
+
+    <form asp-action="Index" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="Correo" class="form-label"></label>
+            <input asp-for="Correo" class="form-control" readonly />
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="NombreCompleto" class="form-label"></label>
+            <input asp-for="NombreCompleto" class="form-control" />
+            <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Rol" class="form-label"></label>
+            <input asp-for="Rol" class="form-control" readonly />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Activo</label>
+            <input class="form-control" value="@(Model.Activo ? "Sí" : "No")" readonly />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <a asp-action="CambiarContrasena" class="btn btn-secondary">Cambiar contraseña</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
