@@ -1,0 +1,38 @@
+﻿@model CGA.MetrologySystem.Models.Perfil.CambiarContrasenaViewModel
+
+@{
+    ViewData["Title"] = "Cambiar contraseña";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Cambiar contraseña</h2>
+
+    <form asp-action="CambiarContrasena" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="ContrasenaActual" class="form-label"></label>
+            <input asp-for="ContrasenaActual" class="form-control" />
+            <span asp-validation-for="ContrasenaActual" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="NuevaContrasena" class="form-label"></label>
+            <input asp-for="NuevaContrasena" class="form-control" />
+            <span asp-validation-for="NuevaContrasena" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ConfirmarNuevaContrasena" class="form-label"></label>
+            <input asp-for="ConfirmarNuevaContrasena" class="form-control" />
+            <span asp-validation-for="ConfirmarNuevaContrasena" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar nueva contraseña</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
