@@ -1,0 +1,68 @@
+﻿@model CGA.MetrologySystem.Models.Auth.LoginViewModel
+
+@{
+    ViewData["Title"] = "Iniciar sesión";
+}
+@{
+    Layout = "_LayoutAuth";
+}
+<div class="container mt-5">
+    <div class="row justify-content-center align-items-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="row g-0">
+
+                    <div class="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center text-white p-5"
+                         style="background: linear-gradient(135deg, #2F5D50, #4C7A6B); min-height: 500px;">
+                        <img src="~/images/logo.png" alt="CGA" style="width:120px; margin-bottom:20px;" />
+                        <h2 class="fw-bold text-white mb-3">CGA Metrology System</h2>
+                        <p class="text-center mb-0">
+                            Plataforma interna para la gestión metrológica, usuarios y trazabilidad administrativa.
+                        </p>
+                    </div>
+
+                    <div class="col-md-6 bg-white p-5">
+                        <div class="mb-4">
+                            <h2 class="mb-1">Iniciar sesión</h2>
+                            <p class="text-muted mb-0">Accede con tu cuenta corporativa.</p>
+                        </div>
+
+                        <form asp-action="Login" method="post">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                            <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                            <div class="mb-3">
+                                <label asp-for="Correo" class="form-label fw-semibold"></label>
+                                <input asp-for="Correo" class="form-control" placeholder="usuario@cga.com.ec" autofocus />
+                                <span asp-validation-for="Correo" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Contrasena" class="form-label fw-semibold"></label>
+                                <input asp-for="Contrasena" class="form-control" />
+                                <span asp-validation-for="Contrasena" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input asp-for="Recordarme" class="form-check-input" />
+                                <label asp-for="Recordarme" class="form-check-label"></label>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    Ingresar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -39,7 +39,7 @@ builder.Services.AddScoped<SignInManager<UsuarioSistema>, SignInManagerPersonali
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Identity/Account/Login";
+    options.LoginPath = "/Auth/Login";
     options.AccessDeniedPath = "/Home/AccessDenied";
     options.Cookie.Name = "CGA.Auth";
 

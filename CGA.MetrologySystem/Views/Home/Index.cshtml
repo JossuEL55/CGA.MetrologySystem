@@ -1,8 +1,49 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-4">
+
+    <h2 class="mb-4">Bienvenido al sistema CGA</h2>
+
+    <div class="row">
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title">Usuarios</h5>
+                    <p class="card-text">Gestiona los usuarios del sistema.</p>
+                    <a asp-controller="Usuarios" asp-action="Index" class="btn btn-primary">
+                        Ir a Usuarios
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title">Auditoría</h5>
+                    <p class="card-text">Consulta las acciones realizadas en el sistema.</p>
+                    <a asp-controller="Auditoria" asp-action="Index" class="btn btn-primary">
+                        Ver Auditoría
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="card-title">Mi Perfil</h5>
+                    <p class="card-text">Gestiona tu información personal.</p>
+                    <a asp-controller="Perfil" asp-action="Index" class="btn btn-primary">
+                        Ir a Perfil
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
 </div>
