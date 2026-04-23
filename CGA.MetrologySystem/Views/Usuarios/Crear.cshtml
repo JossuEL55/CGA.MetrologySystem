@@ -4,51 +4,69 @@
     ViewData["Title"] = "Crear usuario";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Crear usuario</h2>
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Crear usuario</h2>
+        <p class="page-subtitle">Registra un nuevo usuario y asígnale un rol dentro del sistema.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
 
+<div class="form-card">
     <form asp-action="Crear" method="post">
-        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-        <div class="mb-3">
-            <label asp-for="Correo" class="form-label"></label>
-            <input asp-for="Correo" class="form-control" />
-            <span asp-validation-for="Correo" class="text-danger"></span>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Correo" class="form-label fw-semibold"></label>
+                <input asp-for="Correo" class="form-control" placeholder="usuario@cga.com.ec" />
+                <span asp-validation-for="Correo" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="NombreCompleto" class="form-label fw-semibold"></label>
+                <input asp-for="NombreCompleto" class="form-control" placeholder="Nombre completo" />
+                <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="NombreCompleto" class="form-label"></label>
-            <input asp-for="NombreCompleto" class="form-control" />
-            <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Contrasena" class="form-label fw-semibold"></label>
+                <input asp-for="Contrasena" type="password" class="form-control" />
+                <span asp-validation-for="Contrasena" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="ConfirmarContrasena" class="form-label fw-semibold"></label>
+                <input asp-for="ConfirmarContrasena" type="password" class="form-control" />
+                <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Contrasena" class="form-label"></label>
-            <input asp-for="Contrasena" class="form-control" />
-            <span asp-validation-for="Contrasena" class="text-danger"></span>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="Rol" class="form-label fw-semibold"></label>
+                <select asp-for="Rol" asp-items="ViewBag.Roles" class="form-select">
+                    <option value="">Seleccione un rol</option>
+                </select>
+                <span asp-validation-for="Rol" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3 d-flex align-items-end">
+                <div class="form-check">
+                    <input asp-for="Activo" class="form-check-input" />
+                    <label asp-for="Activo" class="form-check-label fw-semibold"></label>
+                </div>
+            </div>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="ConfirmarContrasena" class="form-label"></label>
-            <input asp-for="ConfirmarContrasena" class="form-control" />
-            <span asp-validation-for="ConfirmarContrasena" class="text-danger"></span>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar usuario</button>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="Rol" class="form-label"></label>
-            <select asp-for="Rol" asp-items="ViewBag.Roles" class="form-select">
-                <option value="">Seleccione un rol</option>
-            </select>
-            <span asp-validation-for="Rol" class="text-danger"></span>
-        </div>
-
-        <div class="form-check mb-3">
-            <input asp-for="Activo" class="form-check-input" />
-            <label asp-for="Activo" class="form-check-label"></label>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Guardar</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
 

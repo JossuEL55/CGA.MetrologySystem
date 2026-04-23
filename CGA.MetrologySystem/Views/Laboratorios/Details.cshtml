@@ -4,42 +4,70 @@
     ViewData["Title"] = "Detalle del laboratorio";
 }
 
-<h1>Detalle del laboratorio</h1>
-
-<div>
-    <h4>Laboratorio</h4>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-3">Nombre</dt>
-        <dd class="col-sm-9">@Model.Nombre</dd>
-
-        <dt class="col-sm-3">Dirección</dt>
-        <dd class="col-sm-9">@Model.Direccion</dd>
-
-        <dt class="col-sm-3">Ciudad</dt>
-        <dd class="col-sm-9">@Model.Ciudad</dd>
-
-        <dt class="col-sm-3">País</dt>
-        <dd class="col-sm-9">@Model.Pais</dd>
-
-        <dt class="col-sm-3">Teléfono</dt>
-        <dd class="col-sm-9">@Model.Telefono</dd>
-
-        <dt class="col-sm-3">Correo electrónico</dt>
-        <dd class="col-sm-9">@Model.Email</dd>
-
-        <dt class="col-sm-3">Sitio web</dt>
-        <dd class="col-sm-9">@Model.SitioWeb</dd>
-
-        <dt class="col-sm-3">Norma de acreditación</dt>
-        <dd class="col-sm-9">@Model.NormaAcreditacion</dd>
-
-        <dt class="col-sm-3">Activo</dt>
-        <dd class="col-sm-9">@(Model.Activo ? "Sí" : "No")</dd>
-    </dl>
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Detalle del laboratorio</h2>
+        <p class="page-subtitle">
+            Consulta la información completa del laboratorio seleccionado.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
 </div>
 
-<div>
-    <a asp-action="Edit" asp-route-id="@Model.LaboratorioId" class="btn btn-warning">Editar</a>
-    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+<div class="form-card">
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input class="form-control readonly-highlight" value="@Model.Nombre" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Norma de acreditación</label>
+            <input class="form-control readonly-highlight" value="@Model.NormaAcreditacion" readonly />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Dirección</label>
+        <input class="form-control readonly-highlight" value="@Model.Direccion" readonly />
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label fw-semibold">Ciudad</label>
+            <input class="form-control readonly-highlight" value="@Model.Ciudad" readonly />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label fw-semibold">País</label>
+            <input class="form-control readonly-highlight" value="@Model.Pais" readonly />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label fw-semibold">Estado</label>
+            <input class="form-control readonly-highlight" value="@(Model.Activo ? "Activo" : "Inactivo")" readonly />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Teléfono</label>
+            <input class="form-control readonly-highlight" value="@Model.Telefono" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Correo electrónico</label>
+            <input class="form-control readonly-highlight" value="@Model.Email" readonly />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Sitio web</label>
+        <input class="form-control readonly-highlight" value="@Model.SitioWeb" readonly />
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a asp-action="Edit" asp-route-id="@Model.LaboratorioId" class="btn btn-primary">Editar</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    </div>
 </div>

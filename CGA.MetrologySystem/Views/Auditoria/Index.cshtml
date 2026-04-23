@@ -1,33 +1,55 @@
 ﻿@model List<CGA.MetrologySystem.Models.Auditoria.AuditoriaUsuarioListadoViewModel>
 
 @{
-    ViewData["Title"] = "Auditoría de usuarios";
+    ViewData["Title"] = "Auditoría";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Auditoría de usuarios</h2>
+<div class="page-header">
+    <h2 class="page-title">Auditoría de usuarios</h2>
+    <p class="page-subtitle">
+        Consulta el historial de acciones administrativas realizadas sobre los usuarios del sistema.
+    </p>
+</div>
 
-    <table class="table table-bordered table-striped">
-        <thead class="table-light">
-            <tr>
-                <th>Fecha</th>
-                <th>Administrador</th>
-                <th>Acción</th>
-                <th>Usuario afectado</th>
-                <th>Detalle</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+            <thead class="table-light">
                 <tr>
-                    <td>@item.Fecha.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</td>
-                    <td>@item.AdministradorCorreo</td>
-                    <td>@item.Accion</td>
-                    <td>@item.UsuarioAfectadoCorreo</td>
-                    <td>@item.Detalle</td>
+                    <th>Fecha</th>
+                    <th>Administrador</th>
+                    <th>Acción</th>
+                    <th>Usuario afectado</th>
+                    <th>Detalle</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="fw-semibold">
+                                @item.Fecha.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+                            </td>
+                            <td>@item.AdministradorCorreo</td>
+                            <td>
+                                <span class="badge bg-dark">@item.Accion</span>
+                            </td>
+                            <td>@item.UsuarioAfectadoCorreo</td>
+                            <td>@item.Detalle</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            No existen registros de auditoría disponibles.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

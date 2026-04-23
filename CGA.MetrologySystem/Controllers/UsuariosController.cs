@@ -32,23 +32,33 @@ namespace CGA.MetrologySystem.Controllers
         public async Task<IActionResult> Index()
         {
             var usuarios = _userManager.Users.ToList();
-            var modelo = new List<UsuarioListadoViewModel>();
+            var listaUsuarios = new List<UsuarioListadoViewModel>();
 
             foreach (var usuario in usuarios)
             {
                 var roles = await _userManager.GetRolesAsync(usuario);
+                var rol = roles.FirstOrDefault() ?? "Sin rol";
 
-                modelo.Add(new UsuarioListadoViewModel
+                listaUsuarios.Add(new UsuarioListadoViewModel
                 {
                     Id = usuario.Id,
                     Correo = usuario.Email ?? string.Empty,
                     NombreCompleto = usuario.NombreCompleto,
                     Activo = usuario.Activo,
-                    Rol = roles.FirstOrDefault() ?? "Sin rol"
+                    Rol = rol
                 });
             }
 
-            return View(modelo);
+            var model = new UsuariosIndexViewModel
+            {
+                TotalUsuarios = listaUsuarios.Count,
+                UsuariosActivos = listaUsuarios.Count(u => u.Activo),
+                UsuariosInactivos = listaUsuarios.Count(u => !u.Activo),
+                TotalAdministradores = listaUsuarios.Count(u => u.Rol == "Administrador"),
+                Usuarios = listaUsuarios
+            };
+
+            return View(model);
         }
 
         // Método para mostrar el formulario de creación de un nuevo usuario, cargando los roles disponibles

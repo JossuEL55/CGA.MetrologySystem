@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - CGA</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="auth-body">
+    <div class="auth-layout">
+        <div class="auth-brand-panel">
+            <div class="auth-brand-content">
+                <img src="~/images/logo.png" alt="CGA" class="auth-logo" />
+                <h1 class="auth-title">CGA Metrology System</h1>
+                <p class="auth-text">
+                    Plataforma para la gestión y trazabilidad metrológica de equipos,
+                    usuarios y procesos internos.
+                </p>
+            </div>
+        </div>
+
+        <div class="auth-content-panel">
+            <div class="auth-card">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
