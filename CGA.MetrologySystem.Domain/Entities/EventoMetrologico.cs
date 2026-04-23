@@ -26,7 +26,8 @@ namespace CGA.MetrologySystem.Domain.Entities
         public bool EsExtraordinario { get; set; } = false;
         public string? JustificacionExtraordinario { get; set; }
 
-        public DateTime FechaRegistro { get; set; } = DateTime.UtcNow; public bool Activo { get; set; } = true;
+        public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
+        public bool Activo { get; set; } = true;
 
         public Equipo Equipo { get; set; } = null!;
         public TipoEventoMetrologico TipoEventoMetrologico { get; set; } = null!;

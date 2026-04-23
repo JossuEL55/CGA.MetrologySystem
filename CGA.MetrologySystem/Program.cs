@@ -18,6 +18,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.Configure<GoogleDriveSettings>(
     builder.Configuration.GetSection("GoogleDriveSettings"));
 
+builder.Services.Configure<GoogleOAuthSettings>(
+    builder.Configuration.GetSection("GoogleOAuthSettings"));
+
+builder.Services.Configure<GoogleOAuthTokenStorageSettings>(
+    builder.Configuration.GetSection("GoogleOAuthTokenStorageSettings"));
+
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 
 builder.Services.AddDefaultIdentity<UsuarioSistema>(options =>

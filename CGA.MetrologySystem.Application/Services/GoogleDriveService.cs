@@ -1,56 +1,80 @@
 ﻿using CGA.MetrologySystem.Application.DTOs;
 using CGA.MetrologySystem.Application.Interfaces;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Auth.OAuth2.Flows;
+using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Upload;
+using Google.Apis.Util.Store;
 using Microsoft.Extensions.Options;
-using System.Text.Json;
 using DriveFile = Google.Apis.Drive.v3.Data.File;
 
 namespace CGA.MetrologySystem.Application.Services
 {
     public class GoogleDriveService : IGoogleDriveService
     {
-        private readonly GoogleDriveSettings _settings;
+        private readonly GoogleDriveSettings _driveSettings;
+        private readonly GoogleOAuthSettings _oauthSettings;
+        private readonly GoogleOAuthTokenStorageSettings _tokenStorageSettings;
         private readonly DriveService _driveService;
 
-        public GoogleDriveService(IOptions<GoogleDriveSettings> options)
+        public GoogleDriveService(
+            IOptions<GoogleDriveSettings> driveOptions,
+            IOptions<GoogleOAuthSettings> oauthOptions,
+            IOptions<GoogleOAuthTokenStorageSettings> tokenStorageOptions)
         {
-            _settings = options.Value;
+            _driveSettings = driveOptions.Value;
+            _oauthSettings = oauthOptions.Value;
+            _tokenStorageSettings = tokenStorageOptions.Value;
             _driveService = CreateDriveService();
         }
 
         private DriveService CreateDriveService()
         {
-            var serviceAccount = _settings.ServiceAccount;
+            var refreshToken = GetRefreshTokenFromFile();
 
-            var credentialJson = JsonSerializer.Serialize(new
+            var flow = new GoogleAuthorizationCodeFlow(
+                new GoogleAuthorizationCodeFlow.Initializer
+                {
+                    ClientSecrets = new ClientSecrets
+                    {
+                        ClientId = _oauthSettings.ClientId,
+                        ClientSecret = _oauthSettings.ClientSecret
+                    },
+                    Scopes = new[] { DriveService.Scope.Drive }
+                });
+
+            var token = new TokenResponse
             {
-                type = serviceAccount.Type,
-                project_id = serviceAccount.ProjectId,
-                private_key_id = serviceAccount.PrivateKeyId,
-                private_key = serviceAccount.PrivateKey,
-                client_email = serviceAccount.ClientEmail,
-                client_id = serviceAccount.ClientId,
-                auth_uri = serviceAccount.AuthUri,
-                token_uri = serviceAccount.TokenUri,
-                auth_provider_x509_cert_url = serviceAccount.AuthProviderX509CertUrl,
-                client_x509_cert_url = serviceAccount.ClientX509CertUrl,
-                universe_domain = serviceAccount.UniverseDomain
-            });
+                RefreshToken = refreshToken
+            };
 
-            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(credentialJson));
-
-            var credential = GoogleCredential
-                .FromStream(stream)
-                .CreateScoped(DriveService.Scope.Drive);
+            var credential = new UserCredential(flow, "google-drive-user", token);
 
             return new DriveService(new BaseClientService.Initializer
             {
                 HttpClientInitializer = credential,
-                ApplicationName = "CGA Metrology System"
+                ApplicationName = _oauthSettings.ApplicationName
             });
+        }
+
+        private string GetRefreshTokenFromFile()
+        {
+            if (string.IsNullOrWhiteSpace(_tokenStorageSettings.RefreshTokenFilePath))
+                throw new Exception("No se ha configurado la ruta del archivo de refresh token.");
+
+            var fullPath = Path.GetFullPath(_tokenStorageSettings.RefreshTokenFilePath);
+
+            if (!File.Exists(fullPath))
+                throw new Exception($"No existe el archivo de refresh token en la ruta: {fullPath}");
+
+            var refreshToken = File.ReadAllText(fullPath).Trim();
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                throw new Exception("El archivo de refresh token está vacío.");
+
+            return refreshToken;
         }
 
         public async Task<string?> FindFolderByNameAsync(string folderName, string parentFolderId)
@@ -96,28 +120,56 @@ namespace CGA.MetrologySystem.Application.Services
             string mimeType,
             string parentFolderId)
         {
-            var fileMetadata = new DriveFile
+            if (string.IsNullOrWhiteSpace(parentFolderId))
+                throw new Exception("El parentFolderId está vacío o es inválido.");
+
+            if (fileStream == null || !fileStream.CanRead)
+                throw new Exception("El archivo no se pudo leer correctamente.");
+
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new Exception("El nombre del archivo es obligatorio.");
+
+            if (string.IsNullOrWhiteSpace(mimeType))
+                mimeType = "application/pdf";
+
+            try
             {
-                Name = fileName,
-                Parents = new List<string> { parentFolderId }
-            };
+                if (fileStream.CanSeek)
+                    fileStream.Position = 0;
 
-            var request = _driveService.Files.Create(fileMetadata, fileStream, mimeType);
-            request.Fields = "id, name, webViewLink";
+                var fileMetadata = new DriveFile
+                {
+                    Name = fileName,
+                    Parents = new List<string> { parentFolderId }
+                };
 
-            var progress = await request.UploadAsync();
+                var request = _driveService.Files.Create(fileMetadata, fileStream, mimeType);
+                request.Fields = "id, name, webViewLink";
 
-            if (progress.Status != UploadStatus.Completed)
-                throw new Exception($"No se pudo subir el archivo a Google Drive. Estado: {progress.Status}");
+                var progress = await request.UploadAsync();
 
-            var uploadedFile = request.ResponseBody;
+                if (progress.Status != UploadStatus.Completed)
+                {
+                    var detalle = progress.Exception?.Message ?? "Google Drive no devolvió detalle adicional.";
+                    throw new Exception($"Subida incompleta. Estado: {progress.Status}. Detalle: {detalle}");
+                }
 
-            return new GoogleDriveUploadResultDto
+                var uploadedFile = request.ResponseBody;
+
+                if (uploadedFile == null || string.IsNullOrWhiteSpace(uploadedFile.Id))
+                    throw new Exception("Google Drive no devolvió el archivo correctamente.");
+
+                return new GoogleDriveUploadResultDto
+                {
+                    FileId = uploadedFile.Id,
+                    FileName = uploadedFile.Name,
+                    WebViewLink = uploadedFile.WebViewLink ?? BuildViewUrl(uploadedFile.Id)
+                };
+            }
+            catch (Exception ex)
             {
-                FileId = uploadedFile.Id,
-                FileName = uploadedFile.Name,
-                WebViewLink = uploadedFile.WebViewLink ?? BuildViewUrl(uploadedFile.Id)
-            };
+                throw new Exception($"Error al subir archivo a Google Drive: {ex.Message}", ex);
+            }
         }
 
         public string BuildViewUrl(string fileId)
@@ -127,7 +179,7 @@ namespace CGA.MetrologySystem.Application.Services
 
         public async Task<string> EnsureEquiposRootFolderAsync()
         {
-            return await GetOrCreateFolderAsync("Equipos", _settings.RootFolderId);
+            return await GetOrCreateFolderAsync("Equipos", _driveSettings.RootFolderId);
         }
 
         public async Task<string> EnsureEquipoFolderAsync(string codigoEquipo)
