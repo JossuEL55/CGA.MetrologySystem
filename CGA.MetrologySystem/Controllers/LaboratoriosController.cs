@@ -1,11 +1,13 @@
 ﻿using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
+    [Authorize]
     public class LaboratoriosController : Controller
     {
         private readonly AppDbContext _context;

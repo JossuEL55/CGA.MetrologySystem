@@ -2,11 +2,14 @@
 using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+
 namespace CGA.MetrologySystem.Controllers
 {
+    [Authorize]
     public class EquiposController : Controller
     {
         private readonly AppDbContext _context;
@@ -220,7 +223,7 @@ namespace CGA.MetrologySystem.Controllers
         private async Task CargarCombos(EquipoViewModel model)
         {
             model.TiposEquipo = await _context.TiposEquipo
-                .Where(t => true) // luego puedes filtrar por activos si agregas ese campo
+                .Where(t => true)
                 .Select(t => new SelectListItem
                 {
                     Value = t.TipoEquipoId.ToString(),
