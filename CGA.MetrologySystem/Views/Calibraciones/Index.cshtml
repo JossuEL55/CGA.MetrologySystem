@@ -1,0 +1,54 @@
+﻿@model IEnumerable<CGA.MetrologySystem.Domain.Entities.EventoCalibracionDato>
+
+@{
+    ViewData["Title"] = "Calibraciones";
+}
+
+<h1>Calibraciones</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Nueva calibración</a>
+</p>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Equipo</th>
+            <th>Fecha evento</th>
+            <th>Fecha calibración</th>
+            <th>N° Certificado</th>
+            <th>Laboratorio</th>
+            <th>Responsable</th>
+            <th>Archivo</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.EventoMetrologico?.Equipo?.Codigo - @item.EventoMetrologico?.Equipo?.Nombre</td>
+                <td>@item.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd")</td>
+                <td>@item.FechaCalibracion?.ToString("yyyy-MM-dd")</td>
+                <td>@item.NumeroCertificado</td>
+                <td>@item.Laboratorio?.Nombre</td>
+                <td>@item.EventoMetrologico?.ResponsableInterno?.NombreCompleto</td>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(item.RutaCertificado))
+                    {
+                        <a href="@item.RutaCertificado" target="_blank" class="btn btn-sm btn-outline-success">Ver PDF</a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Sin archivo</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.EventoCalibracionDatoId" class="btn btn-sm btn-info">Detalle</a>
+                    <a asp-action="Edit" asp-route-id="@item.EventoCalibracionDatoId" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@item.EventoCalibracionDatoId" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
