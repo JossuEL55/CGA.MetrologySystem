@@ -1,0 +1,35 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.EventoCalibracionDato
+
+@{
+    ViewData["Title"] = "Eliminar calibración";
+}
+
+<h1>Eliminar calibración</h1>
+
+<h3>¿Seguro que deseas eliminar este registro?</h3>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Equipo</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.Equipo?.Codigo - @Model.EventoMetrologico?.Equipo?.Nombre</dd>
+
+        <dt class="col-sm-3">Fecha evento</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Fecha calibración</dt>
+        <dd class="col-sm-9">@Model.FechaCalibracion?.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Número certificado</dt>
+        <dd class="col-sm-9">@Model.NumeroCertificado</dd>
+
+        <dt class="col-sm-3">Laboratorio</dt>
+        <dd class="col-sm-9">@Model.Laboratorio?.Nombre</dd>
+    </dl>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="EventoCalibracionDatoId" />
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>

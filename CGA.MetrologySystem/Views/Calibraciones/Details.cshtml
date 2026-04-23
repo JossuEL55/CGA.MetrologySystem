@@ -1,0 +1,68 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.EventoCalibracionDato
+
+@{
+    ViewData["Title"] = "Detalle de calibración";
+}
+
+<h1>Detalle de calibración</h1>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-3">Equipo</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.Equipo?.Codigo - @Model.EventoMetrologico?.Equipo?.Nombre</dd>
+
+        <dt class="col-sm-3">Subtipo</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.SubtipoEvento?.Nombre</dd>
+
+        <dt class="col-sm-3">Responsable interno</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.ResponsableInterno?.NombreCompleto</dd>
+
+        <dt class="col-sm-3">Fecha evento</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Próxima fecha</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.FechaProxima?.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Estado equipo</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.EstadoEquipoResultado</dd>
+
+        <dt class="col-sm-3">Comentarios adicionales</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.ComentariosAdicionales</dd>
+
+        <dt class="col-sm-3">Es extraordinario</dt>
+        <dd class="col-sm-9">@(Model.EventoMetrologico?.EsExtraordinario == true ? "Sí" : "No")</dd>
+
+        <dt class="col-sm-3">Justificación</dt>
+        <dd class="col-sm-9">@Model.EventoMetrologico?.JustificacionExtraordinario</dd>
+
+        <dt class="col-sm-3">Número certificado</dt>
+        <dd class="col-sm-9">@Model.NumeroCertificado</dd>
+
+        <dt class="col-sm-3">Fecha calibración</dt>
+        <dd class="col-sm-9">@Model.FechaCalibracion?.ToString("yyyy-MM-dd")</dd>
+
+        <dt class="col-sm-3">Laboratorio</dt>
+        <dd class="col-sm-9">@Model.Laboratorio?.Nombre</dd>
+
+        <dt class="col-sm-3">Observaciones</dt>
+        <dd class="col-sm-9">@Model.Observaciones</dd>
+
+        <dt class="col-sm-3">Archivo PDF</dt>
+        <dd class="col-sm-9">
+            @if (!string.IsNullOrWhiteSpace(Model.RutaCertificado))
+            {
+                <a href="@Model.RutaCertificado" target="_blank" class="btn btn-sm btn-outline-success">Ver certificado</a>
+            }
+            else
+            {
+                <span class="text-muted">Sin archivo</span>
+            }
+        </dd>
+    </dl>
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.EventoCalibracionDatoId" class="btn btn-warning">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+</div>
