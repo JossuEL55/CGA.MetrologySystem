@@ -6,7 +6,6 @@ using Google.Apis.Auth.OAuth2.Responses;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Upload;
-using Google.Apis.Util.Store;
 using Microsoft.Extensions.Options;
 using DriveFile = Google.Apis.Drive.v3.Data.File;
 
@@ -16,23 +15,23 @@ namespace CGA.MetrologySystem.Application.Services
     {
         private readonly GoogleDriveSettings _driveSettings;
         private readonly GoogleOAuthSettings _oauthSettings;
-        private readonly GoogleOAuthTokenStorageSettings _tokenStorageSettings;
+        private readonly IGoogleDriveCredentialProvider _credentialProvider;
         private readonly DriveService _driveService;
 
         public GoogleDriveService(
             IOptions<GoogleDriveSettings> driveOptions,
             IOptions<GoogleOAuthSettings> oauthOptions,
-            IOptions<GoogleOAuthTokenStorageSettings> tokenStorageOptions)
+            IGoogleDriveCredentialProvider credentialProvider)
         {
             _driveSettings = driveOptions.Value;
             _oauthSettings = oauthOptions.Value;
-            _tokenStorageSettings = tokenStorageOptions.Value;
+            _credentialProvider = credentialProvider;
             _driveService = CreateDriveService();
         }
 
         private DriveService CreateDriveService()
         {
-            var refreshToken = GetRefreshTokenFromFile();
+            var refreshToken = _credentialProvider.GetActiveRefreshToken();
 
             var flow = new GoogleAuthorizationCodeFlow(
                 new GoogleAuthorizationCodeFlow.Initializer
@@ -57,24 +56,6 @@ namespace CGA.MetrologySystem.Application.Services
                 HttpClientInitializer = credential,
                 ApplicationName = _oauthSettings.ApplicationName
             });
-        }
-
-        private string GetRefreshTokenFromFile()
-        {
-            if (string.IsNullOrWhiteSpace(_tokenStorageSettings.RefreshTokenFilePath))
-                throw new Exception("No se ha configurado la ruta del archivo de refresh token.");
-
-            var fullPath = Path.GetFullPath(_tokenStorageSettings.RefreshTokenFilePath);
-
-            if (!File.Exists(fullPath))
-                throw new Exception($"No existe el archivo de refresh token en la ruta: {fullPath}");
-
-            var refreshToken = File.ReadAllText(fullPath).Trim();
-
-            if (string.IsNullOrWhiteSpace(refreshToken))
-                throw new Exception("El archivo de refresh token está vacío.");
-
-            return refreshToken;
         }
 
         public async Task<string?> FindFolderByNameAsync(string folderName, string parentFolderId)

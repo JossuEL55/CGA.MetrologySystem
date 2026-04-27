@@ -30,6 +30,7 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
         public DbSet<EventoVerificacionResultado> EventosVerificacionResultado { get; set; }
         public DbSet<EventoMantenimientoActividad> EventosMantenimientoActividad { get; set; }
         public DbSet<EventoCalibracionDato> EventosCalibracionDato { get; set; }
+        public DbSet<GoogleDriveCredential> GoogleDriveCredentials { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
