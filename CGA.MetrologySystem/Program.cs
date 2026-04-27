@@ -7,6 +7,7 @@ using CGA.MetrologySystem.Services.Security;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using CGA.MetrologySystem.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,7 @@ builder.Services.Configure<GoogleOAuthTokenStorageSettings>(
     builder.Configuration.GetSection("GoogleOAuthTokenStorageSettings"));
 
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
+builder.Services.AddScoped<IGoogleDriveCredentialProvider, GoogleDriveCredentialProvider>();
 
 builder.Services.AddDefaultIdentity<UsuarioSistema>(options =>
 {

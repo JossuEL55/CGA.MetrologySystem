@@ -1,8 +1,11 @@
 ﻿using CGA.MetrologySystem.Application.DTOs;
+using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Infrastructure.Persistence;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Drive.v3;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace CGA.MetrologySystem.Controllers
@@ -10,14 +13,14 @@ namespace CGA.MetrologySystem.Controllers
     public class GoogleAuthController : Controller
     {
         private readonly GoogleOAuthSettings _oauthSettings;
-        private readonly GoogleOAuthTokenStorageSettings _tokenStorageSettings;
+        private readonly AppDbContext _context;
 
         public GoogleAuthController(
             IOptions<GoogleOAuthSettings> oauthOptions,
-            IOptions<GoogleOAuthTokenStorageSettings> tokenStorageOptions)
+            AppDbContext context)
         {
             _oauthSettings = oauthOptions.Value;
-            _tokenStorageSettings = tokenStorageOptions.Value;
+            _context = context;
         }
 
         [HttpGet]
@@ -72,9 +75,9 @@ namespace CGA.MetrologySystem.Controllers
                     return Content("Google no devolvió refresh_token. Asegúrate de usar access_type=offline y prompt=consent, y de autorizar con la cuenta correcta.");
                 }
 
-                SaveRefreshTokenToFile(token.RefreshToken);
+                await SaveRefreshTokenToDatabaseAsync(token.RefreshToken);
 
-                return Content("Autenticación completada correctamente. El refresh token fue guardado y Google Drive ya está listo para usarse.");
+                return Content("Autenticación completada correctamente. El refresh token fue guardado en la base de datos y Google Drive ya está listo para usarse.");
             }
             catch (Exception ex)
             {
@@ -82,21 +85,32 @@ namespace CGA.MetrologySystem.Controllers
             }
         }
 
-        private void SaveRefreshTokenToFile(string refreshToken)
+        private async Task SaveRefreshTokenToDatabaseAsync(string refreshToken)
         {
-            if (string.IsNullOrWhiteSpace(_tokenStorageSettings.RefreshTokenFilePath))
-                throw new Exception("No se ha configurado la ruta del archivo para guardar el refresh token.");
+            var credential = await _context.GoogleDriveCredentials
+                .FirstOrDefaultAsync(c => c.Activo);
 
-            var fullPath = Path.GetFullPath(_tokenStorageSettings.RefreshTokenFilePath);
-            var directoryPath = Path.GetDirectoryName(fullPath);
+            if (credential == null)
+            {
+                credential = new GoogleDriveCredential
+                {
+                    RefreshToken = refreshToken,
+                    FechaActualizacion = DateTime.UtcNow,
+                    Activo = true
+                };
 
-            if (string.IsNullOrWhiteSpace(directoryPath))
-                throw new Exception("No se pudo determinar el directorio del archivo de refresh token.");
+                _context.GoogleDriveCredentials.Add(credential);
+            }
+            else
+            {
+                credential.RefreshToken = refreshToken;
+                credential.FechaActualizacion = DateTime.UtcNow;
+                credential.Activo = true;
 
-            if (!Directory.Exists(directoryPath))
-                Directory.CreateDirectory(directoryPath);
+                _context.GoogleDriveCredentials.Update(credential);
+            }
 
-            System.IO.File.WriteAllText(fullPath, refreshToken);
+            await _context.SaveChangesAsync();
         }
     }
 }

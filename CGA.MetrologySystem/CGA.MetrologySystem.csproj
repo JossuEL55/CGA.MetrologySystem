@@ -29,8 +29,4 @@
     <ProjectReference Include="..\CGA.MetrologySystem.Infrastructure\CGA.MetrologySystem.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Tokens\" />
-  </ItemGroup>
-
 </Project>
