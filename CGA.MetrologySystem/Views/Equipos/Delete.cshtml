@@ -1,34 +1,72 @@
 ﻿@model CGA.MetrologySystem.Domain.Entities.Equipo
 
 @{
-    ViewData["Title"] = "Eliminar Equipo";
+    ViewData["Title"] = "Eliminar equipo";
 }
 
-<h2>Eliminar Equipo</h2>
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Eliminar equipo</h2>
+        <p class="page-subtitle">
+            Confirma la eliminación del equipo seleccionado.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
 
-<h4>¿Estás seguro de que deseas eliminar este equipo?</h4>
+<div class="form-card">
 
-<div>
-    <dl class="row">
-        <dt class="col-sm-3">Código</dt>
-        <dd class="col-sm-9">@Model.Codigo</dd>
+    <div class="alert alert-danger">
+        ¿Estás seguro de que deseas eliminar este equipo?
+        Esta acción no se puede deshacer.
+    </div>
 
-        <dt class="col-sm-3">Nombre</dt>
-        <dd class="col-sm-9">@Model.Nombre</dd>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Código</label>
+            <div class="form-control readonly-highlight">@Model.Codigo</div>
+        </div>
 
-        <dt class="col-sm-3">Tipo de equipo</dt>
-        <dd class="col-sm-9">@Model.TipoEquipo?.Nombre</dd>
+        <div class="col-md-6">
+            <label class="form-label">Nombre</label>
+            <div class="form-control readonly-highlight">@Model.Nombre</div>
+        </div>
+    </div>
 
-        <dt class="col-sm-3">Proveedor</dt>
-        <dd class="col-sm-9">@Model.Proveedor?.Nombre</dd>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Tipo de equipo</label>
+            <div class="form-control readonly-highlight">
+                @(Model.TipoEquipo?.Nombre ?? "No registrado")
+            </div>
+        </div>
 
-        <dt class="col-sm-3">Ubicación</dt>
-        <dd class="col-sm-9">@Model.Ubicacion?.Nombre</dd>
-    </dl>
+        <div class="col-md-4">
+            <label class="form-label">Proveedor</label>
+            <div class="form-control readonly-highlight">
+                @(Model.Proveedor?.Nombre ?? "No registrado")
+            </div>
+        </div>
 
-    <form asp-action="Delete" method="post">
-        <input type="hidden" asp-for="EquipoId" />
-        <button type="submit" class="btn btn-danger">Eliminar</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-    </form>
+        <div class="col-md-4">
+            <label class="form-label">Ubicación</label>
+            <div class="form-control readonly-highlight">
+                @(Model.Ubicacion?.Nombre ?? "No registrada")
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="EquipoId" />
+            <button type="submit" class="btn btn-danger">
+                Eliminar
+            </button>
+        </form>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+    </div>
+
 </div>

@@ -4,16 +4,24 @@
     ViewData["Title"] = "Editar calibración";
 }
 
-<h1>Editar calibración</h1>
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Editar calibración</h2>
+        <p class="page-subtitle">
+            Actualiza la información del evento metrológico y del certificado asociado.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
 
-<hr />
+<div class="form-card">
+    <form asp-action="Edit" asp-route-id="@ViewBag.EventoCalibracionDatoId" enctype="multipart/form-data">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<div class="row">
-    <div class="col-md-8">
-        <form asp-action="Edit" asp-route-id="@ViewBag.EventoCalibracionDatoId" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <h5 class="mb-3">Información del evento</h5>
 
-            <div class="mb-3">
+        <div class="row mb-3">
+            <div class="col-md-6">
                 <label asp-for="EquipoId" class="form-label"></label>
                 <select asp-for="EquipoId" asp-items="Model.Equipos" class="form-select">
                     <option value="">-- Seleccione --</option>
@@ -21,15 +29,17 @@
                 <span asp-validation-for="EquipoId" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-6">
                 <label asp-for="SubtipoEventoId" class="form-label"></label>
                 <select asp-for="SubtipoEventoId" asp-items="Model.SubtiposEvento" class="form-select">
                     <option value="">-- Seleccione --</option>
                 </select>
                 <span asp-validation-for="SubtipoEventoId" class="text-danger"></span>
             </div>
+        </div>
 
-            <div class="mb-3">
+        <div class="row mb-3">
+            <div class="col-md-6">
                 <label asp-for="ResponsableInternoId" class="form-label"></label>
                 <select asp-for="ResponsableInternoId" asp-items="Model.ResponsablesInternos" class="form-select">
                     <option value="">-- Seleccione --</option>
@@ -37,80 +47,90 @@
                 <span asp-validation-for="ResponsableInternoId" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-3">
                 <label asp-for="FechaEvento" class="form-label"></label>
                 <input asp-for="FechaEvento" class="form-control" type="date" />
                 <span asp-validation-for="FechaEvento" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-3">
                 <label asp-for="FechaProxima" class="form-label"></label>
                 <input asp-for="FechaProxima" class="form-control" type="date" />
                 <span asp-validation-for="FechaProxima" class="text-danger"></span>
             </div>
+        </div>
 
-            <div class="mb-3">
-                <label asp-for="EstadoEquipoResultado" class="form-label"></label>
-                <input asp-for="EstadoEquipoResultado" class="form-control" />
-                <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
-            </div>
+        <div class="mb-3">
+            <label asp-for="EstadoEquipoResultado" class="form-label"></label>
+            <input asp-for="EstadoEquipoResultado" class="form-control" />
+            <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
+        </div>
 
-            <div class="mb-3">
-                <label asp-for="ComentariosAdicionales" class="form-label"></label>
-                <textarea asp-for="ComentariosAdicionales" class="form-control"></textarea>
-                <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
-            </div>
+        <div class="mb-3">
+            <label asp-for="ComentariosAdicionales" class="form-label"></label>
+            <textarea asp-for="ComentariosAdicionales" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
+        </div>
 
-            <div class="form-check mb-3">
-                <input asp-for="EsExtraordinario" class="form-check-input" />
-                <label asp-for="EsExtraordinario" class="form-check-label"></label>
-            </div>
+        <div class="form-check mb-3">
+            <input asp-for="EsExtraordinario" class="form-check-input" />
+            <label asp-for="EsExtraordinario" class="form-check-label"></label>
+        </div>
 
-            <div class="mb-3">
-                <label asp-for="JustificacionExtraordinario" class="form-label"></label>
-                <textarea asp-for="JustificacionExtraordinario" class="form-control"></textarea>
-                <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
-            </div>
+        <div class="mb-4">
+            <label asp-for="JustificacionExtraordinario" class="form-label"></label>
+            <textarea asp-for="JustificacionExtraordinario" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+        </div>
 
-            <div class="mb-3">
+        <h5 class="mt-4 mb-3">Información de calibración</h5>
+
+        <div class="row mb-3">
+            <div class="col-md-4">
                 <label asp-for="NumeroCertificado" class="form-label"></label>
                 <input asp-for="NumeroCertificado" class="form-control" />
                 <span asp-validation-for="NumeroCertificado" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-4">
                 <label asp-for="FechaCalibracion" class="form-label"></label>
                 <input asp-for="FechaCalibracion" class="form-control" type="date" />
                 <span asp-validation-for="FechaCalibracion" class="text-danger"></span>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-4">
                 <label asp-for="LaboratorioId" class="form-label"></label>
                 <select asp-for="LaboratorioId" asp-items="Model.Laboratorios" class="form-select">
                     <option value="">-- Seleccione --</option>
                 </select>
                 <span asp-validation-for="LaboratorioId" class="text-danger"></span>
             </div>
+        </div>
 
-            <div class="mb-3">
-                <label asp-for="Observaciones" class="form-label"></label>
-                <textarea asp-for="Observaciones" class="form-control"></textarea>
-                <span asp-validation-for="Observaciones" class="text-danger"></span>
-            </div>
+        <div class="mb-3">
+            <label asp-for="Observaciones" class="form-label"></label>
+            <textarea asp-for="Observaciones" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Observaciones" class="text-danger"></span>
+        </div>
 
-            <div class="mb-3">
-                <label asp-for="ArchivoCertificado" class="form-label"></label>
-                <input asp-for="ArchivoCertificado" class="form-control" type="file" accept=".pdf" />
-                <span asp-validation-for="ArchivoCertificado" class="text-danger"></span>
-                <small class="text-muted">Sube un PDF solo si deseas reemplazar el archivo actual.</small>
-            </div>
+        <div class="mb-4">
+            <label asp-for="ArchivoCertificado" class="form-label"></label>
+            <input asp-for="ArchivoCertificado" class="form-control" type="file" accept=".pdf" />
+            <span asp-validation-for="ArchivoCertificado" class="text-danger"></span>
+            <small class="text-muted">
+                Sube un PDF solo si deseas reemplazar el certificado actual.
+            </small>
+        </div>
 
-            <div class="mt-3">
-                <button type="submit" class="btn btn-warning">Actualizar</button>
-                <a asp-action="Index" class="btn btn-secondary">Volver</a>
-            </div>
-        </form>
-    </div>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="submit" class="btn btn-primary">
+                Actualizar
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                Cancelar
+            </a>
+        </div>
+    </form>
 </div>
 
 @section Scripts {

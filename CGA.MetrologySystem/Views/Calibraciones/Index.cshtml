@@ -4,51 +4,131 @@
     ViewData["Title"] = "Calibraciones";
 }
 
-<h1>Calibraciones</h1>
-
-<p>
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Calibraciones</h2>
+        <p class="page-subtitle">
+            Gestiona las calibraciones registradas, sus certificados y la trazabilidad asociada a cada equipo.
+        </p>
+    </div>
     <a asp-action="Create" class="btn btn-primary">Nueva calibración</a>
-</p>
+</div>
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Equipo</th>
-            <th>Fecha evento</th>
-            <th>Fecha calibración</th>
-            <th>N° Certificado</th>
-            <th>Laboratorio</th>
-            <th>Responsable</th>
-            <th>Archivo</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.EventoMetrologico?.Equipo?.Codigo - @item.EventoMetrologico?.Equipo?.Nombre</td>
-                <td>@item.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd")</td>
-                <td>@item.FechaCalibracion?.ToString("yyyy-MM-dd")</td>
-                <td>@item.NumeroCertificado</td>
-                <td>@item.Laboratorio?.Nombre</td>
-                <td>@item.EventoMetrologico?.ResponsableInterno?.NombreCompleto</td>
-                <td>
-                    @if (!string.IsNullOrWhiteSpace(item.RutaCertificado))
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Equipo</th>
+                    <th>Fecha evento</th>
+                    <th>Fecha calibración</th>
+                    <th>N° Certificado</th>
+                    <th>Laboratorio</th>
+                    <th>Responsable</th>
+                    <th>Archivo</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var item in Model)
                     {
-                        <a href="@item.RutaCertificado" target="_blank" class="btn btn-sm btn-outline-success">Ver PDF</a>
+                        <tr>
+                            <td class="fw-semibold">
+                                @item.EventoMetrologico?.Equipo?.Codigo
+                                <br />
+                                <span class="text-muted small">
+                                    @item.EventoMetrologico?.Equipo?.Nombre
+                                </span>
+                            </td>
+
+                            <td>
+                                @item.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd")
+                            </td>
+
+                            <td>
+                                @if (item.FechaCalibracion.HasValue)
+                                {
+                                    @item.FechaCalibracion.Value.ToString("yyyy-MM-dd")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin fecha</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(item.NumeroCertificado))
+                                {
+                                    @item.NumeroCertificado
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No registrado</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(item.Laboratorio?.Nombre))
+                                {
+                                    @item.Laboratorio.Nombre
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin laboratorio</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(item.EventoMetrologico?.ResponsableInterno?.NombreCompleto))
+                                {
+                                    @item.EventoMetrologico.ResponsableInterno.NombreCompleto
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin responsable</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(item.RutaCertificado))
+                                {
+                                    <a href="@item.RutaCertificado" target="_blank" class="btn btn-sm btn-outline-success">
+                                        Ver PDF
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Sin archivo</span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                    <a asp-action="Edit" asp-route-id="@item.EventoCalibracionDatoId" class="btn btn-sm btn-outline-primary">
+                                        Editar
+                                    </a>
+                                    <a asp-action="Details" asp-route-id="@item.EventoCalibracionDatoId" class="btn btn-sm btn-outline-secondary">
+                                        Detalles
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.EventoCalibracionDatoId" class="btn btn-sm btn-outline-danger">
+                                        Eliminar
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                     }
-                    else
-                    {
-                        <span class="text-muted">Sin archivo</span>
-                    }
-                </td>
-                <td>
-                    <a asp-action="Details" asp-route-id="@item.EventoCalibracionDatoId" class="btn btn-sm btn-info">Detalle</a>
-                    <a asp-action="Edit" asp-route-id="@item.EventoCalibracionDatoId" class="btn btn-sm btn-warning">Editar</a>
-                    <a asp-action="Delete" asp-route-id="@item.EventoCalibracionDatoId" class="btn btn-sm btn-danger">Eliminar</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4">
+                            No existen calibraciones registradas.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
