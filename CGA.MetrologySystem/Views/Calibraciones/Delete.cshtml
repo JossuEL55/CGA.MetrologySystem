@@ -4,32 +4,73 @@
     ViewData["Title"] = "Eliminar calibración";
 }
 
-<h1>Eliminar calibración</h1>
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Eliminar calibración</h2>
+        <p class="page-subtitle">
+            Confirma la eliminación del registro seleccionado.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
 
-<h3>¿Seguro que deseas eliminar este registro?</h3>
+<div class="form-card">
 
-<div>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-3">Equipo</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.Equipo?.Codigo - @Model.EventoMetrologico?.Equipo?.Nombre</dd>
+    <div class="alert alert-danger">
+        ¿Estás seguro de que deseas eliminar esta calibración?
+        Esta acción no se puede deshacer.
+    </div>
 
-        <dt class="col-sm-3">Fecha evento</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd")</dd>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Equipo</label>
+            <div class="form-control readonly-highlight">
+                @Model.EventoMetrologico?.Equipo?.Codigo - @Model.EventoMetrologico?.Equipo?.Nombre
+            </div>
+        </div>
 
-        <dt class="col-sm-3">Fecha calibración</dt>
-        <dd class="col-sm-9">@Model.FechaCalibracion?.ToString("yyyy-MM-dd")</dd>
+        <div class="col-md-6">
+            <label class="form-label">Laboratorio</label>
+            <div class="form-control readonly-highlight">
+                @(Model.Laboratorio?.Nombre ?? "No registrado")
+            </div>
+        </div>
+    </div>
 
-        <dt class="col-sm-3">Número certificado</dt>
-        <dd class="col-sm-9">@Model.NumeroCertificado</dd>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Fecha evento</label>
+            <div class="form-control readonly-highlight">
+                @(Model.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd") ?? "No registrada")
+            </div>
+        </div>
 
-        <dt class="col-sm-3">Laboratorio</dt>
-        <dd class="col-sm-9">@Model.Laboratorio?.Nombre</dd>
-    </dl>
+        <div class="col-md-4">
+            <label class="form-label">Fecha calibración</label>
+            <div class="form-control readonly-highlight">
+                @(Model.FechaCalibracion?.ToString("yyyy-MM-dd") ?? "No registrada")
+            </div>
+        </div>
 
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="EventoCalibracionDatoId" />
-        <button type="submit" class="btn btn-danger">Eliminar</button>
-        <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
-    </form>
+        <div class="col-md-4">
+            <label class="form-label">Número certificado</label>
+            <div class="form-control readonly-highlight">
+                @(Model.NumeroCertificado ?? "No registrado")
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="EventoCalibracionDatoId" />
+            <button type="submit" class="btn btn-danger">
+                Eliminar
+            </button>
+        </form>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+    </div>
+
 </div>

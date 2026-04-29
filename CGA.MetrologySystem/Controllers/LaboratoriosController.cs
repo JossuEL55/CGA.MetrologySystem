@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
+
     [Authorize]
     public class LaboratoriosController : Controller
     {

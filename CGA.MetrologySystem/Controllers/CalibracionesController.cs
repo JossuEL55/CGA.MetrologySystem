@@ -5,9 +5,17 @@ using CGA.MetrologySystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CGA.MetrologySystem.Controllers
 {
+    // Controlador para gestionar los eventos de calibración de los equipos, permitiendo crear, editar, eliminar y visualizar
+    // detalles de cada calibración, así como subir y almacenar los certificados de calibración en Google Drive, asegurando
+    // una gestión eficiente y organizada de la información relacionada con las calibraciones realizadas en el sistema.
+
+    //Authorize para manejo de roles y permisos, solo usuarios autorizados pueden acceder
+    //a las funcionalidades de este controlador
+    [Authorize]
     public class CalibracionesController : Controller
     {
         private readonly AppDbContext _context;

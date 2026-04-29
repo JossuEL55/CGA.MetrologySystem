@@ -23,11 +23,12 @@
                 </a>
             </div>
 
-            <<nav class="sidebar-nav">
+            <nav class="sidebar-nav">
                 <a class="sidebar-link" asp-controller="Home" asp-action="Index">Inicio</a>
                 <a class="sidebar-link" asp-controller="Perfil" asp-action="Index">Mi perfil</a>
                 <a class="sidebar-link" asp-controller="Equipos" asp-action="Index">Equipos</a>
                 <a class="sidebar-link" asp-controller="Laboratorios" asp-action="Index">Laboratorios</a>
+                <a class="sidebar-link" asp-controller="Calibraciones" asp-action="Index">Calibraciones</a>
 
                 @if (User.IsInRole("Administrador"))
                 {

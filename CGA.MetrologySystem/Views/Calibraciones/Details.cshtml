@@ -4,65 +4,158 @@
     ViewData["Title"] = "Detalle de calibración";
 }
 
-<h1>Detalle de calibración</h1>
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Detalle de calibración</h2>
+        <p class="page-subtitle">
+            Consulta la información del evento metrológico y el certificado asociado.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
 
-<div>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-3">Equipo</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.Equipo?.Codigo - @Model.EventoMetrologico?.Equipo?.Nombre</dd>
+<div class="form-card">
+    <h5 class="mb-3">Información del equipo</h5>
 
-        <dt class="col-sm-3">Subtipo</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.SubtipoEvento?.Nombre</dd>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Equipo</label>
+            <div class="form-control readonly-highlight">
+                @Model.EventoMetrologico?.Equipo?.Codigo - @Model.EventoMetrologico?.Equipo?.Nombre
+            </div>
+        </div>
 
-        <dt class="col-sm-3">Responsable interno</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.ResponsableInterno?.NombreCompleto</dd>
+        <div class="col-md-6">
+            <label class="form-label">Subtipo</label>
+            <div class="form-control readonly-highlight">
+                @(Model.EventoMetrologico?.SubtipoEvento?.Nombre ?? "No registrado")
+            </div>
+        </div>
+    </div>
 
-        <dt class="col-sm-3">Fecha evento</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd")</dd>
+    <h5 class="mt-4 mb-3">Información del evento</h5>
 
-        <dt class="col-sm-3">Próxima fecha</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.FechaProxima?.ToString("yyyy-MM-dd")</dd>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Responsable interno</label>
+            <div class="form-control readonly-highlight">
+                @(Model.EventoMetrologico?.ResponsableInterno?.NombreCompleto ?? "No registrado")
+            </div>
+        </div>
 
-        <dt class="col-sm-3">Estado equipo</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.EstadoEquipoResultado</dd>
+        <div class="col-md-4">
+            <label class="form-label">Fecha evento</label>
+            <div class="form-control readonly-highlight">
+                @(Model.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd") ?? "No registrada")
+            </div>
+        </div>
 
-        <dt class="col-sm-3">Comentarios adicionales</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.ComentariosAdicionales</dd>
+        <div class="col-md-4">
+            <label class="form-label">Próxima fecha</label>
+            <div class="form-control readonly-highlight">
+                @(Model.EventoMetrologico?.FechaProxima?.ToString("yyyy-MM-dd") ?? "No registrada")
+            </div>
+        </div>
+    </div>
 
-        <dt class="col-sm-3">Es extraordinario</dt>
-        <dd class="col-sm-9">@(Model.EventoMetrologico?.EsExtraordinario == true ? "Sí" : "No")</dd>
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Estado del equipo</label>
+            <div>
+                @if (!string.IsNullOrWhiteSpace(Model.EventoMetrologico?.EstadoEquipoResultado))
+                {
+                    <span class="badge bg-success">@Model.EventoMetrologico.EstadoEquipoResultado</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">No registrado</span>
+                }
+            </div>
+        </div>
 
-        <dt class="col-sm-3">Justificación</dt>
-        <dd class="col-sm-9">@Model.EventoMetrologico?.JustificacionExtraordinario</dd>
+        <div class="col-md-6">
+            <label class="form-label">Evento extraordinario</label>
+            <div>
+                @if (Model.EventoMetrologico?.EsExtraordinario == true)
+                {
+                    <span class="badge bg-warning text-dark">Sí</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">No</span>
+                }
+            </div>
+        </div>
+    </div>
 
-        <dt class="col-sm-3">Número certificado</dt>
-        <dd class="col-sm-9">@Model.NumeroCertificado</dd>
+    <div class="mb-3">
+        <label class="form-label">Comentarios adicionales</label>
+        <div class="form-control readonly-highlight">
+            @(Model.EventoMetrologico?.ComentariosAdicionales ?? "Sin comentarios")
+        </div>
+    </div>
 
-        <dt class="col-sm-3">Fecha calibración</dt>
-        <dd class="col-sm-9">@Model.FechaCalibracion?.ToString("yyyy-MM-dd")</dd>
+    <div class="mb-4">
+        <label class="form-label">Justificación extraordinaria</label>
+        <div class="form-control readonly-highlight">
+            @(Model.EventoMetrologico?.JustificacionExtraordinario ?? "No aplica")
+        </div>
+    </div>
 
-        <dt class="col-sm-3">Laboratorio</dt>
-        <dd class="col-sm-9">@Model.Laboratorio?.Nombre</dd>
+    <h5 class="mt-4 mb-3">Información de calibración</h5>
 
-        <dt class="col-sm-3">Observaciones</dt>
-        <dd class="col-sm-9">@Model.Observaciones</dd>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Número certificado</label>
+            <div class="form-control readonly-highlight">
+                @(Model.NumeroCertificado ?? "No registrado")
+            </div>
+        </div>
 
-        <dt class="col-sm-3">Archivo PDF</dt>
-        <dd class="col-sm-9">
+        <div class="col-md-4">
+            <label class="form-label">Fecha calibración</label>
+            <div class="form-control readonly-highlight">
+                @(Model.FechaCalibracion?.ToString("yyyy-MM-dd") ?? "No registrada")
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Laboratorio</label>
+            <div class="form-control readonly-highlight">
+                @(Model.Laboratorio?.Nombre ?? "No registrado")
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Observaciones</label>
+        <div class="form-control readonly-highlight">
+            @(Model.Observaciones ?? "Sin observaciones")
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label">Archivo PDF</label>
+        <div>
             @if (!string.IsNullOrWhiteSpace(Model.RutaCertificado))
             {
-                <a href="@Model.RutaCertificado" target="_blank" class="btn btn-sm btn-outline-success">Ver certificado</a>
+                <a href="@Model.RutaCertificado" target="_blank" class="btn btn-sm btn-outline-success">
+                    Ver certificado
+                </a>
             }
             else
             {
-                <span class="text-muted">Sin archivo</span>
+                <span class="badge bg-secondary">Sin archivo</span>
             }
-        </dd>
-    </dl>
-</div>
+        </div>
+    </div>
 
-<div>
-    <a asp-action="Edit" asp-route-id="@Model.EventoCalibracionDatoId" class="btn btn-warning">Editar</a>
-    <a asp-action="Index" class="btn btn-secondary">Volver</a>
+    <div class="d-flex justify-content-end gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.EventoCalibracionDatoId" class="btn btn-primary">
+            Editar
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Volver
+        </a>
+    </div>
 </div>
