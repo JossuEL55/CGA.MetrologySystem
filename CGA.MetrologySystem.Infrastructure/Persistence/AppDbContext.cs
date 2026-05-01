@@ -34,6 +34,7 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
         public DbSet<PlantillaEvento> PlantillasEvento { get; set; }
         public DbSet<PlantillaEventoItem> PlantillasEventoItem { get; set; }
         public DbSet<EventoMantenimientoDato> EventosMantenimientoDato { get; set; }
+        public DbSet<EventoVerificacionDato> EventosVerificacionDato { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

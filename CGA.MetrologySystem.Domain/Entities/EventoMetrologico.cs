@@ -38,5 +38,6 @@ namespace CGA.MetrologySystem.Domain.Entities
         public ICollection<EventoMantenimientoActividad> ActividadesMantenimiento { get; set; } = new List<EventoMantenimientoActividad>();
         public EventoCalibracionDato? EventoCalibracionDato { get; set; }
         public EventoMantenimientoDato? EventoMantenimientoDato { get; set; }
+        public EventoVerificacionDato? EventoVerificacionDato { get; set; }
     }
 }
