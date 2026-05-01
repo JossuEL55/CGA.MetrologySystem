@@ -31,6 +31,7 @@ builder.Services.Configure<GoogleOAuthTokenStorageSettings>(
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IGoogleDriveCredentialProvider, GoogleDriveCredentialProvider>();
 builder.Services.AddScoped<MantenimientoPdfService>();
+builder.Services.AddScoped<VerificacionPdfService>();
 
 builder.Services.AddDefaultIdentity<UsuarioSistema>(options =>
 {
