@@ -3,6 +3,7 @@ using System;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CGA.MetrologySystem.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260429022248_AddEventoMantenimientoDato")]
+    partial class AddEventoMantenimientoDato
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -288,15 +291,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
 
                     b.Property<int>("EventoMetrologicoId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("GoogleDriveFileId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("NombreArchivoPdf")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RutaPdf")
-                        .HasColumnType("text");
 
                     b.Property<int>("TipoMantenimientoId")
                         .HasColumnType("integer");

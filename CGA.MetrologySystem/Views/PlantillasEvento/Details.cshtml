@@ -1,0 +1,50 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.PlantillaEvento
+
+@{
+    ViewData["Title"] = "Detalle plantilla";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Detalle de plantilla</h2>
+        <p class="page-subtitle">Información completa de la plantilla.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
+
+<div class="form-card">
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Tipo equipo</label>
+            <input class="form-control readonly-highlight" value="@Model.TipoEquipo?.Nombre" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Tipo evento</label>
+            <input class="form-control readonly-highlight" value="@Model.TipoEventoMetrologico?.Nombre" readonly />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Nombre</label>
+        <input class="form-control readonly-highlight" value="@Model.Nombre" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Descripción</label>
+        <textarea class="form-control readonly-highlight" readonly>@Model.Descripcion</textarea>
+    </div>
+
+    <hr />
+
+    <h5>Items</h5>
+
+    <ul class="list-group">
+        @foreach (var item in Model.Items.OrderBy(i => i.Orden))
+        {
+            <li class="list-group-item">@item.Descripcion</li>
+        }
+    </ul>
+
+</div>
