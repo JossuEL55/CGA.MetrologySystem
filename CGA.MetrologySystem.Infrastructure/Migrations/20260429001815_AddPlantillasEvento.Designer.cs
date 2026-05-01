@@ -3,6 +3,7 @@ using System;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CGA.MetrologySystem.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260429001815_AddPlantillasEvento")]
+    partial class AddPlantillasEvento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -276,39 +279,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.HasIndex("EventoMetrologicoId");
 
                     b.ToTable("EventosMantenimientoActividad");
-                });
-
-            modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.EventoMantenimientoDato", b =>
-                {
-                    b.Property<int>("EventoMantenimientoDatoId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("EventoMantenimientoDatoId"));
-
-                    b.Property<int>("EventoMetrologicoId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("GoogleDriveFileId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("NombreArchivoPdf")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RutaPdf")
-                        .HasColumnType("text");
-
-                    b.Property<int>("TipoMantenimientoId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("EventoMantenimientoDatoId");
-
-                    b.HasIndex("EventoMetrologicoId")
-                        .IsUnique();
-
-                    b.HasIndex("TipoMantenimientoId");
-
-                    b.ToTable("EventosMantenimientoDato");
                 });
 
             modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.EventoMetrologico", b =>
@@ -1003,25 +973,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Navigation("EventoMetrologico");
                 });
 
-            modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.EventoMantenimientoDato", b =>
-                {
-                    b.HasOne("CGA.MetrologySystem.Domain.Entities.EventoMetrologico", "EventoMetrologico")
-                        .WithOne("EventoMantenimientoDato")
-                        .HasForeignKey("CGA.MetrologySystem.Domain.Entities.EventoMantenimientoDato", "EventoMetrologicoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CGA.MetrologySystem.Domain.Entities.TipoMantenimiento", "TipoMantenimiento")
-                        .WithMany()
-                        .HasForeignKey("TipoMantenimientoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("EventoMetrologico");
-
-                    b.Navigation("TipoMantenimiento");
-                });
-
             modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.EventoMetrologico", b =>
                 {
                     b.HasOne("CGA.MetrologySystem.Domain.Entities.Equipo", "Equipo")
@@ -1163,8 +1114,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Navigation("ActividadesMantenimiento");
 
                     b.Navigation("EventoCalibracionDato");
-
-                    b.Navigation("EventoMantenimientoDato");
 
                     b.Navigation("ResultadosVerificacion");
                 });

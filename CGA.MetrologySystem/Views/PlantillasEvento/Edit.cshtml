@@ -1,0 +1,128 @@
+﻿@model CGA.MetrologySystem.Models.PlantillaEventoViewModel
+
+@{
+    ViewData["Title"] = "Editar plantilla";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Editar plantilla</h2>
+        <p class="page-subtitle">Modifica la configuración de la plantilla seleccionada.</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
+
+<form asp-action="Edit" method="post" class="form-card">
+    <input type="hidden" asp-for="PlantillaEventoId" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="TipoEquipoId" class="form-label fw-semibold"></label>
+            <select asp-for="TipoEquipoId" asp-items="Model.TiposEquipo" class="form-control"></select>
+            <span asp-validation-for="TipoEquipoId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="TipoEventoMetrologicoId" class="form-label fw-semibold"></label>
+            <select asp-for="TipoEventoMetrologicoId" asp-items="Model.TiposEventoMetrologico" class="form-control"></select>
+            <span asp-validation-for="TipoEventoMetrologicoId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label fw-semibold"></label>
+        <input asp-for="Nombre" class="form-control" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label fw-semibold"></label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-4">
+        <input asp-for="Activo" class="form-check-input" />
+        <label asp-for="Activo" class="form-check-label fw-semibold"></label>
+    </div>
+
+    <hr />
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Ítems de la plantilla</h5>
+        <button type="button" id="addItem" class="btn btn-outline-primary btn-sm">Agregar ítem</button>
+    </div>
+
+    <table class="table table-hover" id="tablaItems">
+        <thead>
+            <tr>
+                <th>Descripción</th>
+                <th style="width: 120px;">Activo</th>
+                <th style="width: 80px;"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Items.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <input type="hidden" asp-for="Items[i].PlantillaEventoItemId" />
+                        <input type="hidden" asp-for="Items[i].Orden" />
+                        <input asp-for="Items[i].Descripcion" class="form-control" placeholder="Descripción del ítem" />
+                        <span asp-validation-for="Items[i].Descripcion" class="text-danger"></span>
+                    </td>
+                    <td class="align-middle">
+                        <input asp-for="Items[i].Activo" class="form-check-input" />
+                    </td>
+                    <td class="align-middle">
+                        <button type="button" class="btn btn-outline-danger btn-sm eliminar">X</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        let index = @Model.Items.Count;
+
+        document.getElementById("addItem").addEventListener("click", function () {
+            const fila = `
+                <tr>
+                    <td>
+                        <input type="hidden" name="Items[${index}].PlantillaEventoItemId" value="0" />
+                        <input type="hidden" name="Items[${index}].Orden" value="${index + 1}" />
+                        <input name="Items[${index}].Descripcion" class="form-control" placeholder="Descripción del ítem" />
+                    </td>
+                    <td class="align-middle">
+                        <input type="checkbox" name="Items[${index}].Activo" value="true" checked class="form-check-input" />
+                        <input type="hidden" name="Items[${index}].Activo" value="false" />
+                    </td>
+                    <td class="align-middle">
+                        <button type="button" class="btn btn-outline-danger btn-sm eliminar">X</button>
+                    </td>
+                </tr>`;
+
+            document.querySelector("#tablaItems tbody").insertAdjacentHTML("beforeend", fila);
+            index++;
+        });
+
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("eliminar")) {
+                e.target.closest("tr").remove();
+            }
+        });
+    </script>
+}

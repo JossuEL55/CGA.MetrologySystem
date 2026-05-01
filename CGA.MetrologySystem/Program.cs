@@ -8,7 +8,10 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using CGA.MetrologySystem.Infrastructure.Services;
+using QuestPDF.Infrastructure;
+using CGA.MetrologySystem.Services.Pdf;
 
+QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
@@ -27,6 +30,7 @@ builder.Services.Configure<GoogleOAuthTokenStorageSettings>(
 
 builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IGoogleDriveCredentialProvider, GoogleDriveCredentialProvider>();
+builder.Services.AddScoped<MantenimientoPdfService>();
 
 builder.Services.AddDefaultIdentity<UsuarioSistema>(options =>
 {
