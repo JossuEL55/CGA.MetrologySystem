@@ -4,30 +4,41 @@
     ViewData["Title"] = "Eliminar verificación";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h2 class="page-title">Eliminar verificación</h2>
-        <p class="page-subtitle">Confirma si deseas eliminar este registro de verificación.</p>
+        <p class="page-subtitle">
+            Revisa la información antes de eliminar este registro.
+        </p>
     </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver
+    </a>
 </div>
 
 <div class="form-card">
-    <div class="alert alert-warning">
-        Esta acción eliminará la verificación y sus condiciones registradas. No eliminará automáticamente el PDF almacenado en Google Drive.
+    <div class="alert alert-warning mb-4">
+        <strong>Confirmación requerida.</strong>
+        Esta acción eliminará la verificación y sus condiciones registradas.
+        No eliminará automáticamente el PDF almacenado en Google Drive.
     </div>
+
+    <h5 class="mb-3">Datos de la verificación</h5>
 
     <div class="row">
         <div class="col-md-6 mb-3">
             <label class="form-label fw-semibold">Equipo</label>
             <input class="form-control readonly-highlight"
-                   value="@Model.EventoMetrologico.Equipo.Codigo - @Model.EventoMetrologico.Equipo.Nombre" readonly />
+                   value="@Model.EventoMetrologico.Equipo.Codigo - @Model.EventoMetrologico.Equipo.Nombre"
+                   readonly />
         </div>
 
         <div class="col-md-6 mb-3">
             <label class="form-label fw-semibold">Responsable interno</label>
             <input class="form-control readonly-highlight"
-                   value="@Model.EventoMetrologico.ResponsableInterno.NombreCompleto" readonly />
+                   value="@Model.EventoMetrologico.ResponsableInterno.NombreCompleto"
+                   readonly />
         </div>
     </div>
 
@@ -35,65 +46,80 @@
         <div class="col-md-4 mb-3">
             <label class="form-label fw-semibold">Fecha de verificación</label>
             <input class="form-control readonly-highlight"
-                   value="@Model.EventoMetrologico.FechaEvento.ToString("yyyy-MM-dd")" readonly />
+                   value="@Model.EventoMetrologico.FechaEvento.ToString("yyyy-MM-dd")"
+                   readonly />
         </div>
 
         <div class="col-md-4 mb-3">
             <label class="form-label fw-semibold">Próxima fecha</label>
             <input class="form-control readonly-highlight"
-                   value="@(Model.EventoMetrologico.FechaProxima.HasValue? Model.EventoMetrologico.FechaProxima.Value.ToString("yyyy-MM-dd") : "N/D")"
+                   value="@(Model.EventoMetrologico.FechaProxima.HasValue ? Model.EventoMetrologico.FechaProxima.Value.ToString("yyyy-MM-dd") : "N/D")"
                    readonly />
         </div>
 
         <div class="col-md-4 mb-3">
             <label class="form-label fw-semibold">Estado</label>
             <input class="form-control readonly-highlight"
-                   value="@Model.EventoMetrologico.EstadoEquipoResultado" readonly />
+                   value="@Model.EventoMetrologico.EstadoEquipoResultado"
+                   readonly />
         </div>
     </div>
 
-    <hr />
+    @if (!string.IsNullOrWhiteSpace(Model.EventoMetrologico.ComentariosAdicionales))
+    {
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Comentarios adicionales</label>
+            <textarea class="form-control readonly-highlight" rows="3" readonly>@Model.EventoMetrologico.ComentariosAdicionales</textarea>
+        </div>
+    }
+
+    <hr class="my-4" />
 
     <h5 class="mb-3">Condiciones verificadas</h5>
 
-    <table class="table table-hover align-middle">
-        <thead>
-            <tr>
-                <th style="width: 80px;">Orden</th>
-                <th>Condición</th>
-                <th style="width: 120px;">Resultado</th>
-                <th>Observaciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var resultado in Model.EventoMetrologico.ResultadosVerificacion.OrderBy(r => r.Orden))
-            {
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
                 <tr>
-                    <td>@resultado.Orden</td>
-                    <td>@resultado.DescripcionItem</td>
-                    <td>
-                        @if (resultado.Cumple)
-                        {
-                            <span class="badge bg-success">Cumple</span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-danger">No cumple</span>
-                        }
-                    </td>
-                    <td>@resultado.Observaciones</td>
+                    <th style="width: 80px;">Orden</th>
+                    <th>Condición</th>
+                    <th style="width: 130px;">Resultado</th>
+                    <th>Observaciones</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if (Model.EventoMetrologico.ResultadosVerificacion == null || !Model.EventoMetrologico.ResultadosVerificacion.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            No existen condiciones registradas para esta verificación.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var resultado in Model.EventoMetrologico.ResultadosVerificacion.OrderBy(r => r.Orden))
+                    {
+                        <tr>
+                            <td>@resultado.Orden</td>
+                            <td>@resultado.DescripcionItem</td>
+                            <td>
+                                <span class="badge @(resultado.Cumple ? "bg-success" : "bg-danger")">
+                                    @(resultado.Cumple ? "Cumple" : "No cumple")
+                                </span>
+                            </td>
+                            <td>@resultado.Observaciones</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 
     <form asp-action="Delete" method="post" class="d-flex justify-content-end gap-2 mt-4">
         <input type="hidden" asp-for="EventoVerificacionDatoId" />
 
         <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-
-        <button type="submit" class="btn btn-danger">
-            Eliminar
-        </button>
+        <button type="submit" class="btn btn-danger">Eliminar definitivamente</button>
     </form>
 </div>

@@ -3,14 +3,15 @@ using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using CGA.MetrologySystem.Services.Pdf;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using CGA.MetrologySystem.Application.Interfaces;
-using CGA.MetrologySystem.Services.Pdf;
 
 namespace CGA.MetrologySystem.Controllers
 {
+    //Manejo de roles
+    [Authorize]
     public class MantenimientosController : Controller
     {
         private readonly AppDbContext _context;
@@ -62,18 +63,7 @@ namespace CGA.MetrologySystem.Controllers
         }
         public async Task<IActionResult> ExportarPdf(int id)
         {
-            var mantenimiento = await _context.EventosMantenimientoDato
-                .Include(m => m.TipoMantenimiento)
-                .Include(m => m.EventoMetrologico)
-                    .ThenInclude(e => e.Equipo)
-                        .ThenInclude(eq => eq.CaracteristicasMetrologicas)
-                .Include(m => m.EventoMetrologico)
-                    .ThenInclude(e => e.ResponsableInterno)
-                .Include(m => m.EventoMetrologico)
-                    .ThenInclude(e => e.SubtipoEvento)
-                .Include(m => m.EventoMetrologico)
-                    .ThenInclude(e => e.ActividadesMantenimiento)
-                .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == id);
+            var mantenimiento = await CargarMantenimientoCompletoAsync(id);
 
             if (mantenimiento == null)
             {
@@ -199,16 +189,8 @@ namespace CGA.MetrologySystem.Controllers
 
                 await _context.SaveChangesAsync();
 
-                var mantenimientoCompleto = await _context.EventosMantenimientoDato
-                    .Include(m => m.TipoMantenimiento)
-                    .Include(m => m.EventoMetrologico)
-                        .ThenInclude(e => e.Equipo)
-                            .ThenInclude(eq => eq.CaracteristicasMetrologicas)
-                    .Include(m => m.EventoMetrologico)
-                        .ThenInclude(e => e.ResponsableInterno)
-                    .Include(m => m.EventoMetrologico)
-                        .ThenInclude(e => e.ActividadesMantenimiento)
-                    .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == mantenimientoDato.EventoMantenimientoDatoId);
+                var mantenimientoCompleto = await CargarMantenimientoCompletoAsync(
+                mantenimientoDato.EventoMantenimientoDatoId);
 
                 if (mantenimientoCompleto == null)
                 {
@@ -482,6 +464,34 @@ namespace CGA.MetrologySystem.Controllers
                     Orden = i.Orden
                 })
                 .ToList();
+        }
+
+
+        //Método para cargar el mantenimiento completo con todas sus relaciones, utilizado principalmente para generar el PDF
+        //después de crear o editar un mantenimiento, asegurando que se tenga toda la información necesaria en un solo query optimizado.
+        private async Task<EventoMantenimientoDato?> CargarMantenimientoCompletoAsync(int eventoMantenimientoDatoId)
+        {
+            var mantenimiento = await _context.EventosMantenimientoDato
+                .Include(m => m.TipoMantenimiento)
+                .Include(m => m.EventoMetrologico)
+                    .ThenInclude(e => e.Equipo)
+                        .ThenInclude(eq => eq.CaracteristicasMetrologicas)
+                .Include(m => m.EventoMetrologico)
+                    .ThenInclude(e => e.ResponsableInterno)
+                .Include(m => m.EventoMetrologico)
+                    .ThenInclude(e => e.SubtipoEvento)
+                .Include(m => m.EventoMetrologico)
+                    .ThenInclude(e => e.ActividadesMantenimiento)
+                .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == eventoMantenimientoDatoId);
+
+            if (mantenimiento == null) return null;
+
+            mantenimiento.EventoMetrologico.ActividadesMantenimiento =
+                mantenimiento.EventoMetrologico.ActividadesMantenimiento
+                    .OrderBy(a => a.Orden)
+                    .ToList();
+
+            return mantenimiento;
         }
     }
 }

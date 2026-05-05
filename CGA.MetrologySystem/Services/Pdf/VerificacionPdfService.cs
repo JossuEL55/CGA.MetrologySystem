@@ -2,6 +2,7 @@
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using System.IO;
 
 namespace CGA.MetrologySystem.Services.Pdf
 {
@@ -40,6 +41,13 @@ namespace CGA.MetrologySystem.Services.Pdf
 
         private void Encabezado(IContainer container)
         {
+            var logoPath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                "images",
+                "logo.png"
+            );
+
             container.Table(table =>
             {
                 table.ColumnsDefinition(columns =>
@@ -49,28 +57,51 @@ namespace CGA.MetrologySystem.Services.Pdf
                     columns.RelativeColumn(2);
                 });
 
-                table.Cell().Border(1).Height(65).AlignCenter().AlignMiddle()
-                    .Text("CGA").Bold().FontSize(16);
+                table.Cell()
+                    .Border(0.5f)
+                    .Height(75)
+                    .Padding(8)
+                    .AlignCenter()
+                    .AlignMiddle()
+                    .Image(logoPath)
+                    .FitArea();
 
-                table.Cell().Border(1).Column(col =>
-                {
-                    col.Item().AlignCenter().Text("NTE INEN ISO/IEC 17020").Bold().FontSize(9);
-                    col.Item().PaddingTop(12).AlignCenter().Text("VERIFICACIÓN DE EQUIPOS").Bold().FontSize(16);
-                });
-
-                table.Cell().Border(1).Table(inner =>
-                {
-                    inner.ColumnsDefinition(c =>
+                table.Cell()
+                    .Border(0.5f)
+                    .Height(75)
+                    .AlignCenter()
+                    .AlignMiddle()
+                    .Column(col =>
                     {
-                        c.RelativeColumn();
-                        c.RelativeColumn();
+                        col.Item().AlignCenter().Text("CGA OIL INSPECTION SERVICES")
+                            .FontSize(9)
+                            .SemiBold();
+
+                        col.Item().PaddingTop(4).AlignCenter().Text("VERIFICACIÓN DE EQUIPOS")
+                            .FontSize(17)
+                            .Bold();
+
+                        col.Item().PaddingTop(4).AlignCenter().Text("NTE INEN ISO/IEC 17020")
+                            .FontSize(8)
+                            .Italic();
                     });
 
-                    FilaMeta(inner, "Código:", "CGA-FOR-025");
-                    FilaMeta(inner, "Fecha:", "2025-04-21");
-                    FilaMeta(inner, "Revisión:", "1");
-                    FilaMeta(inner, "Página:", "1 de 1");
-                });
+                table.Cell()
+                    .Border(0.5f)
+                    .Height(75)
+                    .Table(inner =>
+                    {
+                        inner.ColumnsDefinition(c =>
+                        {
+                            c.RelativeColumn();
+                            c.RelativeColumn();
+                        });
+
+                        FilaMeta(inner, "Código:", "CGA-FOR-025");
+                        FilaMeta(inner, "Fecha:", "2025-04-21");
+                        FilaMeta(inner, "Revisión:", "1");
+                        FilaMeta(inner, "Página:", "1 de 1");
+                    });
             });
         }
 
@@ -84,10 +115,17 @@ namespace CGA.MetrologySystem.Services.Pdf
                     columns.RelativeColumn();
                 });
 
-                table.Cell().ColumnSpan(2).Border(1).AlignCenter()
-                    .Text("DATOS DEL EQUIPO").Bold();
+                table.Cell()
+                    .ColumnSpan(2)
+                    .Border(0.5f)
+                    .Background("#E0E0E0")
+                    .PaddingVertical(4)
+                    .AlignCenter()
+                    .Text("DATOS DEL EQUIPO")
+                    .Bold()
+                    .FontSize(9);
 
-                table.Cell().Border(1).Padding(4).Column(col =>
+                table.Cell().Border(0.5f).Padding(7).Column(col =>
                 {
                     Campo(col, "Equipo:", equipo.Nombre);
                     Campo(col, "Marca:", equipo.Marca);
@@ -95,7 +133,7 @@ namespace CGA.MetrologySystem.Services.Pdf
                     Campo(col, "Serie:", equipo.Serie);
                 });
 
-                table.Cell().Border(1).Padding(4).Column(col =>
+                table.Cell().Border(0.5f).Padding(7).Column(col =>
                 {
                     Campo(col, "Identificación:", equipo.Codigo);
                     Campo(col, "Rango:", ObtenerCaracteristica(equipo, "Rango"));
@@ -114,11 +152,21 @@ namespace CGA.MetrologySystem.Services.Pdf
                     columns.RelativeColumn();
                 });
 
-                table.Cell().Border(1).Padding(4).AlignCenter()
-                    .Text($"FECHA: {evento.FechaEvento:yyyy-MM-dd}").Bold();
+                table.Cell()
+                    .Border(0.5f)
+                    .PaddingVertical(3)
+                    .AlignCenter()
+                    .Text($"FECHA: {evento.FechaEvento:yyyy-MM-dd}")
+                    .Bold()
+                    .FontSize(9);
 
-                table.Cell().Border(1).Padding(4).AlignCenter()
-                    .Text("FRECUENCIA DE VERIFICACIÓN: 4 MESES").Bold();
+                table.Cell()
+                    .Border(0.5f)
+                    .PaddingVertical(3)
+                    .AlignCenter()
+                    .Text("FRECUENCIA DE VERIFICACIÓN: 4 MESES")
+                    .Bold()
+                    .FontSize(9);
             });
         }
 
@@ -141,36 +189,67 @@ namespace CGA.MetrologySystem.Services.Pdf
 
                 foreach (var resultado in resultados)
                 {
-                    table.Cell().Border(1).Padding(4).MinHeight(28)
-                        .Text(resultado.DescripcionItem);
+                    table.Cell()
+                        .Border(0.5f)
+                        .Padding(6)
+                        .MinHeight(34)
+                        .AlignMiddle()
+                        .Text(resultado.DescripcionItem)
+                        .FontSize(8);
 
-                    table.Cell().Border(1).Padding(4).AlignCenter().AlignMiddle()
-                        .Text(resultado.Cumple ? "X" : "");
+                    table.Cell()
+                        .Border(0.5f)
+                        .Padding(6)
+                        .MinHeight(34)
+                        .AlignCenter()
+                        .AlignMiddle()
+                        .Text(resultado.Cumple ? "X" : "")
+                        .Bold()
+                        .FontSize(9);
 
-                    table.Cell().Border(1).Padding(4).AlignCenter().AlignMiddle()
-                        .Text(!resultado.Cumple ? "X" : "");
+                    table.Cell()
+                        .Border(0.5f)
+                        .Padding(6)
+                        .MinHeight(34)
+                        .AlignCenter()
+                        .AlignMiddle()
+                        .Text(!resultado.Cumple ? "X" : "")
+                        .Bold()
+                        .FontSize(9);
 
-                    table.Cell().Border(1).Padding(4)
-                        .Text(resultado.Observaciones ?? "");
+                    table.Cell()
+                        .Border(0.5f)
+                        .Padding(6)
+                        .MinHeight(34)
+                        .AlignMiddle()
+                        .Text(resultado.Observaciones ?? "")
+                        .FontSize(8);
                 }
 
                 var filasVacias = Math.Max(0, 7 - resultados.Count);
 
                 for (int i = 0; i < filasVacias; i++)
                 {
-                    table.Cell().Border(1).MinHeight(24).Text("");
-                    table.Cell().Border(1).Text("");
-                    table.Cell().Border(1).Text("");
-                    table.Cell().Border(1).Text("");
+                    table.Cell().Border(0.5f).MinHeight(28).Text("");
+                    table.Cell().Border(0.5f).MinHeight(28).Text("");
+                    table.Cell().Border(0.5f).MinHeight(28).Text("");
+                    table.Cell().Border(0.5f).MinHeight(28).Text("");
                 }
             });
         }
 
         private void EstadoResponsableComentarios(
-            IContainer container,
-            EventoMetrologico evento,
-            ResponsableInterno responsable)
+    IContainer container,
+    EventoMetrologico evento,
+    ResponsableInterno responsable)
         {
+            var estado = evento.EstadoEquipoResultado ?? "";
+            var estadoNormalizado = estado.ToLower();
+
+            var colorEstado = estadoNormalizado.Contains("operativo") && !estadoNormalizado.Contains("no operativo")
+                ? "#2E7D32"
+                : "#C62828";
+
             container.Table(table =>
             {
                 table.ColumnsDefinition(columns =>
@@ -179,21 +258,51 @@ namespace CGA.MetrologySystem.Services.Pdf
                     columns.RelativeColumn();
                 });
 
-                table.Cell().Border(1).Padding(8).AlignCenter()
-                    .Text("ESTADO DEL EQUIPO:\n(Operativo; No Operativo; Fuera de Servicio)").Bold();
+                table.Cell()
+                    .Border(0.5f)
+                    .Padding(8)
+                    .AlignCenter()
+                    .AlignMiddle()
+                    .Text("ESTADO DEL EQUIPO:\n(Operativo; No Operativo; Fuera de Servicio)")
+                    .Bold()
+                    .FontSize(8);
 
-                table.Cell().Border(1).Padding(8).AlignCenter().AlignMiddle()
-                    .Text(evento.EstadoEquipoResultado ?? "").Bold();
+                table.Cell()
+                    .Border(0.5f)
+                    .Background("#F9F9F9")
+                    .Padding(8)
+                    .AlignCenter()
+                    .AlignMiddle()
+                    .Text(estado)
+                    .Bold()
+                    .FontSize(11)
+                    .FontColor(colorEstado);
 
-                table.Cell().ColumnSpan(2).Border(1).Padding(6).Column(col =>
-                {
-                    col.Item().Text("Responsable Interno:").Bold();
-                    col.Item().PaddingTop(4).Text($"Nombre: {responsable.NombreCompleto}");
-                    col.Item().PaddingTop(8).Text("Firma: ___________________________");
-                });
+                table.Cell()
+                    .ColumnSpan(2)
+                    .Border(0.5f)
+                    .Padding(8)
+                    .Column(col =>
+                    {
+                        col.Item().Text("Responsable Interno:").Bold().FontSize(8);
+                        col.Item().PaddingTop(4).Text($"Nombre: {responsable.NombreCompleto}").FontSize(8);
+                        col.Item().PaddingTop(10).Text("Firma:").FontSize(8);
+                        col.Item().PaddingTop(4).LineHorizontal(0.8f);
+                    });
 
-                table.Cell().ColumnSpan(2).Border(1).Padding(4)
-                    .Text($"Comentarios Adicionales: {evento.ComentariosAdicionales ?? ""}");
+                table.Cell()
+                    .ColumnSpan(2)
+                    .Border(0.5f)
+                    .Padding(6)
+                    .Column(col =>
+                    {
+                        col.Item()
+                            .Text($"Comentarios Adicionales: {evento.ComentariosAdicionales ?? ""}")
+                            .FontSize(8);
+
+                        col.Item().PaddingTop(6).LineHorizontal(0.5f);
+                        col.Item().PaddingTop(8).LineHorizontal(0.5f);
+                    });
             });
         }
 
@@ -207,11 +316,23 @@ namespace CGA.MetrologySystem.Services.Pdf
                     columns.RelativeColumn();
                 });
 
-                table.Cell().Border(1).Padding(10).AlignCenter()
-                    .Text("Elaborado por:\n\n_______________________");
+                table.Cell()
+                    .Border(0.5f)
+                    .Padding(8)
+                    .Column(col =>
+                    {
+                        col.Item().AlignCenter().Text("Elaborado por:").FontSize(8);
+                        col.Item().PaddingTop(18).LineHorizontal(0.8f);
+                    });
 
-                table.Cell().Border(1).Padding(10).AlignCenter()
-                    .Text("Aprobado por:\n\n_______________________");
+                table.Cell()
+                    .Border(0.5f)
+                    .Padding(8)
+                    .Column(col =>
+                    {
+                        col.Item().AlignCenter().Text("Aprobado por:").FontSize(8);
+                        col.Item().PaddingTop(18).LineHorizontal(0.8f);
+                    });
             });
         }
 
@@ -219,8 +340,8 @@ namespace CGA.MetrologySystem.Services.Pdf
         {
             col.Item().Row(row =>
             {
-                row.RelativeItem(2).Text(etiqueta).Bold();
-                row.RelativeItem(4).Text(valor ?? "***");
+                row.RelativeItem(2).Text(etiqueta).Bold().FontSize(8);
+                row.RelativeItem(4).Text(valor ?? "***").FontSize(8);
             });
         }
 
@@ -233,14 +354,22 @@ namespace CGA.MetrologySystem.Services.Pdf
 
         private static void HeaderCell(TableDescriptor table, string texto)
         {
-            table.Cell().Border(1).Background(Colors.Grey.Lighten2).Padding(4)
-                .AlignCenter().Text(texto).Bold();
+            table.Cell()
+                .Border(0.5f)
+                .Background("#EAEAEA")
+                .PaddingVertical(6)
+                .PaddingHorizontal(4)
+                .AlignCenter()
+                .AlignMiddle()
+                .Text(texto)
+                .Bold()
+                .FontSize(9);
         }
 
         private static void FilaMeta(TableDescriptor table, string etiqueta, string valor)
         {
-            table.Cell().Border(1).Padding(2).Text(etiqueta).Bold();
-            table.Cell().Border(1).Padding(2).Text(valor);
+            table.Cell().Border(0.5f).Padding(3).Text(etiqueta).Bold().FontSize(8);
+            table.Cell().Border(0.5f).Padding(3).Text(valor).FontSize(8);
         }
     }
 }

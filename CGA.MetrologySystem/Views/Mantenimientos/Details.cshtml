@@ -4,15 +4,39 @@
     ViewData["Title"] = "Detalle de mantenimiento";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
-    <div>
-        <h2 class="page-title">Detalle de mantenimiento</h2>
-        <p class="page-subtitle">Información completa del mantenimiento registrado.</p>
-    </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+<div class="section-actions">
+
+    <a asp-action="Edit"
+           asp-route-id="@Model.EventoMantenimientoDatoId"
+           class="btn btn-primary">
+        Editar
+    </a>
+
+    <a asp-action="ExportarPdf"
+           asp-route-id="@Model.EventoMantenimientoDatoId"
+           class="btn btn-danger">
+        Descargar PDF
+    </a>
+
+    @if (!string.IsNullOrWhiteSpace(Model.RutaPdf))
+    {
+        <a href="@Model.RutaPdf"
+               target="_blank"
+               class="btn btn-outline-danger">
+            Ver PDF
+        </a>
+    }
+
+    <a asp-action="Index"
+           class="btn btn-outline-secondary">
+        Volver
+    </a>
+
 </div>
 
 <div class="form-card">
+    <h5 class="mb-3">Datos generales</h5>
+
     <div class="row">
         <div class="col-md-6 mb-3">
             <label class="form-label fw-semibold">Equipo</label>
@@ -41,18 +65,35 @@
     <div class="row">
         <div class="col-md-4 mb-3">
             <label class="form-label fw-semibold">Fecha de mantenimiento</label>
-            <input class="form-control readonly-highlight" value="@Model.EventoMetrologico.FechaEvento.ToString("yyyy-MM-dd")" readonly />
+            <input class="form-control readonly-highlight"
+                   value="@Model.EventoMetrologico.FechaEvento.ToString("yyyy-MM-dd")" readonly />
         </div>
 
         <div class="col-md-4 mb-3">
             <label class="form-label fw-semibold">Próxima fecha</label>
             <input class="form-control readonly-highlight"
-                   value="@(Model.EventoMetrologico.FechaProxima.HasValue? Model.EventoMetrologico.FechaProxima.Value.ToString("yyyy-MM-dd") : "N/D")" readonly />
+                   value="@(Model.EventoMetrologico.FechaProxima.HasValue ? Model.EventoMetrologico.FechaProxima.Value.ToString("yyyy-MM-dd") : "N/D")" readonly />
         </div>
 
         <div class="col-md-4 mb-3">
             <label class="form-label fw-semibold">Estado del equipo</label>
-            <input class="form-control readonly-highlight" value="@Model.EventoMetrologico.EstadoEquipoResultado" readonly />
+            <input class="form-control readonly-highlight"
+                   value="@Model.EventoMetrologico.EstadoEquipoResultado" readonly />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label fw-semibold">Extraordinario</label>
+            <input class="form-control readonly-highlight"
+                   value="@(Model.EventoMetrologico.EsExtraordinario ? "Sí" : "No")" readonly />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label fw-semibold">PDF</label>
+            <input class="form-control readonly-highlight"
+                   value="@(!string.IsNullOrWhiteSpace(Model.RutaPdf) ? "Documento disponible" : "Sin PDF")"
+                   readonly />
         </div>
     </div>
 
@@ -61,58 +102,48 @@
         <textarea class="form-control readonly-highlight" rows="3" readonly>@Model.EventoMetrologico.ComentariosAdicionales</textarea>
     </div>
 
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            <label class="form-label fw-semibold">Extraordinario</label>
-            <input class="form-control readonly-highlight" value="@(Model.EventoMetrologico.EsExtraordinario ? "Sí" : "No")" readonly />
+    @if (Model.EventoMetrologico.EsExtraordinario)
+    {
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Justificación extraordinaria</label>
+            <textarea class="form-control readonly-highlight" rows="2" readonly>@Model.EventoMetrologico.JustificacionExtraordinario</textarea>
         </div>
+    }
 
-        <div class="col-md-8 mb-3">
-            <label class="form-label fw-semibold">Justificación extraordinario</label>
-            <input class="form-control readonly-highlight" value="@Model.EventoMetrologico.JustificacionExtraordinario" readonly />
-        </div>
-    </div>
-
-    <hr />
+    <hr class="my-4" />
 
     <h5 class="mb-3">Actividades realizadas</h5>
 
-    <table class="table table-hover align-middle">
-        <thead>
-            <tr>
-                <th style="width: 80px;">Orden</th>
-                <th>Actividad</th>
-                <th>Observaciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var actividad in Model.EventoMetrologico.ActividadesMantenimiento.OrderBy(a => a.Orden))
-            {
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
                 <tr>
-                    <td>@actividad.Orden</td>
-                    <td>@actividad.DescripcionActividad</td>
-                    <td>@actividad.Observaciones</td>
+                    <th style="width: 80px;">Orden</th>
+                    <th>Actividad</th>
+                    <th>Observaciones</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-
-    <div class="d-flex justify-content-end gap-2 mt-4">
-        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
-
-        <a asp-action="Edit"
-               asp-route-id="@Model.EventoMantenimientoDatoId"
-               class="btn btn-primary">
-            Editar
-        </a>
-
-        @if (!string.IsNullOrWhiteSpace(Model.RutaPdf))
-        {
-            <a href="@Model.RutaPdf"
-                   target="_blank"
-                   class="btn btn-outline-danger">
-                Ver PDF
-            </a>
-        }
+            </thead>
+            <tbody>
+                @if (Model.EventoMetrologico.ActividadesMantenimiento == null || !Model.EventoMetrologico.ActividadesMantenimiento.Any())
+                {
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            No existen actividades registradas para este mantenimiento.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var actividad in Model.EventoMetrologico.ActividadesMantenimiento.OrderBy(a => a.Orden))
+                    {
+                        <tr>
+                            <td>@actividad.Orden</td>
+                            <td>@actividad.DescripcionActividad</td>
+                            <td>@actividad.Observaciones</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
     </div>
 </div>

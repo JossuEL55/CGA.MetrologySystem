@@ -7,18 +7,20 @@ namespace CGA.MetrologySystem.Models
     {
         public int PlantillaEventoId { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar un tipo de equipo.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un tipo de equipo.")]
         [Display(Name = "Tipo de equipo")]
         public int TipoEquipoId { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar un tipo de evento.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un tipo de evento.")]
         [Display(Name = "Tipo de evento")]
         public int TipoEventoMetrologicoId { get; set; }
 
         [Required(ErrorMessage = "El nombre de la plantilla es obligatorio.")]
+        [StringLength(150, ErrorMessage = "El nombre de la plantilla no puede exceder los 150 caracteres.")]
         [Display(Name = "Nombre de la plantilla")]
         public string Nombre { get; set; } = string.Empty;
 
+        [StringLength(500, ErrorMessage = "La descripción no puede exceder los 500 caracteres.")]
         [Display(Name = "Descripción")]
         public string? Descripcion { get; set; }
 
@@ -37,9 +39,11 @@ namespace CGA.MetrologySystem.Models
         public int PlantillaEventoItemId { get; set; }
 
         [Required(ErrorMessage = "La descripción del ítem es obligatoria.")]
+        [StringLength(300, ErrorMessage = "La descripción del ítem no puede exceder los 300 caracteres.")]
         [Display(Name = "Descripción")]
         public string Descripcion { get; set; } = string.Empty;
 
+        [Range(0, int.MaxValue, ErrorMessage = "El orden no puede ser negativo.")]
         public int Orden { get; set; }
 
         public bool Activo { get; set; } = true;

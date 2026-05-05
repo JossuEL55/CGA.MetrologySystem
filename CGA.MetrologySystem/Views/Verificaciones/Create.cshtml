@@ -4,23 +4,30 @@
     ViewData["Title"] = "Crear verificación";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h2 class="page-title">Crear verificación</h2>
-        <p class="page-subtitle">Registra una nueva verificación para un equipo.</p>
+        <p class="page-subtitle">
+            Registra una nueva verificación y sus condiciones asociadas.
+        </p>
     </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver
+    </a>
 </div>
 
 <form asp-action="Create" method="post" class="form-card">
     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
+    <h5 class="mb-3">Datos generales</h5>
+
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label asp-for="EquipoId" class="form-label fw-semibold"></label>
+            <label asp-for="EquipoId" class="form-label fw-semibold">Equipo</label>
             <select asp-for="EquipoId"
                     asp-items="Model.Equipos"
-                    class="form-control"
+                    class="form-select"
                     id="EquipoId">
                 <option value="">Seleccione un equipo...</option>
             </select>
@@ -28,10 +35,10 @@
         </div>
 
         <div class="col-md-6 mb-3">
-            <label asp-for="SubtipoEventoId" class="form-label fw-semibold"></label>
+            <label asp-for="SubtipoEventoId" class="form-label fw-semibold">Subtipo de evento</label>
             <select asp-for="SubtipoEventoId"
                     asp-items="Model.SubtiposEvento"
-                    class="form-control">
+                    class="form-select">
                 <option value="">Seleccione un subtipo...</option>
             </select>
             <span asp-validation-for="SubtipoEventoId" class="text-danger"></span>
@@ -40,31 +47,31 @@
 
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label asp-for="ResponsableInternoId" class="form-label fw-semibold"></label>
+            <label asp-for="ResponsableInternoId" class="form-label fw-semibold">Responsable interno</label>
             <select asp-for="ResponsableInternoId"
                     asp-items="Model.ResponsablesInternos"
-                    class="form-control">
+                    class="form-select">
                 <option value="">Seleccione un responsable...</option>
             </select>
             <span asp-validation-for="ResponsableInternoId" class="text-danger"></span>
         </div>
 
         <div class="col-md-3 mb-3">
-            <label asp-for="FechaEvento" class="form-label fw-semibold"></label>
+            <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha</label>
             <input asp-for="FechaEvento" class="form-control" type="date" />
             <span asp-validation-for="FechaEvento" class="text-danger"></span>
         </div>
 
         <div class="col-md-3 mb-3">
-            <label asp-for="FechaProxima" class="form-label fw-semibold"></label>
+            <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha</label>
             <input asp-for="FechaProxima" class="form-control" type="date" />
             <span asp-validation-for="FechaProxima" class="text-danger"></span>
         </div>
     </div>
 
     <div class="mb-3">
-        <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold"></label>
-        <select asp-for="EstadoEquipoResultado" class="form-control">
+        <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">Estado del equipo</label>
+        <select asp-for="EstadoEquipoResultado" class="form-select">
             <option value="">Seleccione...</option>
             <option value="Operativo">Operativo</option>
             <option value="No Operativo">No Operativo</option>
@@ -74,90 +81,139 @@
     </div>
 
     <div class="mb-3">
-        <label asp-for="ComentariosAdicionales" class="form-label fw-semibold"></label>
-        <textarea asp-for="ComentariosAdicionales" class="form-control" rows="3"></textarea>
+        <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">Comentarios adicionales</label>
+        <textarea asp-for="ComentariosAdicionales"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Registra observaciones generales de la verificación."></textarea>
         <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
     </div>
 
     <div class="form-check mb-3">
         <input asp-for="EsExtraordinario" class="form-check-input" />
-        <label asp-for="EsExtraordinario" class="form-check-label fw-semibold"></label>
+        <label asp-for="EsExtraordinario" class="form-check-label fw-semibold">
+            Evento extraordinario
+        </label>
     </div>
 
     <div class="mb-4">
-        <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold"></label>
-        <textarea asp-for="JustificacionExtraordinario" class="form-control" rows="2"></textarea>
+        <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
+            Justificación extraordinaria
+        </label>
+        <textarea asp-for="JustificacionExtraordinario"
+                  class="form-control"
+                  rows="2"
+                  placeholder="Completa este campo si la verificación fue extraordinaria."></textarea>
         <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
     </div>
 
-    <hr />
+    <hr class="my-4" />
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
-            <h5 class="mb-0">Condiciones a verificar</h5>
-            <small class="text-muted">
-                Al seleccionar un equipo, se cargará automáticamente la plantilla de verificación correspondiente.
-            </small>
+            <h5 class="mb-1">Condiciones a verificar</h5>
+            <p class="page-subtitle">
+                Al seleccionar un equipo, se cargará automáticamente la plantilla correspondiente.
+            </p>
         </div>
-        <button type="button" id="addResultado" class="btn btn-outline-primary btn-sm">
+
+        <button type="button" id="addResultado" class="btn btn-outline-secondary">
             Agregar condición
         </button>
     </div>
 
-    <table class="table table-hover align-middle" id="tablaResultados">
-        <thead>
-            <tr>
-                <th>Condición a verificar</th>
-                <th style="width: 120px;">Cumple</th>
-                <th>Observaciones</th>
-                <th style="width: 80px;"></th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (int i = 0; i < Model.Resultados.Count; i++)
-            {
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-4" id="tablaResultados">
+            <thead>
                 <tr>
-                    <td>
-                        <input type="hidden" asp-for="Resultados[i].Orden" />
-                        <input asp-for="Resultados[i].DescripcionItem"
-                               class="form-control"
-                               placeholder="Condición a verificar" />
-                        <span asp-validation-for="Resultados[i].DescripcionItem" class="text-danger"></span>
-                    </td>
-                    <td class="text-center">
-                        <input type="hidden" name="Resultados[@i].Cumple" value="false" />
-                        <input type="checkbox"
-                               name="Resultados[@i].Cumple"
-                               value="true"
-                               class="form-check-input"
-                        @(Model.Resultados[i].Cumple ? "checked" : "") />
-                    </td>
-                    <td>
-                        <input asp-for="Resultados[i].Observaciones"
-                               class="form-control"
-                               placeholder="Observaciones" />
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-outline-danger btn-sm eliminar">X</button>
-                    </td>
+                    <th>Condición a verificar</th>
+                    <th style="width: 120px;">Cumple</th>
+                    <th>Observaciones</th>
+                    <th class="text-end" style="width: 100px;">Acción</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Resultados.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            <input type="hidden"
+                                   asp-for="Resultados[i].Orden"
+                                   data-field="orden" />
 
-    <div class="d-flex justify-content-end gap-2 mt-4">
+                            <input asp-for="Resultados[i].DescripcionItem"
+                                   data-field="descripcion"
+                                   class="form-control"
+                                   placeholder="Condición a verificar" />
+
+                            <span asp-validation-for="Resultados[i].DescripcionItem" class="text-danger"></span>
+                        </td>
+
+                        <td class="text-center">
+                            <input type="checkbox"
+                                   name="Resultados[@i].Cumple"
+                                   data-field="cumple"
+                                   value="true"
+                                   class="form-check-input"
+                            @(Model.Resultados[i].Cumple ? "checked" : "") />
+
+                            <input type="hidden"
+                                   name="Resultados[@i].Cumple"
+                                   data-field="cumple-hidden"
+                                   value="false" />
+                        </td>
+
+                        <td>
+                            <input asp-for="Resultados[i].Observaciones"
+                                   data-field="observaciones"
+                                   class="form-control"
+                                   placeholder="Observaciones" />
+                        </td>
+
+                        <td class="text-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
         <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="submit" class="btn btn-primary">Guardar verificación</button>
     </div>
 </form>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <partial name="_ValidationScriptsPartial" />
 
     <script>
         let index = @Model.Resultados.Count;
+
+        function reindexarResultados() {
+            document.querySelectorAll("#tablaResultados tbody tr").forEach((row, i) => {
+                const orden = row.querySelector("input[data-field='orden']");
+                const descripcion = row.querySelector("input[data-field='descripcion']");
+                const cumpleHidden = row.querySelector("input[data-field='cumple-hidden']");
+                const cumple = row.querySelector("input[data-field='cumple']");
+                const observaciones = row.querySelector("input[data-field='observaciones']");
+
+                if (orden) {
+                    orden.name = `Resultados[${i}].Orden`;
+                    orden.value = i + 1;
+                }
+
+                if (descripcion) descripcion.name = `Resultados[${i}].DescripcionItem`;
+                if (cumpleHidden) cumpleHidden.name = `Resultados[${i}].Cumple`;
+                if (cumple) cumple.name = `Resultados[${i}].Cumple`;
+                if (observaciones) observaciones.name = `Resultados[${i}].Observaciones`;
+            });
+
+            index = document.querySelectorAll("#tablaResultados tbody tr").length;
+        }
 
         document.addEventListener("DOMContentLoaded", function () {
             const equipoSelect = document.getElementById("EquipoId");
@@ -181,26 +237,42 @@
                     const fila = `
                         <tr>
                             <td>
-                                <input type="hidden" name="Resultados[${index}].Orden" value="${index + 1}" />
+                                <input type="hidden"
+                                       name="Resultados[${index}].Orden"
+                                       data-field="orden"
+                                       value="${index + 1}" />
+
                                 <input name="Resultados[${index}].DescripcionItem"
+                                       data-field="descripcion"
                                        class="form-control"
                                        placeholder="Condición a verificar" />
                             </td>
-                            <td class="text-center">
-                                <input type="hidden" name="Resultados[${index}].Cumple" value="false" />
-                                <input type="checkbox"
+
+                                    <td class="text-center">
+                                 <input type="checkbox"
                                        name="Resultados[${index}].Cumple"
+                                       data-field="cumple"
                                        value="true"
                                        class="form-check-input"
                                        checked />
-                            </td>
+
+                                 <input type="hidden"
+                                       name="Resultados[${index}].Cumple"
+                                       data-field="cumple-hidden"
+                                        value="false" />
+                           </td>
+
                             <td>
                                 <input name="Resultados[${index}].Observaciones"
+                                       data-field="observaciones"
                                        class="form-control"
                                        placeholder="Observaciones" />
                             </td>
-                            <td>
-                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">X</button>
+
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                    Eliminar
+                                </button>
                             </td>
                         </tr>`;
 
@@ -213,6 +285,7 @@
         document.addEventListener("click", function (e) {
             if (e.target.classList.contains("eliminar")) {
                 e.target.closest("tr").remove();
+                reindexarResultados();
             }
         });
     </script>

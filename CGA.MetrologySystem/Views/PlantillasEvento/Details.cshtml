@@ -4,47 +4,90 @@
     ViewData["Title"] = "Detalle plantilla";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h2 class="page-title">Detalle de plantilla</h2>
-        <p class="page-subtitle">Información completa de la plantilla.</p>
+        <p class="page-subtitle">Consulta la configuración completa de esta plantilla.</p>
     </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+
+    <div class="section-actions">
+        <a asp-action="Edit" asp-route-id="@Model.PlantillaEventoId" class="btn btn-primary">Editar</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    </div>
 </div>
 
 <div class="form-card">
+    <h5 class="mb-3">Datos generales</h5>
 
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Tipo equipo</label>
+            <label class="form-label fw-semibold">Tipo de equipo</label>
             <input class="form-control readonly-highlight" value="@Model.TipoEquipo?.Nombre" readonly />
         </div>
 
         <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Tipo evento</label>
+            <label class="form-label fw-semibold">Tipo de evento</label>
             <input class="form-control readonly-highlight" value="@Model.TipoEventoMetrologico?.Nombre" readonly />
         </div>
     </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Nombre</label>
-        <input class="form-control readonly-highlight" value="@Model.Nombre" readonly />
+    <div class="row">
+        <div class="col-md-8 mb-3">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input class="form-control readonly-highlight" value="@Model.Nombre" readonly />
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label class="form-label fw-semibold">Estado</label>
+            <input class="form-control readonly-highlight"
+                   value="@(Model.Activo ? "Activo" : "Inactivo")"
+                   readonly />
+        </div>
     </div>
 
     <div class="mb-3">
         <label class="form-label fw-semibold">Descripción</label>
-        <textarea class="form-control readonly-highlight" readonly>@Model.Descripcion</textarea>
+        <textarea class="form-control readonly-highlight" rows="3" readonly>@Model.Descripcion</textarea>
     </div>
 
-    <hr />
+    <hr class="my-4" />
 
-    <h5>Items</h5>
+    <h5 class="mb-3">Ítems de la plantilla</h5>
 
-    <ul class="list-group">
-        @foreach (var item in Model.Items.OrderBy(i => i.Orden))
-        {
-            <li class="list-group-item">@item.Descripcion</li>
-        }
-    </ul>
-
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th style="width: 90px;">Orden</th>
+                    <th>Descripción</th>
+                    <th style="width: 130px;">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Items == null || !Model.Items.Any())
+                {
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            Esta plantilla no tiene ítems registrados.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model.Items.OrderBy(i => i.Orden))
+                    {
+                        <tr>
+                            <td>@item.Orden</td>
+                            <td>@item.Descripcion</td>
+                            <td>
+                                <span class="badge @(item.Activo ? "bg-success" : "bg-secondary")">
+                                    @(item.Activo ? "Activo" : "Inactivo")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 </div>

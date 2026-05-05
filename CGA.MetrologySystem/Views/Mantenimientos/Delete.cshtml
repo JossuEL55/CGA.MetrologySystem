@@ -4,85 +4,122 @@
     ViewData["Title"] = "Eliminar mantenimiento";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h2 class="page-title">Eliminar mantenimiento</h2>
-        <p class="page-subtitle">Confirma la eliminación del mantenimiento seleccionado.</p>
+        <p class="page-subtitle">
+            Revisa la información antes de eliminar este registro.
+        </p>
     </div>
+
     <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
 </div>
 
 <div class="form-card">
-    <div class="alert alert-danger">
-        ¿Estás seguro de que deseas eliminar este mantenimiento? Esta acción no se puede deshacer.
+    <div class="alert alert-danger mb-4">
+        <strong>Confirmación requerida.</strong>
+        Esta acción eliminará el mantenimiento y sus actividades asociadas. No se puede deshacer.
     </div>
+
+    <h5 class="mb-3">Datos del mantenimiento</h5>
 
     <div class="row">
         <div class="col-md-6 mb-3">
             <label class="form-label fw-semibold">Equipo</label>
             <input class="form-control readonly-highlight"
-                   value="@Model.EventoMetrologico.Equipo.Codigo - @Model.EventoMetrologico.Equipo.Nombre" readonly />
+                   value="@Model.EventoMetrologico.Equipo.Codigo - @Model.EventoMetrologico.Equipo.Nombre"
+                   readonly />
         </div>
 
         <div class="col-md-6 mb-3">
             <label class="form-label fw-semibold">Tipo de mantenimiento</label>
-            <input class="form-control readonly-highlight" value="@Model.TipoMantenimiento.Nombre" readonly />
+            <input class="form-control readonly-highlight"
+                   value="@Model.TipoMantenimiento.Nombre"
+                   readonly />
         </div>
     </div>
 
     <div class="row">
         <div class="col-md-4 mb-3">
             <label class="form-label fw-semibold">Fecha</label>
-            <input class="form-control readonly-highlight" value="@Model.EventoMetrologico.FechaEvento.ToString("yyyy-MM-dd")" readonly />
+            <input class="form-control readonly-highlight"
+                   value="@Model.EventoMetrologico.FechaEvento.ToString("yyyy-MM-dd")"
+                   readonly />
         </div>
 
         <div class="col-md-4 mb-3">
             <label class="form-label fw-semibold">Próxima fecha</label>
             <input class="form-control readonly-highlight"
-                   value="@(Model.EventoMetrologico.FechaProxima.HasValue? Model.EventoMetrologico.FechaProxima.Value.ToString("yyyy-MM-dd") : "N/D")" readonly />
+                   value="@(Model.EventoMetrologico.FechaProxima.HasValue ? Model.EventoMetrologico.FechaProxima.Value.ToString("yyyy-MM-dd") : "N/D")"
+                   readonly />
         </div>
 
         <div class="col-md-4 mb-3">
             <label class="form-label fw-semibold">Estado</label>
-            <input class="form-control readonly-highlight" value="@Model.EventoMetrologico.EstadoEquipoResultado" readonly />
+            <input class="form-control readonly-highlight"
+                   value="@Model.EventoMetrologico.EstadoEquipoResultado"
+                   readonly />
         </div>
     </div>
 
     <div class="mb-3">
         <label class="form-label fw-semibold">Responsable interno</label>
-        <input class="form-control readonly-highlight" value="@Model.EventoMetrologico.ResponsableInterno.NombreCompleto" readonly />
+        <input class="form-control readonly-highlight"
+               value="@Model.EventoMetrologico.ResponsableInterno.NombreCompleto"
+               readonly />
     </div>
 
-    <hr />
+    @if (!string.IsNullOrWhiteSpace(Model.EventoMetrologico.ComentariosAdicionales))
+    {
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Comentarios adicionales</label>
+            <textarea class="form-control readonly-highlight" rows="3" readonly>@Model.EventoMetrologico.ComentariosAdicionales</textarea>
+        </div>
+    }
+
+    <hr class="my-4" />
 
     <h5 class="mb-3">Actividades asociadas</h5>
 
-    <table class="table table-hover align-middle">
-        <thead>
-            <tr>
-                <th style="width: 80px;">Orden</th>
-                <th>Actividad</th>
-                <th>Observaciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var actividad in Model.EventoMetrologico.ActividadesMantenimiento.OrderBy(a => a.Orden))
-            {
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
                 <tr>
-                    <td>@actividad.Orden</td>
-                    <td>@actividad.DescripcionActividad</td>
-                    <td>@actividad.Observaciones</td>
+                    <th style="width: 80px;">Orden</th>
+                    <th>Actividad</th>
+                    <th>Observaciones</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @if (Model.EventoMetrologico.ActividadesMantenimiento == null || !Model.EventoMetrologico.ActividadesMantenimiento.Any())
+                {
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            No existen actividades asociadas a este mantenimiento.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var actividad in Model.EventoMetrologico.ActividadesMantenimiento.OrderBy(a => a.Orden))
+                    {
+                        <tr>
+                            <td>@actividad.Orden</td>
+                            <td>@actividad.DescripcionActividad</td>
+                            <td>@actividad.Observaciones</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 
     <form asp-action="Delete" method="post" class="mt-4">
         <input type="hidden" asp-for="EventoMantenimientoDatoId" />
 
         <div class="d-flex justify-content-end gap-2">
             <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-danger">Eliminar</button>
+            <button type="submit" class="btn btn-danger">Eliminar definitivamente</button>
         </div>
     </form>
 </div>

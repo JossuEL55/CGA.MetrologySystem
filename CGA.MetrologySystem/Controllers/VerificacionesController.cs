@@ -3,12 +3,15 @@ using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using CGA.MetrologySystem.Services.Pdf;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
+    //Manejo de roles
+    [Authorize]
     public class VerificacionesController : Controller
     {
         private readonly AppDbContext _context;
@@ -196,13 +199,23 @@ namespace CGA.MetrologySystem.Controllers
 
                 return RedirectToAction(nameof(Details), new { id = verificacionDato.EventoVerificacionDatoId });
             }
-            catch
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al guardar la verificación.");
+
+                var mensaje = ex.Message;
+
+                if (ex.InnerException != null)
+                    mensaje += " | INNER: " + ex.InnerException.Message;
+
+                if (ex.InnerException?.InnerException != null)
+                    mensaje += " | INNER 2: " + ex.InnerException.InnerException.Message;
+
+                ModelState.AddModelError(string.Empty, mensaje);
+
                 await CargarCombosAsync(model);
                 return View(model);
-            }
+            }   
         }
 
         public async Task<IActionResult> Edit(int? id)
