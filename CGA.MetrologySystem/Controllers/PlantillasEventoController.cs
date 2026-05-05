@@ -1,12 +1,15 @@
 ﻿using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
+    //Authorize solo para el rol "Administrador"
+    [Authorize(Roles = "Administrador")]
     public class PlantillasEventoController : Controller
     {
         private readonly AppDbContext _context;

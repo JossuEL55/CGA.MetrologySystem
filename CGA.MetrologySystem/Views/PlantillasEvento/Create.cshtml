@@ -4,88 +4,160 @@
     ViewData["Title"] = "Crear plantilla";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h2 class="page-title">Crear plantilla</h2>
-        <p class="page-subtitle">Define una nueva plantilla para eventos metrológicos.</p>
+        <p class="page-subtitle">
+            Define los ítems que se usarán como base para verificaciones o mantenimientos.
+        </p>
     </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver
+    </a>
 </div>
 
-<form asp-action="Create" class="form-card">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<form asp-action="Create" method="post" class="form-card">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <h5 class="mb-3">Datos generales</h5>
 
     <div class="row">
         <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Tipo equipo</label>
-            <select asp-for="TipoEquipoId" asp-items="Model.TiposEquipo" class="form-control"></select>
+            <label asp-for="TipoEquipoId" class="form-label fw-semibold">Tipo de equipo</label>
+            <select asp-for="TipoEquipoId" asp-items="Model.TiposEquipo" class="form-select"></select>
+            <span asp-validation-for="TipoEquipoId" class="text-danger"></span>
         </div>
 
         <div class="col-md-6 mb-3">
-            <label class="form-label fw-semibold">Tipo evento</label>
-            <select asp-for="TipoEventoMetrologicoId" asp-items="Model.TiposEventoMetrologico" class="form-control"></select>
+            <label asp-for="TipoEventoMetrologicoId" class="form-label fw-semibold">Tipo de evento</label>
+            <select asp-for="TipoEventoMetrologicoId" asp-items="Model.TiposEventoMetrologico" class="form-select"></select>
+            <span asp-validation-for="TipoEventoMetrologicoId" class="text-danger"></span>
         </div>
     </div>
 
     <div class="mb-3">
-        <label class="form-label fw-semibold">Nombre</label>
-        <input asp-for="Nombre" class="form-control" />
+        <label asp-for="Nombre" class="form-label fw-semibold">Nombre</label>
+        <input asp-for="Nombre" class="form-control" placeholder="Ej. Verificación estándar de Yoke" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label class="form-label fw-semibold">Descripción</label>
-        <textarea asp-for="Descripcion" class="form-control"></textarea>
+        <label asp-for="Descripcion" class="form-label fw-semibold">Descripción</label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3"
+                  placeholder="Describe brevemente el propósito de esta plantilla."></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
     </div>
 
     <div class="form-check mb-4">
         <input asp-for="Activo" class="form-check-input" />
-        <label class="form-check-label fw-semibold">Activo</label>
+        <label asp-for="Activo" class="form-check-label fw-semibold">Plantilla activa</label>
     </div>
 
-    <hr />
-    <h5 class="mb-3">Items de la plantilla</h5>
+    <hr class="my-4" />
 
-    <table class="table" id="tablaItems">
-        <tbody>
-            @for (int i = 0; i < Model.Items.Count; i++)
-            {
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h5 class="mb-1">Ítems de la plantilla</h5>
+            <p class="page-subtitle">
+                Agrega las condiciones o actividades que el técnico deberá revisar.
+            </p>
+        </div>
+
+        <button type="button" id="addItem" class="btn btn-outline-secondary">
+            Agregar ítem
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-4" id="tablaItems">
+            <thead>
                 <tr>
-                    <td>
-                        <input asp-for="Items[i].Descripcion" class="form-control" placeholder="Descripción del ítem" />
-                    </td>
-                    <td style="width:120px;">
-                        <input asp-for="Items[i].Activo" class="form-check-input" />
-                    </td>
-                    <td style="width:80px;">
-                        <button type="button" class="btn btn-outline-danger eliminar">X</button>
-                    </td>
+                    <th>Descripción del ítem</th>
+                    <th style="width: 120px;">Activo</th>
+                    <th class="text-end" style="width: 100px;">Acción</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Items.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            <input asp-for="Items[i].Descripcion"
+                                   data-field="descripcion"
+                                   class="form-control"
+                                   placeholder="Descripción del ítem" />
+                        </td>
 
-    <button type="button" id="addItem" class="btn btn-outline-secondary mb-4">Agregar ítem</button>
+                        <td style="width:120px;" class="align-middle">
+                            <input asp-for="Items[i].Activo"
+                                   data-field="activo"
+                                   class="form-check-input" />
+                        </td>
+
+                        <td style="width:80px;" class="text-end">
+                            <button type="button" class="btn btn-outline-danger eliminar">X</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
     <div class="d-flex justify-content-end gap-2">
         <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="submit" class="btn btn-primary">Guardar plantilla</button>
     </div>
 </form>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
     <script>
         let index = @Model.Items.Count;
 
+        function reindexarItems() {
+            document.querySelectorAll("#tablaItems tbody tr").forEach((row, i) => {
+                const descripcion = row.querySelector("input[data-field='descripcion']");
+                const activo = row.querySelector("input[data-field='activo']");
+                const activoHidden = row.querySelector("input[data-field='activo-hidden']");
+
+                if (descripcion) descripcion.name = `Items[${i}].Descripcion`;
+                if (activo) activo.name = `Items[${i}].Activo`;
+                if (activoHidden) activoHidden.name = `Items[${i}].Activo`;
+            });
+
+            index = document.querySelectorAll("#tablaItems tbody tr").length;
+        }
+
         document.getElementById("addItem").addEventListener("click", function () {
             let fila = `
-            <tr>
-                <td><input name="Items[${index}].Descripcion" class="form-control"/></td>
-                <td class="align-middle">
-                 <input type="checkbox" name="Items[${index}].Activo" value="true" checked class="form-check-input" />
-                  <input type="hidden" name="Items[${index}].Activo" value="false" />
-                </td>   
-                <td><button type="button" class="btn btn-outline-danger eliminar">X</button></td>
-            </tr>`;
+                <tr>
+                    <td>
+                        <input name="Items[${index}].Descripcion"
+                               data-field="descripcion"
+                               class="form-control"
+                               placeholder="Ej. Correcto funcionamiento del equipo" />
+                    </td>
+                    <td class="align-middle">
+                        <input type="checkbox"
+                               name="Items[${index}].Activo"
+                               data-field="activo"
+                               value="true"
+                               checked
+                               class="form-check-input" />
+                        <input type="hidden"
+                               name="Items[${index}].Activo"
+                               data-field="activo-hidden"
+                               value="false" />
+                    </td>
+                    <td class="text-end">
+                        <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>`;
+
             document.querySelector("#tablaItems tbody").insertAdjacentHTML("beforeend", fila);
             index++;
         });
@@ -93,6 +165,7 @@
         document.addEventListener("click", function (e) {
             if (e.target.classList.contains("eliminar")) {
                 e.target.closest("tr").remove();
+                reindexarItems();
             }
         });
     </script>

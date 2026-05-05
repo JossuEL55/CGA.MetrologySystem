@@ -26,14 +26,22 @@
             <nav class="sidebar-nav">
                 <a class="sidebar-link" asp-controller="Home" asp-action="Index">Inicio</a>
                 <a class="sidebar-link" asp-controller="Perfil" asp-action="Index">Mi perfil</a>
+
+                <div class="sidebar-section-title">Metrología</div>
                 <a class="sidebar-link" asp-controller="Equipos" asp-action="Index">Equipos</a>
                 <a class="sidebar-link" asp-controller="Laboratorios" asp-action="Index">Laboratorios</a>
                 <a class="sidebar-link" asp-controller="Calibraciones" asp-action="Index">Calibraciones</a>
+                <a class="sidebar-link" asp-controller="Verificaciones" asp-action="Index">Verificaciones</a>
+                <a class="sidebar-link" asp-controller="Mantenimientos" asp-action="Index">Mantenimientos</a>
 
                 @if (User.IsInRole("Administrador"))
                 {
+                    <div class="sidebar-section-title">Administración</div>
                     <a class="sidebar-link" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
                     <a class="sidebar-link" asp-controller="Auditoria" asp-action="Index">Auditoría</a>
+
+                    <div class="sidebar-section-title">Configuración</div>
+                    <a class="sidebar-link" asp-controller="PlantillasEvento" asp-action="Index">Plantillas de evento</a>
                 }
             </nav>
         </aside>

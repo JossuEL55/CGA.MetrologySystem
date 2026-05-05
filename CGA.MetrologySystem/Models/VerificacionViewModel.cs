@@ -8,15 +8,15 @@ namespace CGA.MetrologySystem.Models
         public int EventoMetrologicoId { get; set; }
         public int EventoVerificacionDatoId { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar un equipo.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un equipo.")]
         [Display(Name = "Equipo")]
         public int EquipoId { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar un subtipo de evento.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un subtipo de evento.")]
         [Display(Name = "Subtipo de evento")]
         public int SubtipoEventoId { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar un responsable interno.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un responsable interno.")]
         [Display(Name = "Responsable interno")]
         public int ResponsableInternoId { get; set; }
 
@@ -29,15 +29,18 @@ namespace CGA.MetrologySystem.Models
         [Display(Name = "Próxima fecha de verificación")]
         public DateTime? FechaProxima { get; set; }
 
+        [StringLength(50, ErrorMessage = "El estado del equipo no puede exceder los 50 caracteres.")]
         [Display(Name = "Estado del equipo")]
         public string? EstadoEquipoResultado { get; set; }
 
+        [StringLength(500, ErrorMessage = "Los comentarios adicionales no pueden exceder los 500 caracteres.")]
         [Display(Name = "Comentarios adicionales")]
         public string? ComentariosAdicionales { get; set; }
 
         [Display(Name = "Es extraordinario")]
         public bool EsExtraordinario { get; set; }
 
+        [StringLength(500, ErrorMessage = "La justificación no puede exceder los 500 caracteres.")]
         [Display(Name = "Justificación extraordinaria")]
         public string? JustificacionExtraordinario { get; set; }
 
@@ -53,15 +56,18 @@ namespace CGA.MetrologySystem.Models
         public int EventoVerificacionResultadoId { get; set; }
 
         [Required(ErrorMessage = "La condición a verificar es obligatoria.")]
+        [StringLength(300, ErrorMessage = "La condición a verificar no puede exceder los 300 caracteres.")]
         [Display(Name = "Condición a verificar")]
         public string DescripcionItem { get; set; } = string.Empty;
 
         [Display(Name = "Cumple")]
         public bool Cumple { get; set; } = true;
 
+        [StringLength(500, ErrorMessage = "Las observaciones no pueden exceder los 500 caracteres.")]
         [Display(Name = "Observaciones")]
         public string? Observaciones { get; set; }
 
+        [Range(0, int.MaxValue, ErrorMessage = "El orden no puede ser negativo.")]
         public int Orden { get; set; }
     }
 }

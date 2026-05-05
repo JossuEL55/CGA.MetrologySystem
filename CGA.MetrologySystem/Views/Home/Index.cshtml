@@ -51,6 +51,26 @@
         </div>
     </div>
 
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card p-4">
+            <h5 class="card-title">Verificaciones</h5>
+            <p class="card-text">Registra y consulta verificaciones internas de los equipos.</p>
+            <a asp-controller="Verificaciones" asp-action="Index" class="btn btn-primary">
+                Ir a Verificaciones
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card p-4">
+            <h5 class="card-title">Mantenimientos</h5>
+            <p class="card-text">Administra mantenimientos preventivos o correctivos de equipos.</p>
+            <a asp-controller="Mantenimientos" asp-action="Index" class="btn btn-primary">
+                Ir a Mantenimientos
+            </a>
+        </div>
+    </div>
+
     @if (User.IsInRole("Administrador"))
     {
         <div class="col-md-4 mb-4">

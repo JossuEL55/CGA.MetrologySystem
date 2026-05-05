@@ -4,41 +4,100 @@
     ViewData["Title"] = "Eliminar plantilla";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h2 class="page-title">Eliminar plantilla</h2>
         <p class="page-subtitle">
-            Confirma la eliminación de la plantilla seleccionada.
+            Revisa la información antes de eliminar esta plantilla del sistema.
         </p>
     </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver
+    </a>
 </div>
 
 <div class="form-card">
-    <div class="alert alert-danger">
-        ¿Estás seguro de que deseas eliminar esta plantilla? Esta acción no se puede deshacer.
+    <div class="alert alert-danger mb-4">
+        <strong>Confirmación requerida.</strong>
+        Esta acción eliminará la plantilla y sus ítems asociados. No se puede deshacer.
     </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Nombre</label>
-        <input class="form-control readonly-highlight" value="@Model.Nombre" readonly />
+    <h5 class="mb-3">Datos de la plantilla</h5>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input class="form-control readonly-highlight" value="@Model.Nombre" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Estado</label>
+            <input class="form-control readonly-highlight"
+                   value="@(Model.Activo ? "Activo" : "Inactivo")"
+                   readonly />
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Tipo equipo</label>
-        <input class="form-control readonly-highlight" value="@Model.TipoEquipo?.Nombre" readonly />
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Tipo de equipo</label>
+            <input class="form-control readonly-highlight" value="@Model.TipoEquipo?.Nombre" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Tipo de evento</label>
+            <input class="form-control readonly-highlight" value="@Model.TipoEventoMetrologico?.Nombre" readonly />
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Tipo evento</label>
-        <input class="form-control readonly-highlight" value="@Model.TipoEventoMetrologico?.Nombre" readonly />
-    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.Descripcion))
+    {
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Descripción</label>
+            <textarea class="form-control readonly-highlight" rows="3" readonly>@Model.Descripcion</textarea>
+        </div>
+    }
+
+    @if (Model.Items != null && Model.Items.Any())
+    {
+        <hr class="my-4" />
+
+        <h5 class="mb-3">Ítems asociados</h5>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Orden</th>
+                        <th>Descripción</th>
+                        <th style="width: 120px;">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items.OrderBy(i => i.Orden))
+                    {
+                        <tr>
+                            <td>@item.Orden</td>
+                            <td>@item.Descripcion</td>
+                            <td>
+                                <span class="badge @(item.Activo ? "bg-success" : "bg-secondary")">
+                                    @(item.Activo ? "Activo" : "Inactivo")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
 
     <form asp-action="Delete" method="post" class="mt-4">
         <input type="hidden" asp-for="PlantillaEventoId" />
+
         <div class="d-flex justify-content-end gap-2">
             <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-danger">Eliminar</button>
+            <button type="submit" class="btn btn-danger">Eliminar definitivamente</button>
         </div>
     </form>
 </div>

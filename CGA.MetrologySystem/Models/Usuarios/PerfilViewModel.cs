@@ -2,13 +2,15 @@
 
 namespace CGA.MetrologySystem.Models.Perfil
 {
-    //Modelo para la vista de perfil de usuario, con validaciones de datos
     public class PerfilViewModel
     {
         [Display(Name = "Correo")]
         public string Correo { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "El nombre completo es obligatorio.")]
+        [StringLength(100, ErrorMessage = "El nombre no puede exceder los 100 caracteres.")]
+        [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$",
+            ErrorMessage = "El nombre solo puede contener letras y espacios.")]
         [Display(Name = "Nombre completo")]
         public string NombreCompleto { get; set; } = string.Empty;
 

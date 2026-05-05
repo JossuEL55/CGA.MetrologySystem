@@ -2,10 +2,9 @@
 
 namespace CGA.MetrologySystem.Models.Usuarios
 {
-    //Modelo para el reseteo de contraseña de usuarios, con validaciones de datos
     public class UsuarioResetPasswordViewModel
     {
-        [Required]
+        [Required(ErrorMessage = "El identificador del usuario es obligatorio.")]
         public string Id { get; set; } = string.Empty;
 
         [Display(Name = "Correo")]
@@ -14,6 +13,8 @@ namespace CGA.MetrologySystem.Models.Usuarios
         [Required(ErrorMessage = "La nueva contraseña es obligatoria.")]
         [DataType(DataType.Password)]
         [MinLength(8, ErrorMessage = "La contraseña debe tener al menos 8 caracteres.")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$",
+            ErrorMessage = "La contraseña debe contener al menos una mayúscula, una minúscula y un número.")]
         [Display(Name = "Nueva contraseña")]
         public string NuevaContrasena { get; set; } = string.Empty;
 

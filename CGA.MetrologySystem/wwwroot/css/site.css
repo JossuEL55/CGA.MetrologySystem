@@ -482,3 +482,14 @@ a {
     background-color: #F9FAFB;
     color: #374151;
 }
+
+.sidebar-section-title {
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    padding: 0 1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.55);
+}
