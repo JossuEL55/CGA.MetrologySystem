@@ -20,7 +20,7 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
                 {
                     await roleManager.CreateAsync(new IdentityRole(role));
                 }
-            }
+            }  
 
             await CrearOActualizarUsuarioAsync(
                 userManager,
