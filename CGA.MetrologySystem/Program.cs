@@ -32,6 +32,7 @@ builder.Services.AddScoped<IGoogleDriveService, GoogleDriveService>();
 builder.Services.AddScoped<IGoogleDriveCredentialProvider, GoogleDriveCredentialProvider>();
 builder.Services.AddScoped<MantenimientoPdfService>();
 builder.Services.AddScoped<VerificacionPdfService>();
+builder.Services.AddScoped<IMetrologyRulesService, MetrologyRulesService>();
 
 builder.Services.AddDefaultIdentity<UsuarioSistema>(options =>
 {
