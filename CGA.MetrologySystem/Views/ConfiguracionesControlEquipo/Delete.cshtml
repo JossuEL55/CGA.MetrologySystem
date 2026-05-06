@@ -12,49 +12,52 @@
         </p>
     </div>
 
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver
+    </a>
 </div>
 
 <div class="form-card">
-    <div class="alert alert-warning">
+
+    <div class="alert alert-warning mb-4">
         Esta acción eliminará la configuración utilizada por el motor de reglas.
         Los eventos históricos registrados no serán eliminados.
     </div>
 
     <div class="row">
-        <div class="col-md-6 mb-3">
+        <div class="col-md-6 mb-4">
             <label class="form-label fw-semibold">Equipo</label>
             <input class="form-control readonly-highlight"
-                   value="@Model.Equipo.Codigo - @Model.Equipo.Nombre"
+                   value="@Model.Equipo?.Codigo - @Model.Equipo?.Nombre"
                    readonly />
         </div>
 
-        <div class="col-md-6 mb-3">
+        <div class="col-md-6 mb-4">
             <label class="form-label fw-semibold">Tipo de evento</label>
             <input class="form-control readonly-highlight"
-                   value="@Model.TipoEventoMetrologico.Nombre"
+                   value="@Model.TipoEventoMetrologico?.Nombre"
                    readonly />
         </div>
     </div>
 
     <div class="row">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-4 mb-4">
             <label class="form-label fw-semibold">Periodicidad</label>
             <input class="form-control readonly-highlight"
                    value="@(Model.PeriodicidadValor.HasValue && !string.IsNullOrWhiteSpace(Model.PeriodicidadUnidad)
-                                                       ? $"{Model.PeriodicidadValor} {Model.PeriodicidadUnidad}"
-                                                       : "Sin periodicidad")"
+                                                             ? $"{Model.PeriodicidadValor} {Model.PeriodicidadUnidad}"
+                                                             : "Sin periodicidad")"
                    readonly />
         </div>
 
-        <div class="col-md-4 mb-3">
+        <div class="col-md-4 mb-4">
             <label class="form-label fw-semibold">Requiere control</label>
             <input class="form-control readonly-highlight"
                    value="@(Model.RequiereControl ? "Sí" : "No")"
                    readonly />
         </div>
 
-        <div class="col-md-4 mb-3">
+        <div class="col-md-4 mb-4">
             <label class="form-label fw-semibold">Permite por ingreso</label>
             <input class="form-control readonly-highlight"
                    value="@(Model.PermitePorIngreso ? "Sí" : "No")"
@@ -62,20 +65,35 @@
         </div>
     </div>
 
-    <div class="mb-3">
-        <label class="form-label fw-semibold">Activo</label>
-        <input class="form-control readonly-highlight"
-               value="@(Model.Activo ? "Activo" : "Inactivo")"
-               readonly />
+    <div class="mb-4">
+        <label class="form-label fw-semibold">Estado</label>
+
+        <div>
+            @if (Model.Activo)
+            {
+                <span class="badge bg-success">Activo</span>
+            }
+            else
+            {
+                <span class="badge bg-danger">Inactivo</span>
+            }
+        </div>
     </div>
 
-    <form asp-action="Delete" method="post" class="d-flex justify-content-end gap-2 mt-4">
+    <form asp-action="Delete"
+          method="post"
+          class="d-flex justify-content-end gap-2 mt-4">
+
         <input type="hidden" asp-for="ConfiguracionControlEquipoId" />
 
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
 
         <button type="submit" class="btn btn-danger">
-            Eliminar
+            Eliminar configuración
         </button>
+
     </form>
+
 </div>

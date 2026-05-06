@@ -8,106 +8,150 @@
     <div>
         <h2 class="page-title">Crear configuración de control</h2>
         <p class="page-subtitle">
-            Registra la periodicidad que debe cumplir un equipo para un tipo de evento metrológico.
+            Registra la periodicidad y reglas base de control metrológico para un equipo y tipo de evento.
         </p>
     </div>
 
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver
+    </a>
 </div>
 
 <form asp-action="Create" method="post" class="form-card">
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
 
     <div class="row">
-        <div class="col-md-6 mb-3">
+
+        <div class="col-md-6 mb-4">
             <label asp-for="EquipoId" class="form-label fw-semibold"></label>
+
             <select asp-for="EquipoId"
                     asp-items="Model.Equipos"
-                    class="form-control">
+                    class="form-select">
                 <option value="">Seleccione un equipo...</option>
             </select>
+
             <span asp-validation-for="EquipoId" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6 mb-3">
+        <div class="col-md-6 mb-4">
             <label asp-for="TipoEventoMetrologicoId" class="form-label fw-semibold"></label>
+
             <select asp-for="TipoEventoMetrologicoId"
                     asp-items="Model.TiposEventoMetrologico"
-                    class="form-control">
+                    class="form-select">
                 <option value="">Seleccione un tipo de evento...</option>
             </select>
+
             <span asp-validation-for="TipoEventoMetrologicoId" class="text-danger"></span>
         </div>
+
     </div>
 
     <div class="row">
-        <div class="col-md-4 mb-3">
+
+        <div class="col-md-4 mb-4">
             <label asp-for="PeriodicidadValor" class="form-label fw-semibold"></label>
+
             <input asp-for="PeriodicidadValor"
-                   class="form-control"
                    type="number"
                    min="1"
+                   class="form-control"
                    placeholder="Ej: 4" />
+
             <span asp-validation-for="PeriodicidadValor" class="text-danger"></span>
         </div>
 
-        <div class="col-md-4 mb-3">
+        <div class="col-md-4 mb-4">
             <label asp-for="PeriodicidadUnidad" class="form-label fw-semibold"></label>
+
             <select asp-for="PeriodicidadUnidad"
                     asp-items="Model.UnidadesPeriodicidad"
-                    class="form-control">
+                    class="form-select">
                 <option value="">Seleccione una unidad...</option>
             </select>
+
             <span asp-validation-for="PeriodicidadUnidad" class="text-danger"></span>
         </div>
 
-        <div class="col-md-4 mb-3">
-            <label class="form-label fw-semibold">Estado de configuración</label>
+        <div class="col-md-4 mb-4">
+            <label class="form-label fw-semibold">
+                Estado de configuración
+            </label>
 
-            <div class="form-check mt-2">
-                <input asp-for="Activo" class="form-check-input" />
-                <label asp-for="Activo" class="form-check-label"></label>
+            <div class="content-card h-100 d-flex align-items-center">
+                <div class="form-check">
+                    <input asp-for="Activo" class="form-check-input" />
+                    <label asp-for="Activo" class="form-check-label fw-semibold"></label>
+                </div>
             </div>
         </div>
+
     </div>
 
-    <hr />
+    <hr class="my-4" />
 
     <div class="row">
-        <div class="col-md-6 mb-3">
-            <div class="p-3 border rounded">
-                <div class="form-check">
+
+        <div class="col-md-6 mb-4">
+            <div class="content-card h-100">
+
+                <div class="form-check mb-2">
                     <input asp-for="RequiereControl" class="form-check-input" />
-                    <label asp-for="RequiereControl" class="form-check-label fw-semibold"></label>
+
+                    <label asp-for="RequiereControl"
+                           class="form-check-label fw-semibold">
+                    </label>
                 </div>
-                <small class="text-muted">
-                    Indica si este equipo debe ser controlado para el tipo de evento seleccionado.
-                </small>
+
+                <p class="text-muted small mb-0">
+                    Indica si este equipo debe pasar obligatoriamente por control
+                    metrológico para el tipo de evento seleccionado.
+                </p>
+
             </div>
         </div>
 
-        <div class="col-md-6 mb-3">
-            <div class="p-3 border rounded">
-                <div class="form-check">
+        <div class="col-md-6 mb-4">
+            <div class="content-card h-100">
+
+                <div class="form-check mb-2">
                     <input asp-for="PermitePorIngreso" class="form-check-input" />
-                    <label asp-for="PermitePorIngreso" class="form-check-label fw-semibold"></label>
+
+                    <label asp-for="PermitePorIngreso"
+                           class="form-check-label fw-semibold">
+                    </label>
                 </div>
-                <small class="text-muted">
-                    Útil cuando el evento puede registrarse por ingreso del equipo, además del control periódico.
-                </small>
+
+                <p class="text-muted small mb-0">
+                    Permite registrar eventos por ingreso del equipo además del
+                    control periódico definido.
+                </p>
+
             </div>
         </div>
+
     </div>
 
-    <div class="alert alert-info mt-3">
-        Esta configuración será usada por el motor de reglas para calcular próximas fechas,
-        detectar eventos extraordinarios y alimentar la semaforización metrológica.
+    <div class="alert alert-info mt-2">
+        Esta configuración será utilizada por el motor de reglas del sistema para
+        calcular próximas fechas, detectar eventos extraordinarios y alimentar la
+        semaforización metrológica.
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-4">
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Guardar</button>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+
+        <button type="submit" class="btn btn-primary">
+            Guardar configuración
+        </button>
+
     </div>
+
 </form>
 
 @section Scripts {
