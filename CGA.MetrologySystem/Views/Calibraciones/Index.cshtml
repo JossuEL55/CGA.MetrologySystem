@@ -81,7 +81,9 @@
                                         : item.NumeroCertificado)
                                 </div>
                                 <div class="text-muted small">
-                                    Calibración: @item.FechaCalibracion.ToShortDateString()
+                                    Calibración: @(item.FechaCalibracion.HasValue
+                                        ? item.FechaCalibracion.Value.ToString("yyyy-MM-dd")
+                                    : "No definida")
                                 </div>
                             </td>
 
