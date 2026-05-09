@@ -2,32 +2,30 @@
 using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authorization;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    // Controlador para gestionar los eventos de calibración de los equipos, permitiendo crear, editar, eliminar y visualizar
-    // detalles de cada calibración, así como subir y almacenar los certificados de calibración en Google Drive, asegurando
-    // una gestión eficiente y organizada de la información relacionada con las calibraciones realizadas en el sistema.
-
-    //Authorize para manejo de roles y permisos, solo usuarios autorizados pueden acceder
-    //a las funcionalidades de este controlador
     [Authorize]
     public class CalibracionesController : Controller
     {
         private readonly AppDbContext _context;
         private readonly IGoogleDriveService _googleDriveService;
+        private readonly IMetrologyRulesService _metrologyRulesService;
 
-        public CalibracionesController(AppDbContext context, IGoogleDriveService googleDriveService)
+        public CalibracionesController(
+            AppDbContext context,
+            IGoogleDriveService googleDriveService,
+            IMetrologyRulesService metrologyRulesService)
         {
             _context = context;
             _googleDriveService = googleDriveService;
+            _metrologyRulesService = metrologyRulesService;
         }
 
-        // INDEX
         public async Task<IActionResult> Index()
         {
             var calibraciones = await _context.EventosCalibracionDato
@@ -42,7 +40,6 @@ namespace CGA.MetrologySystem.Controllers
             return View(calibraciones);
         }
 
-        // DETAILS
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
@@ -62,7 +59,6 @@ namespace CGA.MetrologySystem.Controllers
             return View(calibracion);
         }
 
-        // CREATE GET
         public async Task<IActionResult> Create()
         {
             var model = new CalibracionViewModel
@@ -75,15 +71,16 @@ namespace CGA.MetrologySystem.Controllers
             return View(model);
         }
 
-        // CREATE POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CalibracionViewModel model)
         {
-            if (model.ArchivoCertificado == null || model.ArchivoCertificado.Length == 0)
-            {
-                ModelState.AddModelError("ArchivoCertificado", "Debe subir el certificado en PDF.");
-            }
+            var tipoCalibracion = await ObtenerTipoEventoCalibracionAsync();
+
+            await ValidarFormularioCalibracionAsync(
+                model,
+                tipoCalibracion,
+                certificadoObligatorio: true);
 
             if (!ModelState.IsValid)
             {
@@ -91,63 +88,31 @@ namespace CGA.MetrologySystem.Controllers
                 return View(model);
             }
 
-            var tipoCalibracion = await _context.TiposEventoMetrologico
-                .FirstOrDefaultAsync(t => t.Nombre == "Calibración");
-
-            if (tipoCalibracion == null)
-            {
-                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'Calibración'.");
-                await CargarCombosAsync(model);
-                return View(model);
-            }
-
-            var equipo = await _context.Equipos
-                .FirstOrDefaultAsync(e => e.EquipoId == model.EquipoId);
-
-            if (equipo == null)
-            {
-                ModelState.AddModelError("EquipoId", "El equipo seleccionado no existe.");
-                await CargarCombosAsync(model);
-                return View(model);
-            }
-
-            string? googleDriveFileId = null;
-            string? nombreArchivoCertificado = null;
-            string? rutaCertificado = null;
-
-            if (model.ArchivoCertificado != null && model.ArchivoCertificado.Length > 0)
-            {
-                var subFolderId = await _googleDriveService.EnsureSubFolderAsync(equipo.Codigo, "Calibraciones");
-
-                // VALIDACIÓN TEMPORAL
-                if (string.IsNullOrWhiteSpace(subFolderId))
-                {
-                    throw new Exception("No se pudo obtener la subcarpeta 'Calibraciones' en Google Drive.");
-                }
-
-                using var stream = model.ArchivoCertificado.OpenReadStream();
-                var uploadResult = await _googleDriveService.UploadFileAsync(
-                    stream,
-                    model.ArchivoCertificado.FileName,
-                    model.ArchivoCertificado.ContentType,
-                    subFolderId);
-
-                googleDriveFileId = uploadResult.FileId;
-                nombreArchivoCertificado = uploadResult.FileName;
-                rutaCertificado = uploadResult.WebViewLink;
-            }
-
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
+                var equipo = await _context.Equipos
+                    .FirstOrDefaultAsync(e => e.EquipoId == model.EquipoId);
+
+                if (equipo == null)
+                {
+                    ModelState.AddModelError("EquipoId", "El equipo seleccionado no existe.");
+                    await CargarCombosAsync(model);
+                    return View(model);
+                }
+
+                var uploadResult = await SubirCertificadoAsync(
+                    equipo.Codigo,
+                    model.ArchivoCertificado!);
+
                 var eventoMetrologico = new EventoMetrologico
                 {
                     EquipoId = model.EquipoId,
-                    TipoEventoMetrologicoId = tipoCalibracion.TipoEventoMetrologicoId,
+                    TipoEventoMetrologicoId = tipoCalibracion!.TipoEventoMetrologicoId,
                     SubtipoEventoId = model.SubtipoEventoId,
                     ResponsableInternoId = model.ResponsableInternoId,
-                    FechaEvento = model.FechaEvento,
+                    FechaEvento = model.FechaEvento.Date,
                     FechaProxima = model.FechaProxima,
                     EstadoEquipoResultado = model.EstadoEquipoResultado,
                     ComentariosAdicionales = model.ComentariosAdicionales,
@@ -164,11 +129,11 @@ namespace CGA.MetrologySystem.Controllers
                 {
                     EventoMetrologicoId = eventoMetrologico.EventoMetrologicoId,
                     NumeroCertificado = model.NumeroCertificado,
-                    FechaCalibracion = model.FechaCalibracion,
+                    FechaCalibracion = model.FechaCalibracion!.Value.Date,
                     LaboratorioId = model.LaboratorioId,
-                    RutaCertificado = rutaCertificado,
-                    GoogleDriveFileId = googleDriveFileId,
-                    NombreArchivoCertificado = nombreArchivoCertificado,
+                    RutaCertificado = uploadResult.WebViewLink,
+                    GoogleDriveFileId = uploadResult.FileId,
+                    NombreArchivoCertificado = uploadResult.FileName,
                     Observaciones = model.Observaciones
                 };
 
@@ -177,18 +142,18 @@ namespace CGA.MetrologySystem.Controllers
 
                 await transaction.CommitAsync();
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Details), new { id = calibracion.EventoCalibracionDatoId });
             }
             catch
             {
                 await transaction.RollbackAsync();
+
                 ModelState.AddModelError(string.Empty, "Ocurrió un error al guardar la calibración.");
                 await CargarCombosAsync(model);
                 return View(model);
             }
         }
 
-        // EDIT GET
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -199,17 +164,19 @@ namespace CGA.MetrologySystem.Controllers
 
             if (calibracion == null) return NotFound();
 
+            var evento = calibracion.EventoMetrologico;
+
             var model = new CalibracionViewModel
             {
-                EquipoId = calibracion.EventoMetrologico.EquipoId,
-                SubtipoEventoId = calibracion.EventoMetrologico.SubtipoEventoId,
-                ResponsableInternoId = calibracion.EventoMetrologico.ResponsableInternoId,
-                FechaEvento = calibracion.EventoMetrologico.FechaEvento,
-                FechaProxima = calibracion.EventoMetrologico.FechaProxima,
-                EstadoEquipoResultado = calibracion.EventoMetrologico.EstadoEquipoResultado,
-                ComentariosAdicionales = calibracion.EventoMetrologico.ComentariosAdicionales,
-                EsExtraordinario = calibracion.EventoMetrologico.EsExtraordinario,
-                JustificacionExtraordinario = calibracion.EventoMetrologico.JustificacionExtraordinario,
+                EquipoId = evento.EquipoId,
+                SubtipoEventoId = evento.SubtipoEventoId,
+                ResponsableInternoId = evento.ResponsableInternoId,
+                FechaEvento = evento.FechaEvento,
+                FechaProxima = evento.FechaProxima,
+                EstadoEquipoResultado = evento.EstadoEquipoResultado,
+                ComentariosAdicionales = evento.ComentariosAdicionales,
+                EsExtraordinario = evento.EsExtraordinario,
+                JustificacionExtraordinario = evento.JustificacionExtraordinario,
                 NumeroCertificado = calibracion.NumeroCertificado,
                 FechaCalibracion = calibracion.FechaCalibracion,
                 LaboratorioId = calibracion.LaboratorioId,
@@ -217,22 +184,23 @@ namespace CGA.MetrologySystem.Controllers
             };
 
             ViewBag.EventoCalibracionDatoId = calibracion.EventoCalibracionDatoId;
+            ViewBag.NombreArchivoCertificado = calibracion.NombreArchivoCertificado;
+            ViewBag.RutaCertificado = calibracion.RutaCertificado;
 
             await CargarCombosAsync(model);
             return View(model);
         }
 
-        // EDIT POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, CalibracionViewModel model)
         {
-            var calibracion = await _context.EventosCalibracionDato
-                .Include(c => c.EventoMetrologico)
-                    .ThenInclude(e => e.Equipo)
-                .FirstOrDefaultAsync(c => c.EventoCalibracionDatoId == id);
+            var tipoCalibracion = await ObtenerTipoEventoCalibracionAsync();
 
-            if (calibracion == null) return NotFound();
+            await ValidarFormularioCalibracionAsync(
+                model,
+                tipoCalibracion,
+                certificadoObligatorio: false);
 
             if (!ModelState.IsValid)
             {
@@ -241,53 +209,70 @@ namespace CGA.MetrologySystem.Controllers
                 return View(model);
             }
 
-            if (model.ArchivoCertificado != null && model.ArchivoCertificado.Length > 0)
-            {
-                var equipo = calibracion.EventoMetrologico.Equipo;
-                var subFolderId = await _googleDriveService.EnsureSubFolderAsync(equipo.Codigo, "Calibraciones");
-
-                // VALIDACIÓN TEMPORAL
-                if (string.IsNullOrWhiteSpace(subFolderId))
-                {
-                    throw new Exception("No se pudo obtener la subcarpeta 'Calibraciones' en Google Drive.");
-                }
-
-                using var stream = model.ArchivoCertificado.OpenReadStream();
-                var uploadResult = await _googleDriveService.UploadFileAsync(
-                    stream,
-                    model.ArchivoCertificado.FileName,
-                    model.ArchivoCertificado.ContentType,
-                    subFolderId);
-
-                calibracion.GoogleDriveFileId = uploadResult.FileId;
-                calibracion.NombreArchivoCertificado = uploadResult.FileName;
-                calibracion.RutaCertificado = uploadResult.WebViewLink;
-            }
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                calibracion.EventoMetrologico.EquipoId = model.EquipoId;
-                calibracion.EventoMetrologico.SubtipoEventoId = model.SubtipoEventoId;
-                calibracion.EventoMetrologico.ResponsableInternoId = model.ResponsableInternoId;
-                calibracion.EventoMetrologico.FechaEvento = model.FechaEvento;
-                calibracion.EventoMetrologico.FechaProxima = model.FechaProxima;
-                calibracion.EventoMetrologico.EstadoEquipoResultado = model.EstadoEquipoResultado;
-                calibracion.EventoMetrologico.ComentariosAdicionales = model.ComentariosAdicionales;
-                calibracion.EventoMetrologico.EsExtraordinario = model.EsExtraordinario;
-                calibracion.EventoMetrologico.JustificacionExtraordinario = model.JustificacionExtraordinario;
+                var calibracion = await _context.EventosCalibracionDato
+                    .Include(c => c.EventoMetrologico)
+                        .ThenInclude(e => e.Equipo)
+                    .FirstOrDefaultAsync(c => c.EventoCalibracionDatoId == id);
+
+                if (calibracion == null) return NotFound();
+
+                var evento = calibracion.EventoMetrologico;
+
+                evento.EquipoId = model.EquipoId;
+                evento.TipoEventoMetrologicoId = tipoCalibracion!.TipoEventoMetrologicoId;
+                evento.SubtipoEventoId = model.SubtipoEventoId;
+                evento.ResponsableInternoId = model.ResponsableInternoId;
+                evento.FechaEvento = model.FechaEvento.Date;
+                evento.FechaProxima = model.FechaProxima;
+                evento.EstadoEquipoResultado = model.EstadoEquipoResultado;
+                evento.ComentariosAdicionales = model.ComentariosAdicionales;
+                evento.EsExtraordinario = model.EsExtraordinario;
+                evento.JustificacionExtraordinario = model.JustificacionExtraordinario;
 
                 calibracion.NumeroCertificado = model.NumeroCertificado;
-                calibracion.FechaCalibracion = model.FechaCalibracion;
-                calibracion.LaboratorioId = model.LaboratorioId;
+                calibracion.FechaCalibracion = model.FechaCalibracion!.Value.Date; calibracion.LaboratorioId = model.LaboratorioId;
                 calibracion.Observaciones = model.Observaciones;
 
-                _context.Update(calibracion);
-                await _context.SaveChangesAsync();
+                if (model.ArchivoCertificado != null && model.ArchivoCertificado.Length > 0)
+                {
+                    var equipo = await _context.Equipos
+                        .FirstOrDefaultAsync(e => e.EquipoId == model.EquipoId);
 
-                return RedirectToAction(nameof(Index));
+                    if (equipo == null)
+                    {
+                        ModelState.AddModelError("EquipoId", "El equipo seleccionado no existe.");
+                        ViewBag.EventoCalibracionDatoId = id;
+                        await CargarCombosAsync(model);
+                        return View(model);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(calibracion.GoogleDriveFileId))
+                    {
+                        await _googleDriveService.DeleteFileAsync(calibracion.GoogleDriveFileId);
+                    }
+
+                    var uploadResult = await SubirCertificadoAsync(
+                        equipo.Codigo,
+                        model.ArchivoCertificado);
+
+                    calibracion.GoogleDriveFileId = uploadResult.FileId;
+                    calibracion.NombreArchivoCertificado = uploadResult.FileName;
+                    calibracion.RutaCertificado = uploadResult.WebViewLink;
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return RedirectToAction(nameof(Details), new { id = calibracion.EventoCalibracionDatoId });
             }
             catch
             {
+                await transaction.RollbackAsync();
+
                 ModelState.AddModelError(string.Empty, "Ocurrió un error al actualizar la calibración.");
                 ViewBag.EventoCalibracionDatoId = id;
                 await CargarCombosAsync(model);
@@ -295,7 +280,6 @@ namespace CGA.MetrologySystem.Controllers
             }
         }
 
-        // DELETE GET
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -303,6 +287,10 @@ namespace CGA.MetrologySystem.Controllers
             var calibracion = await _context.EventosCalibracionDato
                 .Include(c => c.EventoMetrologico)
                     .ThenInclude(e => e.Equipo)
+                .Include(c => c.EventoMetrologico)
+                    .ThenInclude(e => e.ResponsableInterno)
+                .Include(c => c.EventoMetrologico)
+                    .ThenInclude(e => e.SubtipoEvento)
                 .Include(c => c.Laboratorio)
                 .FirstOrDefaultAsync(c => c.EventoCalibracionDatoId == id);
 
@@ -311,7 +299,6 @@ namespace CGA.MetrologySystem.Controllers
             return View(calibracion);
         }
 
-        // DELETE POST
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -322,19 +309,29 @@ namespace CGA.MetrologySystem.Controllers
 
             if (calibracion == null) return NotFound();
 
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
             try
             {
+                if (!string.IsNullOrWhiteSpace(calibracion.GoogleDriveFileId))
+                {
+                    await _googleDriveService.DeleteFileAsync(calibracion.GoogleDriveFileId);
+                }
+
                 _context.EventosCalibracionDato.Remove(calibracion);
                 _context.EventosMetrologicos.Remove(calibracion.EventoMetrologico);
 
                 await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 return RedirectToAction(nameof(Index));
             }
             catch
             {
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al eliminar la calibración.");
-                return View(calibracion);
+                await transaction.RollbackAsync();
+
+                TempData["Error"] = "Ocurrió un error al eliminar la calibración.";
+                return RedirectToAction(nameof(Delete), new { id });
             }
         }
 
@@ -379,6 +376,103 @@ namespace CGA.MetrologySystem.Controllers
                     Text = l.Nombre
                 })
                 .ToListAsync();
+        }
+
+        private async Task<TipoEventoMetrologico?> ObtenerTipoEventoCalibracionAsync()
+        {
+            return await _context.TiposEventoMetrologico
+                .FirstOrDefaultAsync(t => t.Nombre == "Calibración");
+        }
+
+        private async Task ValidarFormularioCalibracionAsync(
+            CalibracionViewModel model,
+            TipoEventoMetrologico? tipoCalibracion,
+            bool certificadoObligatorio)
+        {
+            if (tipoCalibracion == null)
+            {
+                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'Calibración'.");
+                return;
+            }
+
+            var equipoExiste = await _context.Equipos
+                .AnyAsync(e => e.EquipoId == model.EquipoId && e.Activo);
+
+            if (!equipoExiste)
+            {
+                ModelState.AddModelError("EquipoId", "Debe seleccionar un equipo válido.");
+            }
+
+            if (certificadoObligatorio &&
+                (model.ArchivoCertificado == null || model.ArchivoCertificado.Length == 0))
+            {
+                ModelState.AddModelError("ArchivoCertificado", "Debe subir el certificado en PDF.");
+            }
+
+            if (model.ArchivoCertificado != null && model.ArchivoCertificado.Length > 0)
+            {
+                if (!EsPdf(model.ArchivoCertificado))
+                {
+                    ModelState.AddModelError("ArchivoCertificado", "El certificado debe ser un archivo PDF.");
+                }
+            }
+
+            var resultadoRegla = await _metrologyRulesService.EvaluarEventoAsync(
+                model.EquipoId,
+                tipoCalibracion.TipoEventoMetrologicoId,
+                model.FechaEvento.Date,
+                model.JustificacionExtraordinario);
+
+            model.EsExtraordinario = resultadoRegla.EsExtraordinario;
+            model.FechaProxima = resultadoRegla.FechaProximaCalculada;
+
+            if (!resultadoRegla.EsValido)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrológicas.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(resultadoRegla.Advertencia))
+            {
+                TempData["AdvertenciaRegla"] = resultadoRegla.Advertencia;
+            }
+        }
+
+        private async Task<CGA.MetrologySystem.Application.DTOs.GoogleDriveUploadResultDto> SubirCertificadoAsync(
+            string codigoEquipo,
+            IFormFile archivoCertificado)
+        {
+            var folderId = await _googleDriveService.EnsureNestedFolderAsync(
+                codigoEquipo,
+                "Documentos",
+                "Calibraciones");
+
+            if (string.IsNullOrWhiteSpace(folderId))
+            {
+                throw new Exception("No se pudo obtener la carpeta de calibraciones en Google Drive.");
+            }
+
+            await using var stream = archivoCertificado.OpenReadStream();
+
+            var extension = Path.GetExtension(archivoCertificado.FileName);
+            var nombreLimpio = Path.GetFileNameWithoutExtension(archivoCertificado.FileName);
+            var nombreArchivoDrive =
+                $"{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}_{nombreLimpio}{extension}";
+
+            return await _googleDriveService.UploadFileAsync(
+                stream,
+                nombreArchivoDrive,
+                archivoCertificado.ContentType,
+                folderId);
+        }
+
+        private static bool EsPdf(IFormFile archivo)
+        {
+            var extension = Path.GetExtension(archivo.FileName);
+
+            return archivo.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase)
+                   || extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase);
         }
     }
 }

@@ -7,86 +7,168 @@
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h2 class="page-title">Editar verificación</h2>
-        <p class="page-subtitle">Actualiza la información y condiciones de la verificación registrada.</p>
+        <p class="page-subtitle">
+            Actualiza la verificación técnica. El PDF será regenerado automáticamente y reemplazado en Google Drive.
+        </p>
     </div>
 
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    <div class="d-flex gap-2">
+        <a asp-action="Details"
+               asp-route-id="@Model.EventoVerificacionDatoId"
+               class="btn btn-outline-primary">
+            Ver detalle
+        </a>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Volver
+        </a>
+    </div>
 </div>
 
-<form asp-action="Edit" asp-route-id="@Model.EventoVerificacionDatoId" method="post" class="form-card">
-    <input type="hidden" asp-for="EventoMetrologicoId" />
-    <input type="hidden" asp-for="EventoVerificacionDatoId" />
+@if (TempData["AdvertenciaRegla"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["AdvertenciaRegla"]
+    </div>
+}
 
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<form asp-action="Edit"
+      asp-route-id="@Model.EventoVerificacionDatoId"
+      method="post"
+      enctype="multipart/form-data"
+      class="form-card">
 
-    <h5 class="mb-3">Datos generales</h5>
+    <input asp-for="EventoMetrologicoId" type="hidden" />
+    <input asp-for="EventoVerificacionDatoId" type="hidden" />
+    <input asp-for="EsExtraordinario" type="hidden" />
+
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+    <div class="mb-4">
+        <h5 class="mb-1">Información de la verificación</h5>
+
+        <p class="text-muted mb-0">
+            El motor de reglas recalculará automáticamente la próxima fecha del evento.
+        </p>
+    </div>
 
     <div class="row">
+
         <div class="col-md-6 mb-3">
             <label asp-for="EquipoId" class="form-label fw-semibold">Equipo</label>
-            <select asp-for="EquipoId" asp-items="Model.Equipos" class="form-select">
+
+            <select asp-for="EquipoId"
+                    asp-items="Model.Equipos"
+                    class="form-select">
                 <option value="">Seleccione un equipo...</option>
             </select>
+
             <span asp-validation-for="EquipoId" class="text-danger"></span>
         </div>
 
         <div class="col-md-6 mb-3">
-            <label asp-for="SubtipoEventoId" class="form-label fw-semibold">Subtipo de evento</label>
-            <select asp-for="SubtipoEventoId" asp-items="Model.SubtiposEvento" class="form-select">
+            <label asp-for="SubtipoEventoId" class="form-label fw-semibold">
+                Subtipo de evento
+            </label>
+
+            <select asp-for="SubtipoEventoId"
+                    asp-items="Model.SubtiposEvento"
+                    class="form-select">
                 <option value="">Seleccione un subtipo...</option>
             </select>
+
             <span asp-validation-for="SubtipoEventoId" class="text-danger"></span>
         </div>
     </div>
 
     <div class="row">
+
         <div class="col-md-6 mb-3">
-            <label asp-for="ResponsableInternoId" class="form-label fw-semibold">Responsable interno</label>
-            <select asp-for="ResponsableInternoId" asp-items="Model.ResponsablesInternos" class="form-select">
+            <label asp-for="ResponsableInternoId" class="form-label fw-semibold">
+                Responsable interno
+            </label>
+
+            <select asp-for="ResponsableInternoId"
+                    asp-items="Model.ResponsablesInternos"
+                    class="form-select">
                 <option value="">Seleccione un responsable...</option>
             </select>
+
             <span asp-validation-for="ResponsableInternoId" class="text-danger"></span>
         </div>
 
         <div class="col-md-3 mb-3">
-            <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha</label>
-            <input asp-for="FechaEvento" class="form-control" type="date" />
+            <label asp-for="FechaEvento" class="form-label fw-semibold">
+                Fecha de verificación
+            </label>
+
+            <input asp-for="FechaEvento"
+                   class="form-control"
+                   type="date" />
+
             <span asp-validation-for="FechaEvento" class="text-danger"></span>
         </div>
 
         <div class="col-md-3 mb-3">
-            <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha</label>
-            <input asp-for="FechaProxima" class="form-control" type="date" />
+            <label asp-for="FechaProxima" class="form-label fw-semibold">
+                Próxima fecha calculada
+            </label>
+
+            <input asp-for="FechaProxima"
+                   class="form-control bg-light"
+                   type="date"
+                   readonly />
+
             <span asp-validation-for="FechaProxima" class="text-danger"></span>
         </div>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">Estado del equipo</label>
-        <select asp-for="EstadoEquipoResultado" class="form-select">
-            <option value="">Seleccione...</option>
-            <option value="Operativo">Operativo</option>
-            <option value="No Operativo">No Operativo</option>
-            <option value="Fuera de Servicio">Fuera de Servicio</option>
-        </select>
-        <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
+    <div class="alert alert-light border mb-4">
+        <strong>Nota:</strong> Si modificas la fecha de verificación, el sistema volverá a evaluar si el evento es extraordinario.
     </div>
 
-    <div class="mb-3">
-        <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">Comentarios adicionales</label>
-        <textarea asp-for="ComentariosAdicionales" class="form-control" rows="3"></textarea>
-        <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
-    </div>
+    <div class="row">
 
-    <div class="form-check mb-3">
-        <input asp-for="EsExtraordinario" class="form-check-input" />
-        <label asp-for="EsExtraordinario" class="form-check-label fw-semibold">Evento extraordinario</label>
+        <div class="col-md-4 mb-3">
+            <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">
+                Estado del equipo
+            </label>
+
+            <select asp-for="EstadoEquipoResultado" class="form-select">
+                <option value="">Seleccione...</option>
+                <option value="Operativo">Operativo</option>
+                <option value="No Operativo">No Operativo</option>
+                <option value="Fuera de Servicio">Fuera de Servicio</option>
+            </select>
+
+            <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-8 mb-3">
+            <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
+                Justificación extraordinaria
+            </label>
+
+            <textarea asp-for="JustificacionExtraordinario"
+                      class="form-control"
+                      rows="2"
+                      placeholder="Completa este campo si la verificación fue extraordinaria."></textarea>
+
+            <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+        </div>
     </div>
 
     <div class="mb-4">
-        <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">Justificación extraordinaria</label>
-        <textarea asp-for="JustificacionExtraordinario" class="form-control" rows="2"></textarea>
-        <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+        <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">
+            Comentarios adicionales
+        </label>
+
+        <textarea asp-for="ComentariosAdicionales"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Comentarios generales de la verificación."></textarea>
+
+        <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
     </div>
 
     <hr class="my-4" />
@@ -94,45 +176,50 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
             <h5 class="mb-1">Condiciones verificadas</h5>
-            <p class="page-subtitle">Modifica las condiciones, cumplimiento y observaciones.</p>
+
+            <p class="text-muted mb-0">
+                Puedes modificar, agregar o quitar condiciones verificadas.
+            </p>
         </div>
 
-        <button type="button" id="addResultado" class="btn btn-outline-secondary">
+        <button type="button" id="addResultado" class="btn btn-outline-primary">
             Agregar condición
         </button>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-4" id="tablaResultados">
-            <thead>
+    <div class="table-responsive mb-4">
+        <table class="table table-hover align-middle" id="tablaResultados">
+            <thead class="table-light">
                 <tr>
                     <th>Condición a verificar</th>
-                    <th style="width: 120px;">Cumple</th>
+                    <th style="width:120px;">Cumple</th>
                     <th>Observaciones</th>
-                    <th class="text-end" style="width: 100px;">Acción</th>
+                    <th class="text-end" style="width:100px;">Acción</th>
                 </tr>
             </thead>
+
             <tbody>
                 @for (int i = 0; i < Model.Resultados.Count; i++)
                 {
                     <tr>
+
                         <td>
-                            <input type="hidden" asp-for="Resultados[i].EventoVerificacionResultadoId" data-field="id" />
-                            <input type="hidden" asp-for="Resultados[i].Orden" data-field="orden" />
+
+                            <input type="hidden"
+                                   asp-for="Resultados[i].EventoVerificacionResultadoId" />
+
+                            <input type="hidden"
+                                   asp-for="Resultados[i].Orden"
+                                   data-field="orden" />
 
                             <input asp-for="Resultados[i].DescripcionItem"
                                    data-field="descripcion"
                                    class="form-control"
                                    placeholder="Condición a verificar" />
 
-                            <span asp-validation-for="Resultados[i].DescripcionItem" class="text-danger"></span>
                         </td>
 
                         <td class="text-center">
-                            <input type="hidden"
-                                   name="Resultados[@i].Cumple"
-                                   data-field="cumple-hidden"
-                                   value="false" />
 
                             <input type="checkbox"
                                    name="Resultados[@i].Cumple"
@@ -140,48 +227,132 @@
                                    value="true"
                                    class="form-check-input"
                             @(Model.Resultados[i].Cumple ? "checked" : "") />
+
+                            <input type="hidden"
+                                   name="Resultados[@i].Cumple"
+                                   data-field="cumple-hidden"
+                                   value="false" />
+
                         </td>
 
                         <td>
+
                             <input asp-for="Resultados[i].Observaciones"
                                    data-field="observaciones"
                                    class="form-control"
                                    placeholder="Observaciones" />
+
                         </td>
 
                         <td class="text-end">
-                            <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+
+                            <button type="button"
+                                    class="btn btn-outline-danger btn-sm eliminar">
                                 Eliminar
                             </button>
+
                         </td>
+
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 
-    <div class="d-flex justify-content-end gap-2">
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    <hr class="my-4" />
+
+    <div class="mb-4">
+
+        <h5 class="mb-1">Evidencias visuales</h5>
+
+        <p class="text-muted">
+            Las evidencias existentes se conservarán. Puedes agregar nuevas imágenes.
+        </p>
+
+        @if (Model.EvidenciasExistentes != null && Model.EvidenciasExistentes.Any())
+        {
+            <div class="row mb-3">
+
+                @foreach (var evidencia in Model.EvidenciasExistentes)
+                {
+                    <div class="col-md-4 mb-3">
+
+                        <div class="border rounded p-3 h-100">
+
+                            <div class="fw-semibold text-truncate">
+                                @evidencia.NombreArchivo
+                            </div>
+
+                            <div class="text-muted small mb-2">
+                                @evidencia.FechaCarga.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </div>
+
+                            <a href="@evidencia.RutaArchivo"
+                                   target="_blank"
+                                   class="btn btn-outline-primary btn-sm">
+                                Abrir evidencia
+                            </a>
+
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-light border">
+                Esta verificación aún no tiene evidencias visuales registradas.
+            </div>
+        }
+
+        <input asp-for="Evidencias"
+               type="file"
+               class="form-control"
+               accept="image/*"
+               capture="environment"
+               multiple />
+
+        <small class="text-muted">
+            Puedes tomar fotografías desde el dispositivo o cargar imágenes existentes.
+        </small>
+
     </div>
+
+    <div class="d-flex justify-content-end gap-2">
+
+        <a asp-action="Details"
+               asp-route-id="@Model.EventoVerificacionDatoId"
+               class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+
+        <button type="submit" class="btn btn-primary">
+            Guardar cambios
+        </button>
+
+    </div>
+
 </form>
 
 @section Scripts {
+
     <partial name="_ValidationScriptsPartial" />
 
     <script>
+
         let index = @Model.Resultados.Count;
 
         function reindexarResultados() {
+
             document.querySelectorAll("#tablaResultados tbody tr").forEach((row, i) => {
-                const id = row.querySelector("input[data-field='id']");
+
                 const orden = row.querySelector("input[data-field='orden']");
                 const descripcion = row.querySelector("input[data-field='descripcion']");
                 const cumpleHidden = row.querySelector("input[data-field='cumple-hidden']");
                 const cumple = row.querySelector("input[data-field='cumple']");
                 const observaciones = row.querySelector("input[data-field='observaciones']");
-
-                if (id) id.name = `Resultados[${i}].EventoVerificacionResultadoId`;
 
                 if (orden) {
                     orden.name = `Resultados[${i}].Orden`;
@@ -197,63 +368,87 @@
             index = document.querySelectorAll("#tablaResultados tbody tr").length;
         }
 
-        document.getElementById("addResultado").addEventListener("click", function () {
-            const fila = `
-                <tr>
-                    <td>
-                        <input type="hidden"
-                               name="Resultados[${index}].EventoVerificacionResultadoId"
-                               data-field="id"
-                               value="0" />
+        document.addEventListener("DOMContentLoaded", function () {
 
-                        <input type="hidden"
-                               name="Resultados[${index}].Orden"
-                               data-field="orden"
-                               value="${index + 1}" />
+            const addResultadoButton = document.getElementById("addResultado");
 
-                        <input name="Resultados[${index}].DescripcionItem"
-                               data-field="descripcion"
-                               class="form-control"
-                               placeholder="Condición a verificar" />
-                    </td>
+            if (addResultadoButton) {
 
-                    <td class="text-center">
-                        <input type="hidden"
-                               name="Resultados[${index}].Cumple"
-                               data-field="cumple-hidden"
-                               value="false" />
+                addResultadoButton.addEventListener("click", function () {
 
-                        <input type="checkbox"
-                               name="Resultados[${index}].Cumple"
-                               data-field="cumple"
-                               value="true"
-                               class="form-check-input"
-                               checked />
-                    </td>
+                    const fila = `
+                        <tr>
 
-                    <td>
-                        <input name="Resultados[${index}].Observaciones"
-                               data-field="observaciones"
-                               class="form-control"
-                               placeholder="Observaciones" />
-                    </td>
+                            <td>
 
-                    <td class="text-end">
-                        <button type="button" class="btn btn-outline-danger btn-sm eliminar">
-                            Eliminar
-                        </button>
-                    </td>
-                </tr>`;
+                                <input type="hidden"
+                                       name="Resultados[${index}].EventoVerificacionResultadoId"
+                                       value="0" />
 
-            document.querySelector("#tablaResultados tbody").insertAdjacentHTML("beforeend", fila);
-            index++;
+                                <input type="hidden"
+                                       name="Resultados[${index}].Orden"
+                                       data-field="orden"
+                                       value="${index + 1}" />
+
+                                <input name="Resultados[${index}].DescripcionItem"
+                                       data-field="descripcion"
+                                       class="form-control"
+                                       placeholder="Condición a verificar" />
+
+                            </td>
+
+                            <td class="text-center">
+
+                                <input type="checkbox"
+                                       name="Resultados[${index}].Cumple"
+                                       data-field="cumple"
+                                       value="true"
+                                       class="form-check-input"
+                                       checked />
+
+                                <input type="hidden"
+                                       name="Resultados[${index}].Cumple"
+                                       data-field="cumple-hidden"
+                                       value="false" />
+
+                            </td>
+
+                            <td>
+
+                                <input name="Resultados[${index}].Observaciones"
+                                       data-field="observaciones"
+                                       class="form-control"
+                                       placeholder="Observaciones" />
+
+                            </td>
+
+                            <td class="text-end">
+
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm eliminar">
+                                    Eliminar
+                                </button>
+
+                            </td>
+
+                        </tr>`;
+
+                    document.querySelector("#tablaResultados tbody")
+                        .insertAdjacentHTML("beforeend", fila);
+
+                    index++;
+                });
+            }
         });
 
         document.addEventListener("click", function (e) {
+
             if (e.target.classList.contains("eliminar")) {
+
                 e.target.closest("tr").remove();
                 reindexarResultados();
             }
         });
+
     </script>
 }

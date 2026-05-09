@@ -35,10 +35,44 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
         public DbSet<PlantillaEventoItem> PlantillasEventoItem { get; set; }
         public DbSet<EventoMantenimientoDato> EventosMantenimientoDato { get; set; }
         public DbSet<EventoVerificacionDato> EventosVerificacionDato { get; set; }
+        public DbSet<EvidenciaEventoMetrologico> EvidenciasEventoMetrologico { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<EvidenciaEventoMetrologico>(entity =>
+            {
+                entity.HasKey(e => e.EvidenciaEventoMetrologicoId);
+
+                entity.Property(e => e.NombreArchivo)
+                    .HasMaxLength(255)
+                    .IsRequired();
+
+                entity.Property(e => e.ContentType)
+                    .HasMaxLength(100)
+                    .IsRequired();
+
+                entity.Property(e => e.GoogleDriveFileId)
+                    .HasMaxLength(255)
+                    .IsRequired();
+
+                entity.Property(e => e.RutaArchivo)
+                    .HasMaxLength(500)
+                    .IsRequired();
+
+                entity.Property(e => e.TipoEvidencia)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(e => e.Descripcion)
+                    .HasMaxLength(500);
+
+                entity.HasOne(e => e.EventoMetrologico)
+                    .WithMany(e => e.Evidencias)
+                    .HasForeignKey(e => e.EventoMetrologicoId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

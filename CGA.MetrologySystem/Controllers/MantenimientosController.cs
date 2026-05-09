@@ -10,23 +10,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    //Manejo de roles
     [Authorize]
     public class MantenimientosController : Controller
     {
         private readonly AppDbContext _context;
         private readonly MantenimientoPdfService _mantenimientoPdfService;
         private readonly IGoogleDriveService _googleDriveService;
+        private readonly IMetrologyRulesService _metrologyRulesService;
 
         public MantenimientosController(
             AppDbContext context,
             MantenimientoPdfService mantenimientoPdfService,
-            IGoogleDriveService googleDriveService)
+            IGoogleDriveService googleDriveService,
+            IMetrologyRulesService metrologyRulesService)
         {
             _context = context;
             _mantenimientoPdfService = mantenimientoPdfService;
             _googleDriveService = googleDriveService;
+            _metrologyRulesService = metrologyRulesService;
         }
+
         public async Task<IActionResult> Index()
         {
             var mantenimientos = await _context.EventosMantenimientoDato
@@ -55,25 +58,27 @@ namespace CGA.MetrologySystem.Controllers
                     .ThenInclude(e => e.SubtipoEvento)
                 .Include(m => m.EventoMetrologico)
                     .ThenInclude(e => e.ActividadesMantenimiento.OrderBy(a => a.Orden))
+                .Include(m => m.EventoMetrologico)
+                    .ThenInclude(e => e.Evidencias)
                 .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == id);
 
             if (mantenimiento == null) return NotFound();
 
+            mantenimiento.EventoMetrologico.Evidencias =
+                mantenimiento.EventoMetrologico.Evidencias
+                    .Where(e => e.Activo)
+                    .OrderByDescending(e => e.FechaCarga)
+                    .ToList();
+
             return View(mantenimiento);
         }
+
         public async Task<IActionResult> ExportarPdf(int id)
         {
             var mantenimiento = await CargarMantenimientoCompletoAsync(id);
 
             if (mantenimiento == null)
-            {
                 return NotFound();
-            }
-
-            mantenimiento.EventoMetrologico.ActividadesMantenimiento =
-                mantenimiento.EventoMetrologico.ActividadesMantenimiento
-                    .OrderBy(a => a.Orden)
-                    .ToList();
 
             var pdfBytes = _mantenimientoPdfService.Generar(mantenimiento);
 
@@ -116,27 +121,14 @@ namespace CGA.MetrologySystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(MantenimientoViewModel model)
         {
-            model.Actividades = model.Actividades
-                .Where(a => !string.IsNullOrWhiteSpace(a.DescripcionActividad))
-                .ToList();
+            NormalizarActividades(model);
 
-            if (!model.Actividades.Any())
-            {
-                ModelState.AddModelError(string.Empty, "Debe agregar al menos una actividad de mantenimiento.");
-            }
+            var tipoEventoMantenimiento = await ObtenerTipoEventoMantenimientoAsync();
+
+            await ValidarFormularioMantenimientoAsync(model, tipoEventoMantenimiento);
 
             if (!ModelState.IsValid)
             {
-                await CargarCombosAsync(model);
-                return View(model);
-            }
-
-            var tipoMantenimientoEvento = await _context.TiposEventoMetrologico
-                .FirstOrDefaultAsync(t => t.Nombre == "Mantenimiento");
-
-            if (tipoMantenimientoEvento == null)
-            {
-                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'Mantenimiento'.");
                 await CargarCombosAsync(model);
                 return View(model);
             }
@@ -148,10 +140,10 @@ namespace CGA.MetrologySystem.Controllers
                 var eventoMetrologico = new EventoMetrologico
                 {
                     EquipoId = model.EquipoId,
-                    TipoEventoMetrologicoId = tipoMantenimientoEvento.TipoEventoMetrologicoId,
+                    TipoEventoMetrologicoId = tipoEventoMantenimiento!.TipoEventoMetrologicoId,
                     SubtipoEventoId = model.SubtipoEventoId,
                     ResponsableInternoId = model.ResponsableInternoId,
-                    FechaEvento = model.FechaEvento,
+                    FechaEvento = model.FechaEvento.Date,
                     FechaProxima = model.FechaProxima,
                     EstadoEquipoResultado = model.EstadoEquipoResultado,
                     ComentariosAdicionales = model.ComentariosAdicionales,
@@ -172,50 +164,27 @@ namespace CGA.MetrologySystem.Controllers
 
                 _context.EventosMantenimientoDato.Add(mantenimientoDato);
 
-                var orden = 1;
-
-                foreach (var actividad in model.Actividades)
-                {
-                    _context.EventosMantenimientoActividad.Add(new EventoMantenimientoActividad
-                    {
-                        EventoMetrologicoId = eventoMetrologico.EventoMetrologicoId,
-                        DescripcionActividad = actividad.DescripcionActividad,
-                        Observaciones = actividad.Observaciones,
-                        Orden = orden
-                    });
-
-                    orden++;
-                }
+                AgregarActividadesAlEvento(eventoMetrologico.EventoMetrologicoId, model.Actividades);
 
                 await _context.SaveChangesAsync();
 
                 var mantenimientoCompleto = await CargarMantenimientoCompletoAsync(
-                mantenimientoDato.EventoMantenimientoDatoId);
+                    mantenimientoDato.EventoMantenimientoDatoId);
 
                 if (mantenimientoCompleto == null)
-                {
                     throw new Exception("No se pudo recuperar el mantenimiento para generar el PDF.");
-                }
 
-                var pdfBytes = _mantenimientoPdfService.Generar(mantenimientoCompleto);
+                await GenerarYSubirPdfAsync(mantenimientoCompleto);
 
                 var codigoEquipo = mantenimientoCompleto.EventoMetrologico.Equipo.Codigo;
-                var fecha = mantenimientoCompleto.EventoMetrologico.FechaEvento.ToString("yyyy-MM-dd");
-                var nombreArchivo = $"Mantenimiento-{codigoEquipo}-{fecha}.pdf";
 
-                var subFolderId = await _googleDriveService.EnsureSubFolderAsync(codigoEquipo, "Mantenimientos");
+                var evidencias = await SubirEvidenciasAsync(
+                    eventoMetrologico.EventoMetrologicoId,
+                    codigoEquipo,
+                    model.Evidencias);
 
-                using var pdfStream = new MemoryStream(pdfBytes);
-
-                var uploadResult = await _googleDriveService.UploadFileAsync(
-                    pdfStream,
-                    nombreArchivo,
-                    "application/pdf",
-                    subFolderId);
-
-                mantenimientoDato.GoogleDriveFileId = uploadResult.FileId;
-                mantenimientoDato.NombreArchivoPdf = uploadResult.FileName;
-                mantenimientoDato.RutaPdf = uploadResult.WebViewLink;
+                if (evidencias.Any())
+                    _context.EvidenciasEventoMetrologico.AddRange(evidencias);
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -225,6 +194,7 @@ namespace CGA.MetrologySystem.Controllers
             catch
             {
                 await transaction.RollbackAsync();
+
                 ModelState.AddModelError(string.Empty, "Ocurrió un error al guardar el mantenimiento.");
                 await CargarCombosAsync(model);
                 return View(model);
@@ -238,6 +208,8 @@ namespace CGA.MetrologySystem.Controllers
             var mantenimiento = await _context.EventosMantenimientoDato
                 .Include(m => m.EventoMetrologico)
                     .ThenInclude(e => e.ActividadesMantenimiento.OrderBy(a => a.Orden))
+                .Include(m => m.EventoMetrologico)
+                    .ThenInclude(e => e.Evidencias)
                 .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == id);
 
             if (mantenimiento == null) return NotFound();
@@ -267,6 +239,22 @@ namespace CGA.MetrologySystem.Controllers
                         Observaciones = a.Observaciones,
                         Orden = a.Orden
                     })
+                    .ToList(),
+                EvidenciasExistentes = evento.Evidencias
+                    .Where(e => e.Activo)
+                    .OrderByDescending(e => e.FechaCarga)
+                    .Select(e => new EvidenciaEventoViewModel
+                    {
+                        EvidenciaEventoMetrologicoId = e.EvidenciaEventoMetrologicoId,
+                        NombreArchivo = e.NombreArchivo,
+                        ContentType = e.ContentType,
+                        GoogleDriveFileId = e.GoogleDriveFileId,
+                        RutaArchivo = e.RutaArchivo,
+                        TipoEvidencia = e.TipoEvidencia,
+                        Descripcion = e.Descripcion,
+                        FechaCarga = e.FechaCarga,
+                        Activo = e.Activo
+                    })
                     .ToList()
             };
 
@@ -278,38 +266,43 @@ namespace CGA.MetrologySystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, MantenimientoViewModel model)
         {
-            if (id != model.EventoMantenimientoDatoId) return NotFound();
+            if (id != model.EventoMantenimientoDatoId)
+                return NotFound();
 
-            model.Actividades = model.Actividades
-                .Where(a => !string.IsNullOrWhiteSpace(a.DescripcionActividad))
-                .ToList();
+            NormalizarActividades(model);
 
-            if (!model.Actividades.Any())
-            {
-                ModelState.AddModelError(string.Empty, "Debe mantener al menos una actividad de mantenimiento.");
-            }
+            var tipoEventoMantenimiento = await ObtenerTipoEventoMantenimientoAsync();
+
+            await ValidarFormularioMantenimientoAsync(model, tipoEventoMantenimiento);
 
             if (!ModelState.IsValid)
             {
                 await CargarCombosAsync(model);
+                await CargarEvidenciasExistentesEnModeloAsync(model);
                 return View(model);
             }
 
-            var mantenimiento = await _context.EventosMantenimientoDato
-                .Include(m => m.EventoMetrologico)
-                    .ThenInclude(e => e.ActividadesMantenimiento)
-                .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == id);
-
-            if (mantenimiento == null) return NotFound();
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
+                var mantenimiento = await _context.EventosMantenimientoDato
+                    .Include(m => m.EventoMetrologico)
+                        .ThenInclude(e => e.ActividadesMantenimiento)
+                    .Include(m => m.EventoMetrologico)
+                        .ThenInclude(e => e.Evidencias)
+                    .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == id);
+
+                if (mantenimiento == null)
+                    return NotFound();
+
                 var evento = mantenimiento.EventoMetrologico;
 
                 evento.EquipoId = model.EquipoId;
+                evento.TipoEventoMetrologicoId = tipoEventoMantenimiento!.TipoEventoMetrologicoId;
                 evento.SubtipoEventoId = model.SubtipoEventoId;
                 evento.ResponsableInternoId = model.ResponsableInternoId;
-                evento.FechaEvento = model.FechaEvento;
+                evento.FechaEvento = model.FechaEvento.Date;
                 evento.FechaProxima = model.FechaProxima;
                 evento.EstadoEquipoResultado = model.EstadoEquipoResultado;
                 evento.ComentariosAdicionales = model.ComentariosAdicionales;
@@ -319,30 +312,43 @@ namespace CGA.MetrologySystem.Controllers
                 mantenimiento.TipoMantenimientoId = model.TipoMantenimientoId;
 
                 _context.EventosMantenimientoActividad.RemoveRange(evento.ActividadesMantenimiento);
-
-                var orden = 1;
-
-                foreach (var actividad in model.Actividades)
-                {
-                    evento.ActividadesMantenimiento.Add(new EventoMantenimientoActividad
-                    {
-                        EventoMetrologicoId = evento.EventoMetrologicoId,
-                        DescripcionActividad = actividad.DescripcionActividad,
-                        Observaciones = actividad.Observaciones,
-                        Orden = orden
-                    });
-
-                    orden++;
-                }
+                AgregarActividadesAlEvento(evento.EventoMetrologicoId, model.Actividades);
 
                 await _context.SaveChangesAsync();
 
-                return RedirectToAction(nameof(Index));
+                var mantenimientoCompleto = await CargarMantenimientoCompletoAsync(
+                    mantenimiento.EventoMantenimientoDatoId);
+
+                if (mantenimientoCompleto == null)
+                    throw new Exception("No se pudo recuperar el mantenimiento para regenerar el PDF.");
+
+                if (!string.IsNullOrWhiteSpace(mantenimiento.GoogleDriveFileId))
+                    await _googleDriveService.DeleteFileAsync(mantenimiento.GoogleDriveFileId);
+
+                await GenerarYSubirPdfAsync(mantenimientoCompleto);
+
+                var codigoEquipo = mantenimientoCompleto.EventoMetrologico.Equipo.Codigo;
+
+                var nuevasEvidencias = await SubirEvidenciasAsync(
+                    evento.EventoMetrologicoId,
+                    codigoEquipo,
+                    model.Evidencias);
+
+                if (nuevasEvidencias.Any())
+                    _context.EvidenciasEventoMetrologico.AddRange(nuevasEvidencias);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return RedirectToAction(nameof(Details), new { id = mantenimiento.EventoMantenimientoDatoId });
             }
             catch
             {
+                await transaction.RollbackAsync();
+
                 ModelState.AddModelError(string.Empty, "Ocurrió un error al actualizar el mantenimiento.");
                 await CargarCombosAsync(model);
+                await CargarEvidenciasExistentesEnModeloAsync(model);
                 return View(model);
             }
         }
@@ -359,9 +365,17 @@ namespace CGA.MetrologySystem.Controllers
                     .ThenInclude(e => e.ResponsableInterno)
                 .Include(m => m.EventoMetrologico)
                     .ThenInclude(e => e.ActividadesMantenimiento.OrderBy(a => a.Orden))
+                .Include(m => m.EventoMetrologico)
+                    .ThenInclude(e => e.Evidencias)
                 .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == id);
 
             if (mantenimiento == null) return NotFound();
+
+            mantenimiento.EventoMetrologico.Evidencias =
+                mantenimiento.EventoMetrologico.Evidencias
+                    .Where(e => e.Activo)
+                    .OrderByDescending(e => e.FechaCarga)
+                    .ToList();
 
             return View(mantenimiento);
         }
@@ -373,19 +387,44 @@ namespace CGA.MetrologySystem.Controllers
             var mantenimiento = await _context.EventosMantenimientoDato
                 .Include(m => m.EventoMetrologico)
                     .ThenInclude(e => e.ActividadesMantenimiento)
+                .Include(m => m.EventoMetrologico)
+                    .ThenInclude(e => e.Evidencias)
                 .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == id);
 
             if (mantenimiento == null) return NotFound();
 
-            var evento = mantenimiento.EventoMetrologico;
+            using var transaction = await _context.Database.BeginTransactionAsync();
 
-            _context.EventosMantenimientoActividad.RemoveRange(evento.ActividadesMantenimiento);
-            _context.EventosMantenimientoDato.Remove(mantenimiento);
-            _context.EventosMetrologicos.Remove(evento);
+            try
+            {
+                var evento = mantenimiento.EventoMetrologico;
 
-            await _context.SaveChangesAsync();
+                if (!string.IsNullOrWhiteSpace(mantenimiento.GoogleDriveFileId))
+                    await _googleDriveService.DeleteFileAsync(mantenimiento.GoogleDriveFileId);
 
-            return RedirectToAction(nameof(Index));
+                foreach (var evidencia in evento.Evidencias)
+                {
+                    if (!string.IsNullOrWhiteSpace(evidencia.GoogleDriveFileId))
+                        await _googleDriveService.DeleteFileAsync(evidencia.GoogleDriveFileId);
+                }
+
+                _context.EventosMantenimientoActividad.RemoveRange(evento.ActividadesMantenimiento);
+                _context.EvidenciasEventoMetrologico.RemoveRange(evento.Evidencias);
+                _context.EventosMantenimientoDato.Remove(mantenimiento);
+                _context.EventosMetrologicos.Remove(evento);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+
+                TempData["Error"] = "Ocurrió un error al eliminar el mantenimiento.";
+                return RedirectToAction(nameof(Delete), new { id });
+            }
         }
 
         private async Task CargarCombosAsync(MantenimientoViewModel model)
@@ -439,9 +478,7 @@ namespace CGA.MetrologySystem.Controllers
 
             if (equipo == null) return;
 
-            var tipoEventoMantenimiento = await _context.TiposEventoMetrologico
-                .AsNoTracking()
-                .FirstOrDefaultAsync(t => t.Nombre == "Mantenimiento");
+            var tipoEventoMantenimiento = await ObtenerTipoEventoMantenimientoAsync();
 
             if (tipoEventoMantenimiento == null) return;
 
@@ -466,9 +503,6 @@ namespace CGA.MetrologySystem.Controllers
                 .ToList();
         }
 
-
-        //Método para cargar el mantenimiento completo con todas sus relaciones, utilizado principalmente para generar el PDF
-        //después de crear o editar un mantenimiento, asegurando que se tenga toda la información necesaria en un solo query optimizado.
         private async Task<EventoMantenimientoDato?> CargarMantenimientoCompletoAsync(int eventoMantenimientoDatoId)
         {
             var mantenimiento = await _context.EventosMantenimientoDato
@@ -482,6 +516,8 @@ namespace CGA.MetrologySystem.Controllers
                     .ThenInclude(e => e.SubtipoEvento)
                 .Include(m => m.EventoMetrologico)
                     .ThenInclude(e => e.ActividadesMantenimiento)
+                .Include(m => m.EventoMetrologico)
+                    .ThenInclude(e => e.Evidencias)
                 .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == eventoMantenimientoDatoId);
 
             if (mantenimiento == null) return null;
@@ -491,7 +527,208 @@ namespace CGA.MetrologySystem.Controllers
                     .OrderBy(a => a.Orden)
                     .ToList();
 
+            mantenimiento.EventoMetrologico.Evidencias =
+                mantenimiento.EventoMetrologico.Evidencias
+                    .Where(e => e.Activo)
+                    .OrderByDescending(e => e.FechaCarga)
+                    .ToList();
+
             return mantenimiento;
+        }
+
+        private async Task<TipoEventoMetrologico?> ObtenerTipoEventoMantenimientoAsync()
+        {
+            return await _context.TiposEventoMetrologico
+                .FirstOrDefaultAsync(t => t.Nombre == "Mantenimiento");
+        }
+
+        private async Task ValidarFormularioMantenimientoAsync(
+            MantenimientoViewModel model,
+            TipoEventoMetrologico? tipoEventoMantenimiento)
+        {
+            if (!model.Actividades.Any())
+            {
+                ModelState.AddModelError(string.Empty, "Debe agregar al menos una actividad de mantenimiento.");
+            }
+
+            if (tipoEventoMantenimiento == null)
+            {
+                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'Mantenimiento'.");
+                return;
+            }
+
+            if (!ValidarEvidencias(model.Evidencias))
+            {
+                ModelState.AddModelError(string.Empty, "Solo se permiten evidencias visuales en formato imagen.");
+            }
+
+            var resultadoRegla = await _metrologyRulesService.EvaluarEventoAsync(
+                model.EquipoId,
+                tipoEventoMantenimiento.TipoEventoMetrologicoId,
+                model.FechaEvento.Date,
+                model.JustificacionExtraordinario);
+
+            model.EsExtraordinario = resultadoRegla.EsExtraordinario;
+            model.FechaProxima = resultadoRegla.FechaProximaCalculada;
+
+            if (!resultadoRegla.EsValido)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrológicas.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(resultadoRegla.Advertencia))
+            {
+                TempData["AdvertenciaRegla"] = resultadoRegla.Advertencia;
+            }
+        }
+
+        private static void NormalizarActividades(MantenimientoViewModel model)
+        {
+            model.Actividades = model.Actividades
+                .Where(a => !string.IsNullOrWhiteSpace(a.DescripcionActividad))
+                .ToList();
+        }
+
+        private void AgregarActividadesAlEvento(
+            int eventoMetrologicoId,
+            List<MantenimientoActividadViewModel> actividades)
+        {
+            var orden = 1;
+
+            foreach (var actividad in actividades)
+            {
+                _context.EventosMantenimientoActividad.Add(new EventoMantenimientoActividad
+                {
+                    EventoMetrologicoId = eventoMetrologicoId,
+                    DescripcionActividad = actividad.DescripcionActividad,
+                    Observaciones = actividad.Observaciones,
+                    Orden = orden
+                });
+
+                orden++;
+            }
+        }
+
+        private static bool ValidarEvidencias(List<IFormFile> evidencias)
+        {
+            if (evidencias == null || !evidencias.Any())
+                return true;
+
+            return evidencias
+                .Where(e => e != null && e.Length > 0)
+                .All(e =>
+                    !string.IsNullOrWhiteSpace(e.ContentType) &&
+                    e.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private async Task<List<EvidenciaEventoMetrologico>> SubirEvidenciasAsync(
+            int eventoMetrologicoId,
+            string codigoEquipo,
+            List<IFormFile> evidencias)
+        {
+            var evidenciasGuardadas = new List<EvidenciaEventoMetrologico>();
+
+            if (evidencias == null || evidencias.Count == 0)
+                return evidenciasGuardadas;
+
+            var evidenciasValidas = evidencias
+                .Where(e =>
+                    e != null &&
+                    e.Length > 0 &&
+                    !string.IsNullOrWhiteSpace(e.ContentType) &&
+                    e.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (!evidenciasValidas.Any())
+                return evidenciasGuardadas;
+
+            var folderId = await _googleDriveService.EnsureNestedFolderAsync(
+                codigoEquipo,
+                "Evidencias",
+                "Mantenimientos");
+
+            foreach (var evidencia in evidenciasValidas)
+            {
+                await using var stream = evidencia.OpenReadStream();
+
+                var extension = Path.GetExtension(evidencia.FileName);
+                var nombreLimpio = Path.GetFileNameWithoutExtension(evidencia.FileName);
+                var nombreArchivoDrive =
+                    $"{DateTime.Now:yyyyMMdd_HHmmss}_{Guid.NewGuid():N}_{nombreLimpio}{extension}";
+
+                var uploadResult = await _googleDriveService.UploadFileAsync(
+                    stream,
+                    nombreArchivoDrive,
+                    evidencia.ContentType,
+                    folderId);
+
+                evidenciasGuardadas.Add(new EvidenciaEventoMetrologico
+                {
+                    EventoMetrologicoId = eventoMetrologicoId,
+                    NombreArchivo = evidencia.FileName,
+                    ContentType = evidencia.ContentType,
+                    GoogleDriveFileId = uploadResult.FileId,
+                    RutaArchivo = uploadResult.WebViewLink,
+                    TipoEvidencia = "Imagen",
+                    Descripcion = null,
+                    FechaCarga = DateTime.UtcNow,
+                    Activo = true
+                });
+            }
+
+            return evidenciasGuardadas;
+        }
+
+        private async Task GenerarYSubirPdfAsync(EventoMantenimientoDato mantenimiento)
+        {
+            var pdfBytes = _mantenimientoPdfService.Generar(mantenimiento);
+
+            var codigoEquipo = mantenimiento.EventoMetrologico.Equipo.Codigo;
+            var fecha = mantenimiento.EventoMetrologico.FechaEvento.ToString("yyyy-MM-dd");
+            var nombreArchivo = $"Mantenimiento-{codigoEquipo}-{fecha}.pdf";
+
+            var folderId = await _googleDriveService.EnsureNestedFolderAsync(
+                codigoEquipo,
+                "Documentos",
+                "Mantenimientos");
+
+            using var pdfStream = new MemoryStream(pdfBytes);
+
+            var uploadResult = await _googleDriveService.UploadFileAsync(
+                pdfStream,
+                nombreArchivo,
+                "application/pdf",
+                folderId);
+
+            mantenimiento.GoogleDriveFileId = uploadResult.FileId;
+            mantenimiento.NombreArchivoPdf = uploadResult.FileName;
+            mantenimiento.RutaPdf = uploadResult.WebViewLink;
+        }
+
+        private async Task CargarEvidenciasExistentesEnModeloAsync(MantenimientoViewModel model)
+        {
+            if (model.EventoMetrologicoId <= 0)
+                return;
+
+            model.EvidenciasExistentes = await _context.EvidenciasEventoMetrologico
+                .AsNoTracking()
+                .Where(e => e.EventoMetrologicoId == model.EventoMetrologicoId && e.Activo)
+                .OrderByDescending(e => e.FechaCarga)
+                .Select(e => new EvidenciaEventoViewModel
+                {
+                    EvidenciaEventoMetrologicoId = e.EvidenciaEventoMetrologicoId,
+                    NombreArchivo = e.NombreArchivo,
+                    ContentType = e.ContentType,
+                    GoogleDriveFileId = e.GoogleDriveFileId,
+                    RutaArchivo = e.RutaArchivo,
+                    TipoEvidencia = e.TipoEvidencia,
+                    Descripcion = e.Descripcion,
+                    FechaCarga = e.FechaCarga,
+                    Activo = e.Activo
+                })
+                .ToListAsync();
         }
     }
 }
