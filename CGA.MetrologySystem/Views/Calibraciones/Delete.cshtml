@@ -2,75 +2,100 @@
 
 @{
     ViewData["Title"] = "Eliminar calibración";
+
+    var evento = Model.EventoMetrologico;
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-        <h2 class="page-title">Eliminar calibración</h2>
+        <h2 class="page-title text-danger">Eliminar calibración</h2>
         <p class="page-subtitle">
-            Confirma la eliminación del registro seleccionado.
+            Esta acción eliminará el registro de calibración y el certificado asociado en Google Drive.
         </p>
     </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+
+    <a asp-action="Details" asp-route-id="@Model.EventoCalibracionDatoId" class="btn btn-outline-secondary">
+        Cancelar
+    </a>
 </div>
 
-<div class="form-card">
-
+@if (TempData["Error"] != null)
+{
     <div class="alert alert-danger">
-        ¿Estás seguro de que deseas eliminar esta calibración?
-        Esta acción no se puede deshacer.
+        @TempData["Error"]
+    </div>
+}
+
+<div class="form-card">
+    <div class="alert alert-danger">
+        <h5 class="alert-heading">Confirmación requerida</h5>
+        <p class="mb-0">
+            Estás a punto de eliminar definitivamente esta calibración. También se intentará borrar el certificado PDF almacenado en Drive.
+        </p>
     </div>
 
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <label class="form-label">Equipo</label>
-            <div class="form-control readonly-highlight">
-                @Model.EventoMetrologico?.Equipo?.Codigo - @Model.EventoMetrologico?.Equipo?.Nombre
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="text-muted small">Equipo</div>
+            <div class="fw-semibold">@evento.Equipo?.Codigo - @evento.Equipo?.Nombre</div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="text-muted small">Fecha del evento</div>
+            <div class="fw-semibold">@evento.FechaEvento.ToString("yyyy-MM-dd")</div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="text-muted small">Fecha calibración</div>
+            <div class="fw-semibold">@Model.FechaCalibracion.ToString()</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="text-muted small">Certificado</div>
+            <div class="fw-semibold">
+                @(string.IsNullOrWhiteSpace(Model.NumeroCertificado)
+                    ? "Sin número"
+                    : Model.NumeroCertificado)
             </div>
         </div>
 
-        <div class="col-md-6">
-            <label class="form-label">Laboratorio</label>
-            <div class="form-control readonly-highlight">
-                @(Model.Laboratorio?.Nombre ?? "No registrado")
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <label class="form-label">Fecha evento</label>
-            <div class="form-control readonly-highlight">
-                @(Model.EventoMetrologico?.FechaEvento.ToString("yyyy-MM-dd") ?? "No registrada")
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <label class="form-label">Fecha calibración</label>
-            <div class="form-control readonly-highlight">
-                @(Model.FechaCalibracion?.ToString("yyyy-MM-dd") ?? "No registrada")
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <label class="form-label">Número certificado</label>
-            <div class="form-control readonly-highlight">
-                @(Model.NumeroCertificado ?? "No registrado")
-            </div>
+        <div class="col-md-6 mb-3">
+            <div class="text-muted small">Laboratorio</div>
+            <div class="fw-semibold">@Model.Laboratorio?.Nombre</div>
         </div>
     </div>
 
-    <div class="d-flex justify-content-end gap-2 mt-4">
-        <form asp-action="Delete">
-            <input type="hidden" asp-for="EventoCalibracionDatoId" />
+    <div class="border rounded p-3 mb-4">
+        <h6 class="mb-3">Elementos que se eliminarán</h6>
+
+        <ul class="mb-0">
+            <li>Registro principal del evento metrológico.</li>
+            <li>Datos específicos de la calibración.</li>
+            <li>
+                Certificado PDF:
+                @if (!string.IsNullOrWhiteSpace(Model.NombreArchivoCertificado))
+                {
+                    <strong>@Model.NombreArchivoCertificado</strong>
+                }
+                else
+                {
+                    <span class="text-muted">sin archivo asociado</span>
+                }
+            </li>
+        </ul>
+    </div>
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="EventoCalibracionDatoId" />
+
+        <div class="d-flex justify-content-end gap-2">
+            <a asp-action="Details" asp-route-id="@Model.EventoCalibracionDatoId" class="btn btn-outline-secondary">
+                No eliminar
+            </a>
+
             <button type="submit" class="btn btn-danger">
-                Eliminar
+                Sí, eliminar calibración
             </button>
-        </form>
-
-        <a asp-action="Index" class="btn btn-outline-secondary">
-            Cancelar
-        </a>
-    </div>
-
+        </div>
+    </form>
 </div>

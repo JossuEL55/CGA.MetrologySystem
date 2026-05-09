@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace CGA.MetrologySystem.Models
 {
@@ -54,6 +55,9 @@ namespace CGA.MetrologySystem.Models
         public List<SelectListItem> SubtiposEvento { get; set; } = new();
         public List<SelectListItem> TiposMantenimiento { get; set; } = new();
         public List<SelectListItem> ResponsablesInternos { get; set; } = new();
+        public List<IFormFile> Evidencias { get; set; } = new();
+
+        public List<EvidenciaEventoViewModel> EvidenciasExistentes { get; set; } = new();
     }
 
     public class MantenimientoActividadViewModel

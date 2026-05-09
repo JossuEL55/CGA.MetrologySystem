@@ -1,46 +1,66 @@
 ﻿@model CGA.MetrologySystem.Models.VerificacionViewModel
 
 @{
-    ViewData["Title"] = "Crear verificación";
+    ViewData["Title"] = "Registrar verificación";
 }
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-        <h2 class="page-title">Crear verificación</h2>
+        <h2 class="page-title">Registrar verificación</h2>
         <p class="page-subtitle">
-            Registra una nueva verificación y sus condiciones asociadas.
+            Registra la verificación técnica del equipo, sus condiciones evaluadas y evidencias visuales asociadas.
         </p>
     </div>
 
     <a asp-action="Index" class="btn btn-outline-secondary">
-        Volver
+        Volver al historial
     </a>
 </div>
 
-<form asp-action="Create" method="post" class="form-card">
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+@if (TempData["AdvertenciaRegla"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["AdvertenciaRegla"]
+    </div>
+}
 
-    <h5 class="mb-3">Datos generales</h5>
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="form-card">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+    <div class="mb-4">
+        <h5 class="mb-1">Información de la verificación</h5>
+        <p class="text-muted mb-0">
+            El sistema calculará automáticamente la próxima fecha según la configuración metrológica del equipo.
+        </p>
+    </div>
 
     <div class="row">
         <div class="col-md-6 mb-3">
             <label asp-for="EquipoId" class="form-label fw-semibold">Equipo</label>
+
             <select asp-for="EquipoId"
                     asp-items="Model.Equipos"
                     class="form-select"
                     id="EquipoId">
                 <option value="">Seleccione un equipo...</option>
             </select>
+
             <span asp-validation-for="EquipoId" class="text-danger"></span>
+
+            <small class="text-muted">
+                Al seleccionar un equipo se cargará automáticamente la plantilla correspondiente.
+            </small>
         </div>
 
         <div class="col-md-6 mb-3">
             <label asp-for="SubtipoEventoId" class="form-label fw-semibold">Subtipo de evento</label>
+
             <select asp-for="SubtipoEventoId"
                     asp-items="Model.SubtiposEvento"
                     class="form-select">
                 <option value="">Seleccione un subtipo...</option>
             </select>
+
             <span asp-validation-for="SubtipoEventoId" class="text-danger"></span>
         </div>
     </div>
@@ -48,83 +68,108 @@
     <div class="row">
         <div class="col-md-6 mb-3">
             <label asp-for="ResponsableInternoId" class="form-label fw-semibold">Responsable interno</label>
+
             <select asp-for="ResponsableInternoId"
                     asp-items="Model.ResponsablesInternos"
                     class="form-select">
                 <option value="">Seleccione un responsable...</option>
             </select>
+
             <span asp-validation-for="ResponsableInternoId" class="text-danger"></span>
         </div>
 
         <div class="col-md-3 mb-3">
-            <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha</label>
+            <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha de verificación</label>
+
             <input asp-for="FechaEvento" class="form-control" type="date" />
+
             <span asp-validation-for="FechaEvento" class="text-danger"></span>
         </div>
 
         <div class="col-md-3 mb-3">
-            <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha</label>
-            <input asp-for="FechaProxima" class="form-control" type="date" />
+            <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha calculada</label>
+
+            <input asp-for="FechaProxima"
+                   class="form-control bg-light"
+                   type="date"
+                   readonly />
+
             <span asp-validation-for="FechaProxima" class="text-danger"></span>
         </div>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">Estado del equipo</label>
-        <select asp-for="EstadoEquipoResultado" class="form-select">
-            <option value="">Seleccione...</option>
-            <option value="Operativo">Operativo</option>
-            <option value="No Operativo">No Operativo</option>
-            <option value="Fuera de Servicio">Fuera de Servicio</option>
-        </select>
-        <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
+    <div class="alert alert-light border d-flex align-items-start gap-3 mb-4">
+        <div class="fw-bold text-primary">Reglas</div>
+
+        <div>
+            Si la verificación se registra fuera del periodo esperado, el sistema la marcará automáticamente como extraordinaria.
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">Comentarios adicionales</label>
-        <textarea asp-for="ComentariosAdicionales"
-                  class="form-control"
-                  rows="3"
-                  placeholder="Registra observaciones generales de la verificación."></textarea>
-        <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
-    </div>
+    <input asp-for="EsExtraordinario" type="hidden" />
 
-    <div class="form-check mb-3">
-        <input asp-for="EsExtraordinario" class="form-check-input" />
-        <label asp-for="EsExtraordinario" class="form-check-label fw-semibold">
-            Evento extraordinario
-        </label>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">
+                Estado del equipo
+            </label>
+
+            <select asp-for="EstadoEquipoResultado" class="form-select">
+                <option value="">Seleccione...</option>
+                <option value="Operativo">Operativo</option>
+                <option value="No Operativo">No Operativo</option>
+                <option value="Fuera de Servicio">Fuera de Servicio</option>
+            </select>
+
+            <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-8 mb-3">
+            <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
+                Justificación extraordinaria
+            </label>
+
+            <textarea asp-for="JustificacionExtraordinario"
+                      class="form-control"
+                      rows="2"
+                      placeholder="Completa este campo únicamente si la verificación fue realizada fuera del periodo esperado."></textarea>
+
+            <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+        </div>
     </div>
 
     <div class="mb-4">
-        <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
-            Justificación extraordinaria
+        <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">
+            Comentarios adicionales
         </label>
-        <textarea asp-for="JustificacionExtraordinario"
+
+        <textarea asp-for="ComentariosAdicionales"
                   class="form-control"
-                  rows="2"
-                  placeholder="Completa este campo si la verificación fue extraordinaria."></textarea>
-        <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+                  rows="3"
+                  placeholder="Ejemplo: El equipo cumple correctamente las condiciones evaluadas."></textarea>
+
+        <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
     </div>
 
     <hr class="my-4" />
 
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
-            <h5 class="mb-1">Condiciones a verificar</h5>
-            <p class="page-subtitle">
-                Al seleccionar un equipo, se cargará automáticamente la plantilla correspondiente.
+            <h5 class="mb-1">Condiciones verificadas</h5>
+
+            <p class="text-muted mb-0">
+                Registra las condiciones evaluadas durante la verificación técnica.
             </p>
         </div>
 
-        <button type="button" id="addResultado" class="btn btn-outline-secondary">
+        <button type="button" id="addResultado" class="btn btn-outline-primary">
             Agregar condición
         </button>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-4" id="tablaResultados">
-            <thead>
+    <div class="table-responsive mb-4">
+        <table class="table table-hover align-middle" id="tablaResultados">
+            <thead class="table-light">
                 <tr>
                     <th>Condición a verificar</th>
                     <th style="width: 120px;">Cumple</th>
@@ -132,6 +177,7 @@
                     <th class="text-end" style="width: 100px;">Acción</th>
                 </tr>
             </thead>
+
             <tbody>
                 @for (int i = 0; i < Model.Resultados.Count; i++)
                 {
@@ -181,9 +227,35 @@
         </table>
     </div>
 
+    <hr class="my-4" />
+
+    <div class="mb-4">
+        <h5 class="mb-1">Evidencias visuales</h5>
+
+        <p class="text-muted">
+            Puedes tomar fotografías desde tablet/celular o subir imágenes existentes del dispositivo.
+        </p>
+
+        <input asp-for="Evidencias"
+               type="file"
+               class="form-control"
+               accept="image/*"
+               capture="environment"
+               multiple />
+
+        <small class="text-muted">
+            Formatos permitidos: imágenes. Puedes seleccionar múltiples evidencias.
+        </small>
+    </div>
+
     <div class="d-flex justify-content-end gap-2">
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Guardar verificación</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+
+        <button type="submit" class="btn btn-primary">
+            Guardar verificación
+        </button>
     </div>
 </form>
 
@@ -195,6 +267,7 @@
 
         function reindexarResultados() {
             document.querySelectorAll("#tablaResultados tbody tr").forEach((row, i) => {
+
                 const orden = row.querySelector("input[data-field='orden']");
                 const descripcion = row.querySelector("input[data-field='descripcion']");
                 const cumpleHidden = row.querySelector("input[data-field='cumple-hidden']");
@@ -216,10 +289,12 @@
         }
 
         document.addEventListener("DOMContentLoaded", function () {
+
             const equipoSelect = document.getElementById("EquipoId");
 
             if (equipoSelect) {
                 equipoSelect.addEventListener("change", function () {
+
                     const equipoId = this.value;
 
                     if (!equipoId || equipoId === "0") {
@@ -233,10 +308,14 @@
             const addResultadoButton = document.getElementById("addResultado");
 
             if (addResultadoButton) {
+
                 addResultadoButton.addEventListener("click", function () {
+
                     const fila = `
                         <tr>
+
                             <td>
+
                                 <input type="hidden"
                                        name="Resultados[${index}].Orden"
                                        data-field="orden"
@@ -246,44 +325,57 @@
                                        data-field="descripcion"
                                        class="form-control"
                                        placeholder="Condición a verificar" />
+
                             </td>
 
-                                    <td class="text-center">
-                                 <input type="checkbox"
+                            <td class="text-center">
+
+                                <input type="checkbox"
                                        name="Resultados[${index}].Cumple"
                                        data-field="cumple"
                                        value="true"
                                        class="form-check-input"
                                        checked />
 
-                                 <input type="hidden"
+                                <input type="hidden"
                                        name="Resultados[${index}].Cumple"
                                        data-field="cumple-hidden"
-                                        value="false" />
-                           </td>
+                                       value="false" />
+
+                            </td>
 
                             <td>
+
                                 <input name="Resultados[${index}].Observaciones"
                                        data-field="observaciones"
                                        class="form-control"
                                        placeholder="Observaciones" />
+
                             </td>
 
                             <td class="text-end">
-                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+
+                                <button type="button"
+                                        class="btn btn-outline-danger btn-sm eliminar">
                                     Eliminar
                                 </button>
+
                             </td>
+
                         </tr>`;
 
-                    document.querySelector("#tablaResultados tbody").insertAdjacentHTML("beforeend", fila);
+                    document.querySelector("#tablaResultados tbody")
+                        .insertAdjacentHTML("beforeend", fila);
+
                     index++;
                 });
             }
         });
 
         document.addEventListener("click", function (e) {
+
             if (e.target.classList.contains("eliminar")) {
+
                 e.target.closest("tr").remove();
                 reindexarResultados();
             }

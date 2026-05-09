@@ -174,5 +174,44 @@ namespace CGA.MetrologySystem.Application.Services
             var equipoFolderId = await EnsureEquipoFolderAsync(codigoEquipo);
             return await GetOrCreateFolderAsync(subFolderName, equipoFolderId);
         }
+
+        public async Task DeleteFileAsync(string fileId)
+        {
+            if (string.IsNullOrWhiteSpace(fileId))
+                return;
+
+            try
+            {
+                await _driveService.Files.Delete(fileId).ExecuteAsync();
+            }
+            catch (Google.GoogleApiException ex) when (ex.HttpStatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // Si el archivo ya no existe en Drive, no rompemos el flujo del sistema.
+                return;
+            }
+        }
+
+        public async Task<string> EnsureNestedFolderAsync(
+            string codigoEquipo,
+            params string[] folderNames)
+        {
+            if (string.IsNullOrWhiteSpace(codigoEquipo))
+                throw new Exception("El código del equipo es obligatorio para crear carpetas en Drive.");
+
+            if (folderNames == null || folderNames.Length == 0)
+                return await EnsureEquipoFolderAsync(codigoEquipo);
+
+            var currentFolderId = await EnsureEquipoFolderAsync(codigoEquipo);
+
+            foreach (var folderName in folderNames)
+            {
+                if (string.IsNullOrWhiteSpace(folderName))
+                    continue;
+
+                currentFolderId = await GetOrCreateFolderAsync(folderName, currentFolderId);
+            }
+
+            return currentFolderId;
+        }
     }
 }

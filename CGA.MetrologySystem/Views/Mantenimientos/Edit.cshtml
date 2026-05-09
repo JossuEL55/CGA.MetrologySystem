@@ -7,30 +7,56 @@
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h2 class="page-title">Editar mantenimiento</h2>
-        <p class="page-subtitle">Modifica la información y actividades del mantenimiento registrado.</p>
+        <p class="page-subtitle">
+            Actualiza la información técnica del mantenimiento. Al guardar, el PDF será regenerado y reemplazado automáticamente.
+        </p>
     </div>
 
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+    <div class="d-flex gap-2">
+        <a asp-action="Details" asp-route-id="@Model.EventoMantenimientoDatoId" class="btn btn-outline-primary">
+            Ver detalle
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Volver
+        </a>
+    </div>
 </div>
 
-<form asp-action="Edit" method="post" class="form-card">
-    <input type="hidden" asp-for="EventoMetrologicoId" />
-    <input type="hidden" asp-for="EventoMantenimientoDatoId" />
+@if (TempData["AdvertenciaRegla"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["AdvertenciaRegla"]
+    </div>
+}
 
-    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<form asp-action="Edit" asp-route-id="@Model.EventoMantenimientoDatoId" method="post" enctype="multipart/form-data" class="form-card">
+    <input asp-for="EventoMetrologicoId" type="hidden" />
+    <input asp-for="EventoMantenimientoDatoId" type="hidden" />
+    <input asp-for="EsExtraordinario" type="hidden" />
 
-    <h5 class="mb-3">Datos generales</h5>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+    <div class="mb-4">
+        <h5 class="mb-1">Información del mantenimiento</h5>
+        <p class="text-muted mb-0">
+            Modifica los datos principales del evento. El motor de reglas recalculará la próxima fecha al guardar.
+        </p>
+    </div>
 
     <div class="row">
         <div class="col-md-6 mb-3">
             <label asp-for="EquipoId" class="form-label fw-semibold">Equipo</label>
-            <select asp-for="EquipoId" asp-items="Model.Equipos" class="form-select"></select>
+            <select asp-for="EquipoId" asp-items="Model.Equipos" class="form-select">
+                <option value="">Seleccione un equipo...</option>
+            </select>
             <span asp-validation-for="EquipoId" class="text-danger"></span>
         </div>
 
         <div class="col-md-6 mb-3">
             <label asp-for="TipoMantenimientoId" class="form-label fw-semibold">Tipo de mantenimiento</label>
-            <select asp-for="TipoMantenimientoId" asp-items="Model.TiposMantenimiento" class="form-select"></select>
+            <select asp-for="TipoMantenimientoId" asp-items="Model.TiposMantenimiento" class="form-select">
+                <option value="">Seleccione un tipo...</option>
+            </select>
             <span asp-validation-for="TipoMantenimientoId" class="text-danger"></span>
         </div>
     </div>
@@ -38,59 +64,51 @@
     <div class="row">
         <div class="col-md-6 mb-3">
             <label asp-for="SubtipoEventoId" class="form-label fw-semibold">Subtipo de evento</label>
-            <select asp-for="SubtipoEventoId" asp-items="Model.SubtiposEvento" class="form-select"></select>
+            <select asp-for="SubtipoEventoId" asp-items="Model.SubtiposEvento" class="form-select">
+                <option value="">Seleccione un subtipo...</option>
+            </select>
             <span asp-validation-for="SubtipoEventoId" class="text-danger"></span>
         </div>
 
         <div class="col-md-6 mb-3">
             <label asp-for="ResponsableInternoId" class="form-label fw-semibold">Responsable interno</label>
-            <select asp-for="ResponsableInternoId" asp-items="Model.ResponsablesInternos" class="form-select"></select>
+            <select asp-for="ResponsableInternoId" asp-items="Model.ResponsablesInternos" class="form-select">
+                <option value="">Seleccione un responsable...</option>
+            </select>
             <span asp-validation-for="ResponsableInternoId" class="text-danger"></span>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-md-6 mb-3">
-            <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha</label>
+        <div class="col-md-4 mb-3">
+            <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha del mantenimiento</label>
             <input asp-for="FechaEvento" class="form-control" type="date" />
             <span asp-validation-for="FechaEvento" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6 mb-3">
-            <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha</label>
-            <input asp-for="FechaProxima" class="form-control" type="date" />
+        <div class="col-md-4 mb-3">
+            <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha calculada</label>
+            <input asp-for="FechaProxima" class="form-control bg-light" type="date" readonly />
             <span asp-validation-for="FechaProxima" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">Estado del equipo</label>
+            <select asp-for="EstadoEquipoResultado" class="form-select">
+                <option value="">Seleccione...</option>
+                <option value="Operativo">Operativo</option>
+                <option value="No Operativo">No Operativo</option>
+                <option value="Fuera de Servicio">Fuera de Servicio</option>
+            </select>
+            <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
         </div>
     </div>
 
-    <div class="mb-3">
-        <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">Estado del equipo</label>
-        <select asp-for="EstadoEquipoResultado" class="form-select">
-            <option value="">Seleccione...</option>
-            <option value="Operativo">Operativo</option>
-            <option value="No Operativo">No Operativo</option>
-            <option value="Fuera de Servicio">Fuera de Servicio</option>
-        </select>
-        <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
+    <div class="alert alert-light border mb-4">
+        <strong>Nota:</strong> Si cambias la fecha del mantenimiento, el sistema volverá a evaluar si el evento es ordinario o extraordinario.
     </div>
 
     <div class="mb-3">
-        <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">Comentarios adicionales</label>
-        <textarea asp-for="ComentariosAdicionales"
-                  class="form-control"
-                  rows="3"
-                  placeholder="Registra observaciones generales del mantenimiento."></textarea>
-        <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
-    </div>
-
-    <div class="form-check mb-3">
-        <input asp-for="EsExtraordinario" class="form-check-input" />
-        <label asp-for="EsExtraordinario" class="form-check-label fw-semibold">
-            Evento extraordinario
-        </label>
-    </div>
-
-    <div class="mb-4">
         <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
             Justificación extraordinaria
         </label>
@@ -101,28 +119,37 @@
         <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
     </div>
 
+    <div class="mb-4">
+        <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">Comentarios adicionales</label>
+        <textarea asp-for="ComentariosAdicionales"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Comentarios generales del mantenimiento."></textarea>
+        <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
+    </div>
+
     <hr class="my-4" />
 
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
-            <h5 class="mb-1">Actividades realizadas</h5>
-            <p class="page-subtitle">
-                Modifica las actividades registradas para este mantenimiento.
+            <h5 class="mb-1">Actividades técnicas realizadas</h5>
+            <p class="text-muted mb-0">
+                Puedes corregir, agregar o quitar actividades. El PDF se actualizará con estos datos.
             </p>
         </div>
 
-        <button type="button" id="addActividad" class="btn btn-outline-secondary">
+        <button type="button" id="addActividad" class="btn btn-outline-primary">
             Agregar actividad
         </button>
     </div>
 
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-4" id="tablaActividades">
-            <thead>
+    <div class="table-responsive mb-4">
+        <table class="table table-hover align-middle" id="tablaActividades">
+            <thead class="table-light">
                 <tr>
-                    <th>Actividad</th>
+                    <th>Actividad realizada</th>
                     <th>Observaciones</th>
-                    <th class="text-end" style="width: 100px;">Acción</th>
+                    <th class="text-end" style="width: 110px;">Acción</th>
                 </tr>
             </thead>
             <tbody>
@@ -130,18 +157,13 @@
                 {
                     <tr>
                         <td>
-                            <input type="hidden"
-                                   asp-for="Actividades[i].EventoMantenimientoActividadId"
-                                   data-field="id" />
-
-                            <input type="hidden"
-                                   asp-for="Actividades[i].Orden"
-                                   data-field="orden" />
+                            <input type="hidden" asp-for="Actividades[i].EventoMantenimientoActividadId" />
+                            <input type="hidden" asp-for="Actividades[i].Orden" data-field="orden" />
 
                             <input asp-for="Actividades[i].DescripcionActividad"
                                    data-field="descripcion"
                                    class="form-control"
-                                   placeholder="Descripción de la actividad" />
+                                   placeholder="Ejemplo: Limpieza general del equipo" />
 
                             <span asp-validation-for="Actividades[i].DescripcionActividad" class="text-danger"></span>
                         </td>
@@ -150,12 +172,12 @@
                             <input asp-for="Actividades[i].Observaciones"
                                    data-field="observaciones"
                                    class="form-control"
-                                   placeholder="Observaciones" />
+                                   placeholder="Observaciones opcionales" />
                         </td>
 
                         <td class="text-end">
                             <button type="button" class="btn btn-outline-danger btn-sm eliminar">
-                                Eliminar
+                                Quitar
                             </button>
                         </td>
                     </tr>
@@ -164,9 +186,59 @@
         </table>
     </div>
 
+    <hr class="my-4" />
+
+    <div class="mb-4">
+        <h5 class="mb-1">Evidencias visuales</h5>
+        <p class="text-muted">
+            Las evidencias existentes se conservan. Puedes agregar nuevas fotografías o imágenes.
+        </p>
+
+        @if (Model.EvidenciasExistentes != null && Model.EvidenciasExistentes.Any())
+        {
+            <div class="row mb-3">
+                @foreach (var evidencia in Model.EvidenciasExistentes)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold text-truncate">@evidencia.NombreArchivo</div>
+                            <div class="text-muted small mb-2">
+                                @evidencia.FechaCarga.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </div>
+                            <a href="@evidencia.RutaArchivo" target="_blank" class="btn btn-outline-primary btn-sm">
+                                Abrir evidencia
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-light border">
+                Este mantenimiento aún no tiene evidencias visuales registradas.
+            </div>
+        }
+
+        <input asp-for="Evidencias"
+               type="file"
+               class="form-control"
+               accept="image/*"
+               capture="environment"
+               multiple />
+
+        <small class="text-muted">
+            Puedes tomar fotos desde el dispositivo o cargar imágenes existentes.
+        </small>
+    </div>
+
     <div class="d-flex justify-content-end gap-2">
-        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <a asp-action="Details" asp-route-id="@Model.EventoMantenimientoDatoId" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary">
+            Guardar cambios
+        </button>
     </div>
 </form>
 
@@ -178,12 +250,9 @@
 
         function reindexarActividades() {
             document.querySelectorAll("#tablaActividades tbody tr").forEach((row, i) => {
-                const id = row.querySelector("input[data-field='id']");
                 const orden = row.querySelector("input[data-field='orden']");
                 const descripcion = row.querySelector("input[data-field='descripcion']");
                 const observaciones = row.querySelector("input[data-field='observaciones']");
-
-                if (id) id.name = `Actividades[${i}].EventoMantenimientoActividadId`;
 
                 if (orden) {
                     orden.name = `Actividades[${i}].Orden`;
@@ -197,42 +266,47 @@
             index = document.querySelectorAll("#tablaActividades tbody tr").length;
         }
 
-        document.getElementById("addActividad").addEventListener("click", function () {
-            const fila = `
-                <tr>
-                    <td>
-                        <input type="hidden"
-                               name="Actividades[${index}].EventoMantenimientoActividadId"
-                               data-field="id"
-                               value="0" />
+        document.addEventListener("DOMContentLoaded", function () {
+            const addActividadButton = document.getElementById("addActividad");
 
-                        <input type="hidden"
-                               name="Actividades[${index}].Orden"
-                               data-field="orden"
-                               value="${index + 1}" />
+            if (addActividadButton) {
+                addActividadButton.addEventListener("click", function () {
+                    const fila = `
+                        <tr>
+                            <td>
+                                <input type="hidden"
+                                       name="Actividades[${index}].EventoMantenimientoActividadId"
+                                       value="0" />
 
-                        <input name="Actividades[${index}].DescripcionActividad"
-                               data-field="descripcion"
-                               class="form-control"
-                               placeholder="Descripción de la actividad" />
-                    </td>
+                                <input type="hidden"
+                                       name="Actividades[${index}].Orden"
+                                       data-field="orden"
+                                       value="${index + 1}" />
 
-                    <td>
-                        <input name="Actividades[${index}].Observaciones"
-                               data-field="observaciones"
-                               class="form-control"
-                               placeholder="Observaciones" />
-                    </td>
+                                <input name="Actividades[${index}].DescripcionActividad"
+                                       data-field="descripcion"
+                                       class="form-control"
+                                       placeholder="Ejemplo: Limpieza general del equipo" />
+                            </td>
 
-                    <td class="text-end">
-                        <button type="button" class="btn btn-outline-danger btn-sm eliminar">
-                            Eliminar
-                        </button>
-                    </td>
-                </tr>`;
+                            <td>
+                                <input name="Actividades[${index}].Observaciones"
+                                       data-field="observaciones"
+                                       class="form-control"
+                                       placeholder="Observaciones opcionales" />
+                            </td>
 
-            document.querySelector("#tablaActividades tbody").insertAdjacentHTML("beforeend", fila);
-            index++;
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                    Quitar
+                                </button>
+                            </td>
+                        </tr>`;
+
+                    document.querySelector("#tablaActividades tbody").insertAdjacentHTML("beforeend", fila);
+                    index++;
+                });
+            }
         });
 
         document.addEventListener("click", function (e) {
