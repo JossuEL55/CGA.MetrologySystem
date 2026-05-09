@@ -540,6 +540,9 @@ namespace CGA.MetrologySystem.Controllers
             model.EsExtraordinario = resultadoRegla.EsExtraordinario;
             model.FechaProxima = resultadoRegla.FechaProximaCalculada;
 
+            ModelState.Remove(nameof(model.FechaProxima));
+            ModelState.Remove(nameof(model.EsExtraordinario));
+
             if (!resultadoRegla.EsValido)
             {
                 ModelState.AddModelError(

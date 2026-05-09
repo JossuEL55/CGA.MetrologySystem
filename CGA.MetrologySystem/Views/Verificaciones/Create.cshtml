@@ -92,7 +92,8 @@
             <input asp-for="FechaProxima"
                    class="form-control bg-light"
                    type="date"
-                   readonly />
+                   readonly
+                   tabindex="-1" />
 
             <span asp-validation-for="FechaProxima" class="text-danger"></span>
         </div>
@@ -240,7 +241,6 @@
                type="file"
                class="form-control"
                accept="image/*"
-               capture="environment"
                multiple />
 
         <small class="text-muted">
