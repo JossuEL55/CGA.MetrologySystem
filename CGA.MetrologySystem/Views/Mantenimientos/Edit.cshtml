@@ -88,7 +88,11 @@
 
         <div class="col-md-4 mb-3">
             <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha calculada</label>
-            <input asp-for="FechaProxima" class="form-control bg-light" type="date" readonly />
+            <input asp-for="FechaProxima"
+                   class="form-control bg-light"
+                   type="date"
+                   readonly
+                   tabindex="-1" />
             <span asp-validation-for="FechaProxima" class="text-danger"></span>
         </div>
 
@@ -224,7 +228,6 @@
                type="file"
                class="form-control"
                accept="image/*"
-               capture="environment"
                multiple />
 
         <small class="text-muted">
