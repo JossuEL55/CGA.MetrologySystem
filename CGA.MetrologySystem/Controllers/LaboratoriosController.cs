@@ -53,6 +53,9 @@ namespace CGA.MetrologySystem.Controllers
                 Email = model.Email,
                 SitioWeb = model.SitioWeb,
                 NormaAcreditacion = model.NormaAcreditacion,
+                NumeroAcreditacion = model.NumeroAcreditacion,
+                Alcance = model.Alcance,
+                Observaciones = model.Observaciones,
                 Activo = model.Activo
             };
 
@@ -99,6 +102,9 @@ namespace CGA.MetrologySystem.Controllers
                 Email = laboratorio.Email,
                 SitioWeb = laboratorio.SitioWeb,
                 NormaAcreditacion = laboratorio.NormaAcreditacion,
+                NumeroAcreditacion = laboratorio.NumeroAcreditacion,
+                Alcance = laboratorio.Alcance,
+                Observaciones = laboratorio.Observaciones,
                 Activo = laboratorio.Activo
             };
 
@@ -129,6 +135,9 @@ namespace CGA.MetrologySystem.Controllers
             laboratorio.Email = model.Email;
             laboratorio.SitioWeb = model.SitioWeb;
             laboratorio.NormaAcreditacion = model.NormaAcreditacion;
+            laboratorio.NumeroAcreditacion = model.NumeroAcreditacion;
+            laboratorio.Alcance = model.Alcance;
+            laboratorio.Observaciones = model.Observaciones;
             laboratorio.Activo = model.Activo;
 
             _context.Set<Laboratorio>().Update(laboratorio);

@@ -30,7 +30,7 @@ namespace CGA.MetrologySystem.Controllers
                 .Include(e => e.Ubicacion)
                 .Include(e => e.ResponsableInterno)
                 .ToListAsync();
-
+        
             return View(equipos);
         }
 

@@ -26,9 +26,26 @@
         </div>
 
         <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Estado</label>
+            <input class="form-control readonly-highlight" value="@(Model.Activo ? "Activo" : "Inactivo")" readonly />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
             <label class="form-label fw-semibold">Norma de acreditación</label>
             <input class="form-control readonly-highlight" value="@Model.NormaAcreditacion" readonly />
         </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Número de acreditación</label>
+            <input class="form-control readonly-highlight" value="@Model.NumeroAcreditacion" readonly />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Alcance</label>
+        <input class="form-control readonly-highlight" value="@Model.Alcance" readonly />
     </div>
 
     <div class="mb-3">
@@ -37,19 +54,14 @@
     </div>
 
     <div class="row">
-        <div class="col-md-4 mb-3">
+        <div class="col-md-6 mb-3">
             <label class="form-label fw-semibold">Ciudad</label>
             <input class="form-control readonly-highlight" value="@Model.Ciudad" readonly />
         </div>
 
-        <div class="col-md-4 mb-3">
+        <div class="col-md-6 mb-3">
             <label class="form-label fw-semibold">País</label>
             <input class="form-control readonly-highlight" value="@Model.Pais" readonly />
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <label class="form-label fw-semibold">Estado</label>
-            <input class="form-control readonly-highlight" value="@(Model.Activo ? "Activo" : "Inactivo")" readonly />
         </div>
     </div>
 
@@ -68,6 +80,11 @@
     <div class="mb-3">
         <label class="form-label fw-semibold">Sitio web</label>
         <input class="form-control readonly-highlight" value="@Model.SitioWeb" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Observaciones</label>
+        <textarea class="form-control readonly-highlight" rows="3" readonly>@Model.Observaciones</textarea>
     </div>
 
     <form asp-action="Delete" method="post" class="mt-4">
