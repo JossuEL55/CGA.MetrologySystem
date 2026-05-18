@@ -28,17 +28,44 @@
                 <a class="sidebar-link" asp-controller="Perfil" asp-action="Index">Mi perfil</a>
 
                 <div class="sidebar-section-title">Metrología</div>
-                <a class="sidebar-link" asp-controller="Equipos" asp-action="Index">Equipos</a>
-                <a class="sidebar-link" asp-controller="Laboratorios" asp-action="Index">Laboratorios</a>
-                <a class="sidebar-link" asp-controller="Calibraciones" asp-action="Index">Calibraciones</a>
-                <a class="sidebar-link" asp-controller="Verificaciones" asp-action="Index">Verificaciones</a>
-                <a class="sidebar-link" asp-controller="Mantenimientos" asp-action="Index">Mantenimientos</a>
+
+                <a class="sidebar-link" asp-controller="Equipos" asp-action="Index">
+                    Equipos
+                </a>
+
+                <a class="sidebar-link" asp-controller="Laboratorios" asp-action="Index">
+                    Laboratorios
+                </a>
+
+                <a class="sidebar-link" asp-controller="Calibraciones" asp-action="Index">
+                    Calibraciones
+                </a>
+
+                <a class="sidebar-link" asp-controller="Verificaciones" asp-action="Index">
+                    Verificaciones
+                </a>
+
+                <a class="sidebar-link" asp-controller="Mantenimientos" asp-action="Index">
+                    Mantenimientos
+                </a>
+
+                <a class="sidebar-link"
+                       asp-controller="ControlMetrologico"
+                       asp-action="Index">
+                    Control metrológico
+                </a>
 
                 @if (User.IsInRole("Administrador"))
                 {
                     <div class="sidebar-section-title">Administración</div>
-                    <a class="sidebar-link" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
-                    <a class="sidebar-link" asp-controller="Auditoria" asp-action="Index">Auditoría</a>
+
+                    <a class="sidebar-link" asp-controller="Usuarios" asp-action="Index">
+                        Usuarios
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="Auditoria" asp-action="Index">
+                        Auditoría
+                    </a>
 
                     <div class="sidebar-section-title">Configuración</div>
 
@@ -84,6 +111,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
