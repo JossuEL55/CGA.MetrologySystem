@@ -1,0 +1,34 @@
+﻿@model CGA.MetrologySystem.Models.ControlMetrologico.ControlEventoViewModel
+
+<div class="metro-control-card @Model.CssClass">
+    <div class="metro-control-top">
+        <div class="metro-control-icon">
+            <i class="bi @Model.Icono"></i>
+        </div>
+
+        <div>
+            <strong>@Model.TipoEventoNombre</strong>
+            <span>@Model.Mensaje</span>
+        </div>
+    </div>
+
+    <div class="metro-control-dates">
+        <div>
+            <small>Último</small>
+            <b>
+                @(Model.FechaUltimoEvento.HasValue
+                    ? Model.FechaUltimoEvento.Value.ToString("yyyy-MM-dd")
+                    : "N/D")
+            </b>
+        </div>
+
+        <div>
+            <small>Próximo</small>
+            <b>
+                @(Model.FechaProxima.HasValue
+                    ? Model.FechaProxima.Value.ToString("yyyy-MM-dd")
+                    : "N/D")
+            </b>
+        </div>
+    </div>
+</div>

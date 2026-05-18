@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using CGA.MetrologySystem.Infrastructure.Services;
 using QuestPDF.Infrastructure;
 using CGA.MetrologySystem.Services.Pdf;
+using CGA.MetrologySystem.Services.ControlMetrologico;
 
 QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,7 @@ builder.Services.AddScoped<IGoogleDriveCredentialProvider, GoogleDriveCredential
 builder.Services.AddScoped<MantenimientoPdfService>();
 builder.Services.AddScoped<VerificacionPdfService>();
 builder.Services.AddScoped<IMetrologyRulesService, MetrologyRulesService>();
+builder.Services.AddScoped<ControlMetrologicoService>();
 
 builder.Services.AddDefaultIdentity<UsuarioSistema>(options =>
 {
