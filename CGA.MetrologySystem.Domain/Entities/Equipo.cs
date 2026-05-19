@@ -42,5 +42,7 @@ namespace CGA.MetrologySystem.Domain.Entities
         public ICollection<CaracteristicaMetrologicaEquipo> CaracteristicasMetrologicas { get; set; } = new List<CaracteristicaMetrologicaEquipo>();
         public ICollection<ConfiguracionControlEquipo> ConfiguracionesControl { get; set; } = new List<ConfiguracionControlEquipo>();
         public ICollection<EventoMetrologico> EventosMetrologicos { get; set; } = new List<EventoMetrologico>();
+        public FichaTecnicaEquipo? FichaTecnica { get; set; }
+        public HojaVidaEquipo? HojaVida { get; set; }
     }
 }

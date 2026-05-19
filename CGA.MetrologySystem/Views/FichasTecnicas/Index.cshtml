@@ -1,0 +1,203 @@
+﻿@model CGA.MetrologySystem.Models.FichasTecnicas.FichasTecnicasIndexViewModel
+
+@{
+    ViewData["Title"] = "Fichas Técnicas";
+}
+
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Fichas Técnicas</h2>
+
+        <p class="page-subtitle">
+            Consulta, generación y actualización de fichas técnicas consolidadas por equipo.
+        </p>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i>
+        @TempData["Success"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle"></i>
+        @TempData["Error"]
+    </div>
+}
+
+<div class="form-card mb-4">
+    <form asp-action="Index" method="get">
+        <div class="row g-3 align-items-end">
+
+            <div class="col-md-5">
+                <label class="form-label">Buscar</label>
+
+                <input asp-for="Buscar"
+                       class="form-control"
+                       placeholder="Código, nombre, marca, modelo o serie..." />
+            </div>
+
+            <div class="col-md-5">
+                <label class="form-label">Equipo</label>
+
+                <select asp-for="EquipoId"
+                        asp-items="Model.Equipos"
+                        class="form-select">
+
+                    <option value="">Todos los equipos</option>
+
+                </select>
+            </div>
+
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i>
+                    Filtrar
+                </button>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<div class="form-card">
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle">
+
+            <thead class="table-light">
+                <tr>
+                    <th>Equipo</th>
+                    <th>Tipo</th>
+                    <th>Ficha Técnica</th>
+                    <th>Última Generación</th>
+                    <th>Eventos</th>
+                    <th class="text-center">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @if (Model.Fichas.Any())
+                {
+                    foreach (var item in Model.Fichas)
+                    {
+                        <tr>
+
+                            <td>
+                                <div class="fw-semibold">
+                                    @item.CodigoEquipo
+                                </div>
+
+                                <div class="text-muted small">
+                                    @item.NombreEquipo
+                                </div>
+                            </td>
+
+                            <td>
+                                @item.TipoEquipo
+                            </td>
+
+                            <td>
+                                @if (item.TieneFichaTecnica)
+                                {
+                                    <span class="badge bg-success">
+                                        Generada
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        Pendiente
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (item.FechaUltimaGeneracion.HasValue)
+                                {
+                                    @item.FechaUltimaGeneracion.Value.ToString("yyyy-MM-dd")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        Sin generar
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                <span class="badge bg-dark">
+                                    @item.CantidadEventosIncluidos
+                                </span>
+                            </td>
+
+                            <td class="text-center">
+
+                                <div class="d-flex justify-content-center gap-2">
+
+                                    @if (item.FichaTecnicaEquipoId.HasValue)
+                                    {
+                                        <a asp-action="VerPdf"
+                                               asp-route-id="@item.FichaTecnicaEquipoId"
+                                               class="btn btn-sm btn-outline-dark">
+
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                            Ver PDF
+                                        </a>
+                                    }
+
+                                    <form asp-action="GenerarActualizar"
+                                          method="post">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="equipoId"
+                                               value="@item.EquipoId" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-primary">
+
+                                            <i class="bi bi-arrow-repeat"></i>
+
+                                            @(item.TieneFichaTecnica
+                                                ? "Actualizar"
+                                                : "Generar")
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+
+                            <div class="text-muted">
+                                No se encontraron equipos.
+                            </div>
+
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
