@@ -3,6 +3,7 @@ using System;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CGA.MetrologySystem.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260518234835_AddFichaTecnicaEquipo")]
+    partial class AddFichaTecnicaEquipo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -542,47 +545,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.HasKey("GoogleDriveCredentialId");
 
                     b.ToTable("GoogleDriveCredentials");
-                });
-
-            modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.HojaVidaEquipo", b =>
-                {
-                    b.Property<int>("HojaVidaEquipoId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("HojaVidaEquipoId"));
-
-                    b.Property<bool>("Activa")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("CantidadEventosIncluidos")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("EquipoId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("FechaUltimaGeneracion")
-                        .HasColumnType("date");
-
-                    b.Property<string>("GoogleDriveFileId")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("NombreArchivoPdf")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("RutaPdf")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.HasKey("HojaVidaEquipoId");
-
-                    b.HasIndex("EquipoId")
-                        .IsUnique();
-
-                    b.ToTable("HojasVidaEquipo");
                 });
 
             modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.Laboratorio", b =>
@@ -1273,17 +1235,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Navigation("Equipo");
                 });
 
-            modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.HojaVidaEquipo", b =>
-                {
-                    b.HasOne("CGA.MetrologySystem.Domain.Entities.Equipo", "Equipo")
-                        .WithOne("HojaVida")
-                        .HasForeignKey("CGA.MetrologySystem.Domain.Entities.HojaVidaEquipo", "EquipoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Equipo");
-                });
-
             modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.PlantillaEvento", b =>
                 {
                     b.HasOne("CGA.MetrologySystem.Domain.Entities.TipoEquipo", "TipoEquipo")
@@ -1374,8 +1325,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Navigation("EventosMetrologicos");
 
                     b.Navigation("FichaTecnica");
-
-                    b.Navigation("HojaVida");
                 });
 
             modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.EventoMetrologico", b =>

@@ -36,6 +36,8 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
         public DbSet<EventoMantenimientoDato> EventosMantenimientoDato { get; set; }
         public DbSet<EventoVerificacionDato> EventosVerificacionDato { get; set; }
         public DbSet<EvidenciaEventoMetrologico> EvidenciasEventoMetrologico { get; set; }
+        public DbSet<FichaTecnicaEquipo> FichasTecnicasEquipo { get; set; }
+        public DbSet<HojaVidaEquipo> HojasVidaEquipo { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -73,6 +75,51 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
                     .HasForeignKey(e => e.EventoMetrologicoId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+            modelBuilder.Entity<FichaTecnicaEquipo>(entity =>
+            {
+                entity.HasKey(f => f.FichaTecnicaEquipoId);
+
+                entity.Property(f => f.NombreArchivoPdf)
+                    .HasMaxLength(255)
+                    .IsRequired();
+
+                entity.Property(f => f.GoogleDriveFileId)
+                    .HasMaxLength(255);
+
+                entity.Property(f => f.RutaPdf)
+                    .HasMaxLength(500);
+
+                entity.HasOne(f => f.Equipo)
+                    .WithOne(e => e.FichaTecnica)
+                    .HasForeignKey<FichaTecnicaEquipo>(f => f.EquipoId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(f => f.EquipoId)
+                    .IsUnique();
+            });
+            modelBuilder.Entity<HojaVidaEquipo>(entity =>
+            {
+                entity.HasKey(h => h.HojaVidaEquipoId);
+
+                entity.Property(h => h.NombreArchivoPdf)
+                    .HasMaxLength(255)
+                    .IsRequired();
+
+                entity.Property(h => h.GoogleDriveFileId)
+                    .HasMaxLength(255);
+
+                entity.Property(h => h.RutaPdf)
+                    .HasMaxLength(500);
+
+                entity.HasOne(h => h.Equipo)
+                    .WithOne(e => e.HojaVida)
+                    .HasForeignKey<HojaVidaEquipo>(h => h.EquipoId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(h => h.EquipoId)
+                    .IsUnique();
+            });
         }
+
     }
 }
