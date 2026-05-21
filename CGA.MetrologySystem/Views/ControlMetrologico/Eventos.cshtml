@@ -19,11 +19,29 @@
     </div>
 
     <div class="metro-hero-actions">
+        @if (User.IsInRole("Administrador"))
+        {
+            <form asp-controller="Alertas" asp-action="Procesar" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-envelope-paper"></i> Procesar alertas
+                </button>
+            </form>
+        }
+
         <a asp-action="Index" class="btn btn-light">
             <i class="bi bi-grid-3x3-gap"></i> Vista por equipo
         </a>
     </div>
 </div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @successMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
 
 <div class="metro-summary-grid mb-4">
     <div class="metro-kpi">

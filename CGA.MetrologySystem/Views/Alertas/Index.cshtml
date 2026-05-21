@@ -1,0 +1,165 @@
+@model CGA.MetrologySystem.Models.Alertas.AlertasIndexViewModel
+
+@{
+    ViewData["Title"] = "Alertas";
+}
+
+<div class="metro-hero mb-4">
+    <div>
+        <span class="metro-eyebrow">
+            <i class="bi bi-envelope-check"></i> Trazabilidad operativa
+        </span>
+
+        <h1>Historial de alertas</h1>
+
+        <p>
+            Consulta los correos generados por el motor de alertas metrologicas,
+            sus destinatarios, estado de envio y fecha critica asociada.
+        </p>
+    </div>
+
+    <div class="metro-hero-actions">
+        <form asp-controller="Alertas" asp-action="Procesar" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-envelope-paper"></i> Procesar alertas
+            </button>
+        </form>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @successMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+<div class="metro-summary-grid mb-4">
+    <div class="metro-kpi">
+        <span>Total alertas</span>
+        <strong>@Model.TotalAlertas</strong>
+        <i class="bi bi-bell"></i>
+    </div>
+
+    <div class="metro-kpi kpi-ok">
+        <span>Exitosas</span>
+        <strong>@Model.AlertasExitosas</strong>
+        <i class="bi bi-check-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-danger">
+        <span>Fallidas</span>
+        <strong>@Model.AlertasFallidas</strong>
+        <i class="bi bi-x-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-warning">
+        <span>Ultimas 24 h</span>
+        <strong>@Model.AlertasUltimas24Horas</strong>
+        <i class="bi bi-clock-history"></i>
+    </div>
+</div>
+
+<div class="metro-table-card">
+    <div class="metro-table-header">
+        <div>
+            <h5>Bitacora de notificaciones</h5>
+            <p>Ultimos 100 registros generados por el sistema de alertas.</p>
+        </div>
+
+        <span class="metro-table-count">
+            @Model.Alertas.Count registro(s)
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table metro-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Fecha envio</th>
+                    <th>Equipo</th>
+                    <th>Evento</th>
+                    <th>Alerta</th>
+                    <th>Fecha critica</th>
+                    <th>Destinatarios</th>
+                    <th>Estado</th>
+                    <th>Mensaje</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Alertas.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="metro-empty">
+                                <i class="bi bi-inbox"></i>
+                                <h5>No hay alertas registradas</h5>
+                                <p>Cuando el motor envie o intente enviar correos, apareceran en este historial.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var alerta in Model.Alertas)
+                    {
+                        <tr>
+                            <td>
+                                <span class="metro-date-text">
+                                    @alerta.FechaEnvio.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="metro-equipo-cell">
+                                    <div class="metro-equipo-avatar">
+                                        <i class="bi bi-tools"></i>
+                                    </div>
+
+                                    <div>
+                                        <strong>@alerta.CodigoEquipo</strong>
+                                        <span>@alerta.NombreEquipo</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="metro-event-pill">
+                                    @alerta.TipoEvento
+                                </span>
+                            </td>
+                            <td>
+                                <span class="metro-type-pill">@alerta.TipoAlerta</span>
+                            </td>
+                            <td>
+                                <span class="metro-date-text">
+                                    @alerta.FechaReferencia.ToString("yyyy-MM-dd")
+                                </span>
+                            </td>
+                            <td>
+                                <span class="metro-message-text">@alerta.Destinatarios</span>
+                            </td>
+                            <td>
+                                @if (alerta.FueExitosa)
+                                {
+                                    <span class="metro-status-pill estado-vigente">
+                                        <i class="bi bi-check-circle-fill"></i> Exitosa
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="metro-status-pill estado-vencido">
+                                        <i class="bi bi-x-circle-fill"></i> Fallida
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <span class="metro-message-text">@alerta.Mensaje</span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

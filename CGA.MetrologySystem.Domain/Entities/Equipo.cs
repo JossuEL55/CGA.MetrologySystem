@@ -34,6 +34,9 @@ namespace CGA.MetrologySystem.Domain.Entities
         public bool Activo { get; set; } = true;
 
         public string? GoogleDriveFolderId { get; set; }
+        public string? FotoNombreArchivo { get; set; }
+        public string? FotoGoogleDriveFileId { get; set; }
+        public string? FotoRutaArchivo { get; set; }
         public TipoEquipo TipoEquipo { get; set; } = null!;
         public Proveedor Proveedor { get; set; } = null!;
         public Ubicacion Ubicacion { get; set; } = null!;

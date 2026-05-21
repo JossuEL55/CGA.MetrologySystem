@@ -42,6 +42,13 @@ namespace CGA.MetrologySystem.Models
         [Display(Name = "Comentarios adicionales")]
         public string? ComentariosAdicionales { get; set; }
 
+        [Display(Name = "Registro histórico")]
+        public bool EsHistorico { get; set; }
+
+        [StringLength(500, ErrorMessage = "La observación histórica no puede exceder los 500 caracteres.")]
+        [Display(Name = "Observación de carga histórica")]
+        public string? ObservacionCargaHistorica { get; set; }
+
         [Display(Name = "Es extraordinario")]
         public bool EsExtraordinario { get; set; }
 
@@ -72,6 +79,12 @@ namespace CGA.MetrologySystem.Models
         [StringLength(500, ErrorMessage = "Las observaciones no pueden exceder los 500 caracteres.")]
         [Display(Name = "Observaciones")]
         public string? Observaciones { get; set; }
+
+        [Display(Name = "Imagen del ítem")]
+        public IFormFile? EvidenciaImagen { get; set; }
+
+        public string? EvidenciaNombreArchivo { get; set; }
+        public string? EvidenciaRutaArchivo { get; set; }
 
         [Range(0, int.MaxValue, ErrorMessage = "El orden no puede ser negativo.")]
         public int Orden { get; set; }

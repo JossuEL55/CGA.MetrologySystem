@@ -22,6 +22,129 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.AlertaEnviada", b =>
+                {
+                    b.Property<int>("AlertaEnviadaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AlertaEnviadaId"));
+
+                    b.Property<string>("Destinatarios")
+                        .HasColumnType("text");
+
+                    b.Property<int>("EquipoId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaEnvio")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaReferencia")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("FueExitosa")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Mensaje")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TipoAlerta")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TipoEvento")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("AlertaEnviadaId");
+
+                    b.HasIndex("EquipoId");
+
+                    b.ToTable("AlertasEnviadas");
+                });
+
+            modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.AuditoriaMetrologica", b =>
+                {
+                    b.Property<int>("AuditoriaMetrologicaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AuditoriaMetrologicaId"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("CodigoEquipo")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Detalle")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Entidad")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("EntidadId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<int?>("EquipoId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("EsCritico")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("EventoMetrologicoId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NombreEquipo")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("character varying(220)");
+
+                    b.Property<string>("RolUsuario")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("TipoEvento")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("UsuarioCorreo")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("UsuarioId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("UsuarioNombre")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
+
+                    b.HasKey("AuditoriaMetrologicaId");
+
+                    b.ToTable("AuditoriasMetrologicas");
+                });
+
             modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.AuditoriaUsuario", b =>
                 {
                     b.Property<int>("Id")
@@ -161,6 +284,18 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Property<DateTime?>("FechaPuestaFuncionamiento")
                         .HasColumnType("date");
 
+                    b.Property<string>("FotoGoogleDriveFileId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("FotoNombreArchivo")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("FotoRutaArchivo")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("GoogleDriveFolderId")
                         .HasColumnType("text");
 
@@ -262,6 +397,22 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("EvidenciaContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("EvidenciaGoogleDriveFileId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EvidenciaNombreArchivo")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EvidenciaRutaArchivo")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<int>("EventoMetrologicoId")
                         .HasColumnType("integer");
 
@@ -322,6 +473,9 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("Anulado")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("ComentariosAdicionales")
                         .HasColumnType("text");
 
@@ -331,8 +485,14 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Property<bool>("EsExtraordinario")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("EsHistorico")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("EstadoEquipoResultado")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("FechaAnulacion")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("FechaEvento")
                         .HasColumnType("date");
@@ -346,6 +506,14 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Property<string>("JustificacionExtraordinario")
                         .HasColumnType("text");
 
+                    b.Property<string>("MotivoAnulacion")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ObservacionCargaHistorica")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<int>("ResponsableInternoId")
                         .HasColumnType("integer");
 
@@ -354,6 +522,14 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
 
                     b.Property<int>("TipoEventoMetrologicoId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("UsuarioAnulacionId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("UsuarioAnulacionNombre")
+                        .HasMaxLength(180)
+                        .HasColumnType("character varying(180)");
 
                     b.HasKey("EventoMetrologicoId");
 
@@ -410,6 +586,22 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Property<string>("DescripcionItem")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("EvidenciaContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("EvidenciaGoogleDriveFileId")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EvidenciaNombreArchivo")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EvidenciaRutaArchivo")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<int>("EventoMetrologicoId")
                         .HasColumnType("integer");
@@ -633,6 +825,55 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.HasKey("LaboratorioId");
 
                     b.ToTable("Laboratorios");
+                });
+
+            modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.NotificacionEnviada", b =>
+                {
+                    b.Property<int>("NotificacionEnviadaId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("NotificacionEnviadaId"));
+
+                    b.Property<string>("Destinatarios")
+                        .HasColumnType("text");
+
+                    b.Property<int>("EquipoId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EventoMetrologicoId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaEnvio")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("FechaReferencia")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("FueExitosa")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Mensaje")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TipoEvento")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("TipoNotificacion")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.HasKey("NotificacionEnviadaId");
+
+                    b.HasIndex("EquipoId");
+
+                    b.HasIndex("EventoMetrologicoId");
+
+                    b.ToTable("NotificacionesEnviadas");
                 });
 
             modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.PlantillaEvento", b =>
@@ -1082,6 +1323,17 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.AlertaEnviada", b =>
+                {
+                    b.HasOne("CGA.MetrologySystem.Domain.Entities.Equipo", "Equipo")
+                        .WithMany()
+                        .HasForeignKey("EquipoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipo");
+                });
+
             modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.CaracteristicaMetrologicaEquipo", b =>
                 {
                     b.HasOne("CGA.MetrologySystem.Domain.Entities.Equipo", "Equipo")
@@ -1282,6 +1534,25 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Equipo");
+                });
+
+            modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.NotificacionEnviada", b =>
+                {
+                    b.HasOne("CGA.MetrologySystem.Domain.Entities.Equipo", "Equipo")
+                        .WithMany()
+                        .HasForeignKey("EquipoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CGA.MetrologySystem.Domain.Entities.EventoMetrologico", "EventoMetrologico")
+                        .WithMany()
+                        .HasForeignKey("EventoMetrologicoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Equipo");
+
+                    b.Navigation("EventoMetrologico");
                 });
 
             modelBuilder.Entity("CGA.MetrologySystem.Domain.Entities.PlantillaEvento", b =>

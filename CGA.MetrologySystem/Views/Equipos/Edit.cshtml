@@ -15,7 +15,7 @@
 </div>
 
 <div class="form-card">
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
         <input asp-for="EquipoId" type="hidden" />
 
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
@@ -74,6 +74,30 @@
             <input asp-for="Activo" class="form-check-input" type="checkbox" />
             <label asp-for="Activo" class="form-check-label"></label>
         </div>
+
+        <div class="event-upload-box mb-4">
+            <div>
+                <label asp-for="FotoEquipo" class="form-label fw-semibold mb-1"></label>
+                @if (!string.IsNullOrWhiteSpace(Model.FotoActualRutaArchivo))
+                {
+                    <p class="mb-2">
+                        Foto actual:
+                        <a href="@Model.FotoActualRutaArchivo" target="_blank">
+                            @(Model.FotoActualNombreArchivo ?? "Abrir imagen")
+                        </a>
+                    </p>
+                }
+                <p class="mb-0">
+                    Carga una nueva imagen para reemplazar la foto actual del equipo.
+                </p>
+            </div>
+
+            <input asp-for="FotoEquipo"
+                   type="file"
+                   class="form-control"
+                   accept="image/*" />
+        </div>
+        <span asp-validation-for="FotoEquipo" class="text-danger d-block mb-3"></span>
 
         <hr />
 

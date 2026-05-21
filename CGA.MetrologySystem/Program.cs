@@ -9,6 +9,11 @@ using CGA.MetrologySystem.Services.FichasTecnicas;
 using CGA.MetrologySystem.Services.HojasVida;
 using CGA.MetrologySystem.Services.Pdf;
 using CGA.MetrologySystem.Services.Security;
+using CGA.MetrologySystem.Configuration;
+using CGA.MetrologySystem.Services.Email;
+using CGA.MetrologySystem.Services.Alertas;
+using CGA.MetrologySystem.Services.Notificaciones;
+using CGA.MetrologySystem.Services.Auditoria;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +46,17 @@ builder.Services.AddScoped<HojaVidaPdfService>();
 builder.Services.AddScoped<HojaVidaEquipoService>();
 builder.Services.AddScoped<IMetrologyRulesService, MetrologyRulesService>();
 builder.Services.AddScoped<ControlMetrologicoService>();
+builder.Services.Configure<SmtpSettings>(
+builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<AlertasSettings>(
+builder.Configuration.GetSection("AlertasSettings"));
+builder.Services.Configure<NotificacionesSettings>(
+builder.Configuration.GetSection("NotificacionesSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAlertaMetrologicaService, AlertaMetrologicaService>();
+builder.Services.AddScoped<INotificacionMetrologicaService, NotificacionMetrologicaService>();
+builder.Services.AddScoped<IAuditoriaMetrologicaService, AuditoriaMetrologicaService>();
+builder.Services.AddHostedService<AlertasBackgroundService>();
 
 builder.Services.AddDefaultIdentity<UsuarioSistema>(options =>
 {

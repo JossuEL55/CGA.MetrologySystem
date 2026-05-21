@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
+using Microsoft.AspNetCore.Http;
+
 namespace CGA.MetrologySystem.Models
 {
     public class EquipoViewModel
@@ -75,6 +77,12 @@ namespace CGA.MetrologySystem.Models
 
         [Display(Name = "Activo")]
         public bool Activo { get; set; } = true;
+
+        [Display(Name = "Foto del equipo")]
+        public IFormFile? FotoEquipo { get; set; }
+
+        public string? FotoActualNombreArchivo { get; set; }
+        public string? FotoActualRutaArchivo { get; set; }
 
         public List<SelectListItem> TiposEquipo { get; set; } = new();
         public List<SelectListItem> Proveedores { get; set; } = new();
