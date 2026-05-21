@@ -30,11 +30,24 @@
 
     <div class="d-flex gap-2">
 
-        <a asp-action="Edit"
+        @if (!evento.Anulado && evento.Activo &&
+            (!evento.EsHistorico || User.IsInRole("Administrador")))
+        {
+            <a asp-action="Edit"
+                   asp-route-id="@Model.EventoVerificacionDatoId"
+                   class="btn btn-primary">
+                Editar
+            </a>
+        }
+
+        @if (!evento.Anulado && evento.Activo && User.IsInRole("Administrador"))
+        {
+            <a asp-action="Anular"
                asp-route-id="@Model.EventoVerificacionDatoId"
-               class="btn btn-primary">
-            Editar
-        </a>
+               class="btn btn-outline-danger">
+                Anular
+            </a>
+        }
 
         <a asp-action="Index"
                class="btn btn-outline-secondary">
@@ -44,6 +57,20 @@
     </div>
 
 </div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Mensaje"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
 
 <div class="row">
 
@@ -75,6 +102,20 @@
                     {
                         <span class="badge bg-warning text-dark fs-6 ms-1">
                             Extraordinaria
+                        </span>
+                    }
+
+                    @if (evento.EsHistorico)
+                    {
+                        <span class="badge bg-info text-dark fs-6 ms-1">
+                            Histórica
+                        </span>
+                    }
+
+                    @if (evento.Anulado)
+                    {
+                        <span class="badge bg-danger fs-6 ms-1">
+                            Anulada
                         </span>
                     }
 
@@ -184,6 +225,49 @@
                 </div>
             }
 
+            @if (evento.EsHistorico && !string.IsNullOrWhiteSpace(evento.ObservacionCargaHistorica))
+            {
+                <div class="alert alert-info">
+                    <div class="fw-semibold mb-1">
+                        Observación histórica
+                    </div>
+
+                    <div>
+                        @evento.ObservacionCargaHistorica
+                    </div>
+                </div>
+            }
+
+            @if (evento.Anulado)
+            {
+                <div class="alert alert-danger">
+                    <div class="fw-semibold mb-1">
+                        Anulación metrológica
+                    </div>
+
+                    <div>
+                        <strong>Fecha:</strong>
+                        @(evento.FechaAnulacion.HasValue
+                            ? evento.FechaAnulacion.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            : "No definida")
+                    </div>
+
+                    <div>
+                        <strong>Responsable:</strong>
+                        @(string.IsNullOrWhiteSpace(evento.UsuarioAnulacionNombre)
+                            ? "No identificado"
+                            : evento.UsuarioAnulacionNombre)
+                    </div>
+
+                    <div class="mt-2">
+                        <strong>Motivo:</strong>
+                        @(string.IsNullOrWhiteSpace(evento.MotivoAnulacion)
+                            ? "No registrado"
+                            : evento.MotivoAnulacion)
+                    </div>
+                </div>
+            }
+
             <hr class="my-4" />
 
             <h5 class="mb-3">
@@ -192,16 +276,17 @@
 
             @if (evento.ResultadosVerificacion != null && evento.ResultadosVerificacion.Any())
             {
-                <div class="table-responsive">
+                <div class="table-responsive checklist-table-shell checklist-detail-scroll mx-0 mb-0">
 
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table checklist-table align-middle mb-0">
 
-                        <thead class="table-light">
+                        <thead>
                             <tr>
-                                <th>Orden</th>
-                                <th>Condición evaluada</th>
-                                <th>Resultado</th>
-                                <th>Observaciones</th>
+                                <th class="checklist-head-order checklist-order-column">#</th>
+                                <th class="checklist-head-description">Condición evaluada</th>
+                                <th class="checklist-head-status checklist-status-column">Resultado</th>
+                                <th class="checklist-head-notes">Observaciones</th>
+                                <th class="checklist-head-evidence">Evidencia del ítem</th>
                             </tr>
                         </thead>
 
@@ -209,10 +294,10 @@
 
                             @foreach (var resultado in evento.ResultadosVerificacion.OrderBy(r => r.Orden))
                             {
-                                <tr>
+                                <tr class="checklist-row @(resultado.Cumple ? "checklist-row-pass" : "checklist-row-fail")">
 
                                     <td>
-                                        <span class="badge bg-secondary">
+                                        <span class="checklist-row-number">
                                             @resultado.Orden
                                         </span>
                                     </td>
@@ -225,13 +310,13 @@
 
                                         @if (resultado.Cumple)
                                         {
-                                            <span class="badge bg-success">
+                                            <span class="checklist-result-badge checklist-result-pass">
                                                 Cumple
                                             </span>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-danger">
+                                            <span class="checklist-result-badge checklist-result-fail">
                                                 No cumple
                                             </span>
                                         }
@@ -251,6 +336,24 @@
                                             </span>
                                         }
 
+                                    </td>
+
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(resultado.EvidenciaRutaArchivo))
+                                        {
+                                            <a href="@resultado.EvidenciaRutaArchivo"
+                                               target="_blank"
+                                               class="btn btn-outline-primary btn-sm"
+                                               title="@resultado.EvidenciaNombreArchivo">
+                                                Ver imagen
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">
+                                                Sin imagen
+                                            </span>
+                                        }
                                     </td>
 
                                 </tr>

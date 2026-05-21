@@ -23,6 +23,15 @@ namespace CGA.MetrologySystem.Domain.Entities
         public string? EstadoEquipoResultado { get; set; }
         public string? ComentariosAdicionales { get; set; }
 
+        public bool EsHistorico { get; set; } = false;
+        public string? ObservacionCargaHistorica { get; set; }
+
+        public bool Anulado { get; set; } = false;
+        public DateTime? FechaAnulacion { get; set; }
+        public string? MotivoAnulacion { get; set; }
+        public string? UsuarioAnulacionId { get; set; }
+        public string? UsuarioAnulacionNombre { get; set; }
+
         public bool EsExtraordinario { get; set; } = false;
         public string? JustificacionExtraordinario { get; set; }
 

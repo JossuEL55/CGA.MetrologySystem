@@ -2,7 +2,10 @@
 using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
+using CGA.MetrologySystem.Services.Auditoria;
+using CGA.MetrologySystem.Services.Notificaciones;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -15,28 +18,81 @@ namespace CGA.MetrologySystem.Controllers
         private readonly AppDbContext _context;
         private readonly IGoogleDriveService _googleDriveService;
         private readonly IMetrologyRulesService _metrologyRulesService;
+        private readonly INotificacionMetrologicaService _notificacionMetrologicaService;
+        private readonly IAuditoriaMetrologicaService _auditoriaMetrologicaService;
+        private readonly UserManager<Infrastructure.Identity.UsuarioSistema> _userManager;
 
         public CalibracionesController(
             AppDbContext context,
             IGoogleDriveService googleDriveService,
-            IMetrologyRulesService metrologyRulesService)
+            IMetrologyRulesService metrologyRulesService,
+            INotificacionMetrologicaService notificacionMetrologicaService,
+            IAuditoriaMetrologicaService auditoriaMetrologicaService,
+            UserManager<Infrastructure.Identity.UsuarioSistema> userManager)
         {
             _context = context;
             _googleDriveService = googleDriveService;
             _metrologyRulesService = metrologyRulesService;
+            _notificacionMetrologicaService = notificacionMetrologicaService;
+            _auditoriaMetrologicaService = auditoriaMetrologicaService;
+            _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(
+            string? buscar,
+            string? estado,
+            int? subtipoEventoId,
+            int? laboratorioId,
+            DateTime? desde,
+            DateTime? hasta)
         {
-            var calibraciones = await _context.EventosCalibracionDato
+            var query = _context.EventosCalibracionDato
                 .Include(c => c.EventoMetrologico)
                     .ThenInclude(e => e.Equipo)
                 .Include(c => c.EventoMetrologico)
                     .ThenInclude(e => e.ResponsableInterno)
+                .Include(c => c.EventoMetrologico)
+                    .ThenInclude(e => e.SubtipoEvento)
                 .Include(c => c.Laboratorio)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(buscar))
+            {
+                var texto = buscar.Trim();
+                query = query.Where(c =>
+                    c.EventoMetrologico.Equipo.Codigo.Contains(texto) ||
+                    c.EventoMetrologico.Equipo.Nombre.Contains(texto) ||
+                    c.EventoMetrologico.ResponsableInterno.NombreCompleto.Contains(texto) ||
+                    (c.NumeroCertificado != null && c.NumeroCertificado.Contains(texto)) ||
+                    (c.Laboratorio != null && c.Laboratorio.Nombre.Contains(texto)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(estado))
+                query = query.Where(c => c.EventoMetrologico.EstadoEquipoResultado == estado);
+
+            if (subtipoEventoId.HasValue)
+                query = query.Where(c => c.EventoMetrologico.SubtipoEventoId == subtipoEventoId.Value);
+
+            if (laboratorioId.HasValue)
+                query = query.Where(c => c.LaboratorioId == laboratorioId.Value);
+
+            if (desde.HasValue)
+                query = query.Where(c => c.EventoMetrologico.FechaEvento >= desde.Value.Date);
+
+            if (hasta.HasValue)
+                query = query.Where(c => c.EventoMetrologico.FechaEvento <= hasta.Value.Date);
+
+            var calibraciones = await query
                 .OrderByDescending(c => c.EventoMetrologico.FechaEvento)
                 .ToListAsync();
 
+            ViewBag.Buscar = buscar;
+            ViewBag.Estado = estado;
+            ViewBag.Desde = desde;
+            ViewBag.Hasta = hasta;
+            ViewBag.Laboratorios = await CrearOpcionesLaboratoriosAsync(laboratorioId);
+            ViewBag.SubtiposEvento = await CrearOpcionesSubtiposAsync(subtipoEventoId);
+            ViewBag.Estados = CrearOpcionesEstado(estado);
             return View(calibraciones);
         }
 
@@ -59,6 +115,7 @@ namespace CGA.MetrologySystem.Controllers
             return View(calibracion);
         }
 
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Create()
         {
             var model = new CalibracionViewModel
@@ -73,6 +130,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Create(CalibracionViewModel model)
         {
             var tipoCalibracion = await ObtenerTipoEventoCalibracionAsync();
@@ -141,6 +199,8 @@ namespace CGA.MetrologySystem.Controllers
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
+                await _notificacionMetrologicaService.NotificarEventoExtraordinarioAsync(
+                    eventoMetrologico.EventoMetrologicoId);
 
                 return RedirectToAction(nameof(Details), new { id = calibracion.EventoCalibracionDatoId });
             }
@@ -154,6 +214,7 @@ namespace CGA.MetrologySystem.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -193,6 +254,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Edit(int id, CalibracionViewModel model)
         {
             var tipoCalibracion = await ObtenerTipoEventoCalibracionAsync();
@@ -210,6 +272,9 @@ namespace CGA.MetrologySystem.Controllers
             }
 
             using var transaction = await _context.Database.BeginTransactionAsync();
+            var certificadoReemplazado = false;
+            string? nombreCertificadoAnterior = null;
+            string? nombreCertificadoNuevo = null;
 
             try
             {
@@ -239,6 +304,8 @@ namespace CGA.MetrologySystem.Controllers
 
                 if (model.ArchivoCertificado != null && model.ArchivoCertificado.Length > 0)
                 {
+                    nombreCertificadoAnterior = calibracion.NombreArchivoCertificado;
+
                     var equipo = await _context.Equipos
                         .FirstOrDefaultAsync(e => e.EquipoId == model.EquipoId);
 
@@ -262,10 +329,44 @@ namespace CGA.MetrologySystem.Controllers
                     calibracion.GoogleDriveFileId = uploadResult.FileId;
                     calibracion.NombreArchivoCertificado = uploadResult.FileName;
                     calibracion.RutaCertificado = uploadResult.WebViewLink;
+                    nombreCertificadoNuevo = uploadResult.FileName;
+                    certificadoReemplazado = true;
                 }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                if (certificadoReemplazado)
+                {
+                    var usuarioActual = await _userManager.GetUserAsync(User);
+                    var usuarioResponsable = usuarioActual == null
+                        ? User.Identity?.Name
+                        : $"{usuarioActual.NombreCompleto} ({usuarioActual.Email})";
+
+                    await _auditoriaMetrologicaService.RegistrarAsync(new AuditoriaMetrologicaRegistro
+                    {
+                        UsuarioId = usuarioActual?.Id,
+                        UsuarioNombre = usuarioActual?.NombreCompleto ?? User.Identity?.Name,
+                        UsuarioCorreo = usuarioActual?.Email,
+                        RolUsuario = User.IsInRole("Administrador") ? "Administrador" : "Usuario",
+                        Accion = "Reemplazo de certificado",
+                        Entidad = "Calibracion",
+                        EntidadId = calibracion.EventoCalibracionDatoId.ToString(),
+                        EquipoId = evento.EquipoId,
+                        CodigoEquipo = evento.Equipo.Codigo,
+                        NombreEquipo = evento.Equipo.Nombre,
+                        EventoMetrologicoId = evento.EventoMetrologicoId,
+                        TipoEvento = "Calibracion",
+                        Detalle = $"Se reemplazo el certificado '{nombreCertificadoAnterior ?? "sin archivo previo"}' por '{nombreCertificadoNuevo ?? "archivo sin nombre"}'.",
+                        EsCritico = true
+                    });
+
+                    await _notificacionMetrologicaService.NotificarReemplazoCertificadoCalibracionAsync(
+                        calibracion.EventoCalibracionDatoId,
+                        nombreCertificadoAnterior,
+                        nombreCertificadoNuevo,
+                        usuarioResponsable);
+                }
 
                 return RedirectToAction(nameof(Details), new { id = calibracion.EventoCalibracionDatoId });
             }
@@ -280,6 +381,7 @@ namespace CGA.MetrologySystem.Controllers
             }
         }
 
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -301,6 +403,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var calibracion = await _context.EventosCalibracionDato
@@ -333,6 +436,43 @@ namespace CGA.MetrologySystem.Controllers
                 TempData["Error"] = "Ocurrió un error al eliminar la calibración.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
+        }
+
+        private async Task<List<SelectListItem>> CrearOpcionesSubtiposAsync(int? subtipoEventoId)
+        {
+            return await _context.SubtiposEvento
+                .AsNoTracking()
+                .Where(s => s.Activo)
+                .OrderBy(s => s.Nombre)
+                .Select(s => new SelectListItem
+                {
+                    Value = s.SubtipoEventoId.ToString(),
+                    Text = s.Nombre,
+                    Selected = s.SubtipoEventoId == subtipoEventoId
+                })
+                .ToListAsync();
+        }
+
+        private async Task<List<SelectListItem>> CrearOpcionesLaboratoriosAsync(int? laboratorioId)
+        {
+            return await _context.Laboratorios
+                .AsNoTracking()
+                .Where(l => l.Activo)
+                .OrderBy(l => l.Nombre)
+                .Select(l => new SelectListItem
+                {
+                    Value = l.LaboratorioId.ToString(),
+                    Text = l.Nombre,
+                    Selected = l.LaboratorioId == laboratorioId
+                })
+                .ToListAsync();
+        }
+
+        private static List<SelectListItem> CrearOpcionesEstado(string? estado)
+        {
+            return new[] { "Operativo", "No Operativo", "Fuera de Servicio" }
+                .Select(valor => new SelectListItem(valor, valor, valor == estado))
+                .ToList();
         }
 
         private async Task CargarCombosAsync(CalibracionViewModel model)
@@ -421,6 +561,7 @@ namespace CGA.MetrologySystem.Controllers
                 model.EquipoId,
                 tipoCalibracion.TipoEventoMetrologicoId,
                 model.FechaEvento.Date,
+                model.SubtipoEventoId,
                 model.JustificacionExtraordinario);
 
             model.EsExtraordinario = resultadoRegla.EsExtraordinario;

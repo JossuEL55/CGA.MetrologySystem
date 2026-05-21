@@ -94,6 +94,58 @@
         </ul>
     </div>
 
+    @if (evento.ActividadesMantenimiento != null && evento.ActividadesMantenimiento.Any())
+    {
+        <div class="table-responsive checklist-table-shell mx-0 mb-4">
+            <table class="table checklist-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="checklist-head-order checklist-order-column">#</th>
+                        <th class="checklist-head-description">Actividad</th>
+                        <th class="checklist-head-notes">Observaciones</th>
+                        <th class="checklist-head-evidence">Evidencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var actividad in evento.ActividadesMantenimiento.OrderBy(a => a.Orden))
+                    {
+                        <tr class="checklist-row">
+                            <td>
+                                <span class="checklist-row-number">@actividad.Orden</span>
+                            </td>
+                            <td class="fw-semibold">@actividad.DescripcionActividad</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(actividad.Observaciones))
+                                {
+                                    @actividad.Observaciones
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin observaciones</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(actividad.EvidenciaRutaArchivo))
+                                {
+                                    <a href="@actividad.EvidenciaRutaArchivo"
+                                       target="_blank"
+                                       class="btn btn-outline-primary btn-sm"
+                                       title="@actividad.EvidenciaNombreArchivo">
+                                        Ver imagen
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin imagen</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
     <form asp-action="Delete" method="post">
         <input type="hidden" asp-for="EventoMantenimientoDatoId" />
 

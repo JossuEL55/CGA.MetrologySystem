@@ -8,7 +8,9 @@ namespace CGA.MetrologySystem.Application.Interfaces
             int equipoId,
             int tipoEventoMetrologicoId,
             DateTime fechaEvento,
-            string? justificacionExtraordinario);
+            int subtipoEventoId,
+            string? justificacionExtraordinario,
+            bool esHistorico = false);
 
         Task<DateTime?> CalcularProximaFechaAsync(
             int equipoId,

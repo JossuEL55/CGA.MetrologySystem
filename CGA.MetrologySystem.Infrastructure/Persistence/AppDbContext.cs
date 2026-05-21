@@ -11,9 +11,10 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
-
-        //Revisar las dos entidades siguientes, no se si es necesario tener ambas (IMPORTANTE)
+        public DbSet<AlertaEnviada> AlertasEnviadas { get; set; }
+        public DbSet<NotificacionEnviada> NotificacionesEnviadas { get; set; }
         public DbSet<AuditoriaUsuario> AuditoriasUsuario { get; set; }
+        public DbSet<AuditoriaMetrologica> AuditoriasMetrologicas { get; set; }
         public DbSet<TipoEquipo> TiposEquipo { get; set; }
         public DbSet<TipoEventoMetrologico> TiposEventoMetrologico { get; set; }
         public DbSet<TipoDocumento> TiposDocumento { get; set; }
@@ -75,6 +76,36 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
                     .HasForeignKey(e => e.EventoMetrologicoId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+
+            modelBuilder.Entity<EventoVerificacionResultado>(entity =>
+            {
+                entity.Property(e => e.EvidenciaNombreArchivo)
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.EvidenciaContentType)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.EvidenciaGoogleDriveFileId)
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.EvidenciaRutaArchivo)
+                    .HasMaxLength(500);
+            });
+
+            modelBuilder.Entity<EventoMantenimientoActividad>(entity =>
+            {
+                entity.Property(e => e.EvidenciaNombreArchivo)
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.EvidenciaContentType)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.EvidenciaGoogleDriveFileId)
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.EvidenciaRutaArchivo)
+                    .HasMaxLength(500);
+            });
             modelBuilder.Entity<FichaTecnicaEquipo>(entity =>
             {
                 entity.HasKey(f => f.FichaTecnicaEquipoId);
@@ -119,6 +150,124 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
                 entity.HasIndex(h => h.EquipoId)
                     .IsUnique();
             });
+            modelBuilder.Entity<Equipo>(entity =>
+            {
+                entity.Property(e => e.FotoNombreArchivo)
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.FotoGoogleDriveFileId)
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.FotoRutaArchivo)
+                    .HasMaxLength(500);
+            });
+            modelBuilder.Entity<AlertaEnviada>(entity =>
+            {
+                entity.HasKey(a => a.AlertaEnviadaId);
+
+                entity.Property(a => a.TipoEvento)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(a => a.TipoAlerta)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(a => a.Mensaje)
+                    .HasMaxLength(500);
+
+                entity.HasOne(a => a.Equipo)
+                    .WithMany()
+                    .HasForeignKey(a => a.EquipoId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<NotificacionEnviada>(entity =>
+            {
+                entity.HasKey(n => n.NotificacionEnviadaId);
+
+                entity.Property(n => n.TipoNotificacion)
+                    .HasMaxLength(80)
+                    .IsRequired();
+
+                entity.Property(n => n.TipoEvento)
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                entity.Property(n => n.Mensaje)
+                    .HasMaxLength(500);
+
+                entity.HasOne(n => n.Equipo)
+                    .WithMany()
+                    .HasForeignKey(n => n.EquipoId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(n => n.EventoMetrologico)
+                    .WithMany()
+                    .HasForeignKey(n => n.EventoMetrologicoId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<EventoMetrologico>(entity =>
+            {
+                entity.Property(e => e.ObservacionCargaHistorica)
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.MotivoAnulacion)
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.UsuarioAnulacionId)
+                    .HasMaxLength(450);
+
+                entity.Property(e => e.UsuarioAnulacionNombre)
+                    .HasMaxLength(180);
+            });
+            modelBuilder.Entity<AuditoriaMetrologica>(entity =>
+            {
+                entity.HasKey(a => a.AuditoriaMetrologicaId);
+
+                entity.Property(a => a.UsuarioId)
+                    .HasMaxLength(450);
+
+                entity.Property(a => a.UsuarioNombre)
+                    .HasMaxLength(180)
+                    .IsRequired();
+
+                entity.Property(a => a.UsuarioCorreo)
+                    .HasMaxLength(256)
+                    .IsRequired();
+
+                entity.Property(a => a.RolUsuario)
+                    .HasMaxLength(80)
+                    .IsRequired();
+
+                entity.Property(a => a.Accion)
+                    .HasMaxLength(120)
+                    .IsRequired();
+
+                entity.Property(a => a.Entidad)
+                    .HasMaxLength(120)
+                    .IsRequired();
+
+                entity.Property(a => a.EntidadId)
+                    .HasMaxLength(80)
+                    .IsRequired();
+
+                entity.Property(a => a.CodigoEquipo)
+                    .HasMaxLength(80)
+                    .IsRequired();
+
+                entity.Property(a => a.NombreEquipo)
+                    .HasMaxLength(220)
+                    .IsRequired();
+
+                entity.Property(a => a.TipoEvento)
+                    .HasMaxLength(80)
+                    .IsRequired();
+
+                entity.Property(a => a.Detalle)
+                    .HasMaxLength(1000)
+                    .IsRequired();
+            });
+
         }
 
     }

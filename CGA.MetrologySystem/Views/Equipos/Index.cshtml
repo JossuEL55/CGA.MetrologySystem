@@ -19,6 +19,7 @@
         <table class="table align-middle table-hover mb-0">
             <thead class="table-light">
                 <tr>
+                    <th class="text-center">Foto</th>
                     <th>Código</th>
                     <th>Equipo</th>
                     <th>Tipo</th>
@@ -36,6 +37,21 @@
                     @foreach (var equipo in Model)
                     {
                         <tr>
+                            <td class="text-center">
+                                @if (!string.IsNullOrWhiteSpace(equipo.FotoGoogleDriveFileId))
+                                {
+                                    <a asp-action="Details" asp-route-id="@equipo.EquipoId" class="equipo-photo-thumb">
+                                        <img src="https://drive.google.com/thumbnail?id=@equipo.FotoGoogleDriveFileId&sz=w240"
+                                             alt="Foto de @equipo.Codigo" />
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="equipo-photo-thumb equipo-photo-thumb-empty">
+                                        Sin foto
+                                    </span>
+                                }
+                            </td>
                             <td class="fw-semibold">@equipo.Codigo</td>
 
                             <td>
@@ -92,7 +108,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4">
+                        <td colspan="10" class="text-center text-muted py-4">
                             No existen equipos registrados.
                         </td>
                     </tr>

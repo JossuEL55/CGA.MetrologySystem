@@ -1,0 +1,137 @@
+@model CGA.MetrologySystem.Models.Auditoria.AuditoriaMetrologicaIndexViewModel
+
+@{
+    ViewData["Title"] = "Bitacora metrologica";
+}
+
+<div class="metro-hero mb-4">
+    <div>
+        <span class="metro-eyebrow">
+            <i class="bi bi-journal-check"></i> Trazabilidad tecnica
+        </span>
+
+        <h1>Bitacora metrologica</h1>
+
+        <p>
+            Consulta los cambios relevantes realizados sobre eventos, documentos y controles metrologicos.
+        </p>
+    </div>
+</div>
+
+<div class="metro-summary-grid mb-4">
+    <div class="metro-kpi">
+        <span>Total registros</span>
+        <strong>@Model.TotalRegistros</strong>
+        <i class="bi bi-journals"></i>
+    </div>
+
+    <div class="metro-kpi kpi-danger">
+        <span>Cambios criticos</span>
+        <strong>@Model.CambiosCriticos</strong>
+        <i class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-warning">
+        <span>Ultimas 24 h</span>
+        <strong>@Model.RegistrosUltimas24Horas</strong>
+        <i class="bi bi-clock-history"></i>
+    </div>
+</div>
+
+<div class="metro-table-card">
+    <div class="metro-table-header">
+        <div>
+            <h5>Historial metrologico</h5>
+            <p>Ultimos 150 cambios trazados por el sistema.</p>
+        </div>
+
+        <span class="metro-table-count">
+            @Model.Registros.Count registro(s)
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table metro-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Usuario</th>
+                    <th>Rol</th>
+                    <th>Accion</th>
+                    <th>Equipo</th>
+                    <th>Evento</th>
+                    <th>Entidad</th>
+                    <th>Detalle</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Registros.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="metro-empty">
+                                <i class="bi bi-journal"></i>
+                                <h5>No hay cambios metrologicos trazados</h5>
+                                <p>Los cambios relevantes empezaran a aparecer en esta bitacora.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var registro in Model.Registros)
+                    {
+                        <tr>
+                            <td>
+                                <span class="metro-date-text">
+                                    @registro.Fecha.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                </span>
+                            </td>
+                            <td>
+                                <span class="metro-message-text">@registro.Usuario</span>
+                            </td>
+                            <td>
+                                <span class="metro-type-pill">@registro.RolUsuario</span>
+                            </td>
+                            <td>
+                                @if (registro.EsCritico)
+                                {
+                                    <span class="metro-status-pill estado-vencido">
+                                        <i class="bi bi-exclamation-circle-fill"></i> @registro.Accion
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="metro-status-pill estado-vigente">
+                                        <i class="bi bi-check-circle-fill"></i> @registro.Accion
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <div class="metro-equipo-cell">
+                                    <div class="metro-equipo-avatar">
+                                        <i class="bi bi-tools"></i>
+                                    </div>
+
+                                    <div>
+                                        <strong>@registro.CodigoEquipo</strong>
+                                        <span>@registro.NombreEquipo</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="metro-event-pill">@registro.TipoEvento</span>
+                            </td>
+                            <td>
+                                <span class="metro-message-text">@registro.Entidad</span>
+                            </td>
+                            <td>
+                                <span class="metro-message-text">@registro.Detalle</span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

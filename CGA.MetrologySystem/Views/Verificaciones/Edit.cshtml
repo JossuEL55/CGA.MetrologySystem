@@ -40,8 +40,6 @@
 
     <input asp-for="EventoMetrologicoId" type="hidden" />
     <input asp-for="EventoVerificacionDatoId" type="hidden" />
-    <input asp-for="EsExtraordinario" type="hidden" />
-
     <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
 
     <div class="mb-4">
@@ -130,6 +128,16 @@
 
     <div class="row">
 
+        @if (User.IsInRole("Administrador"))
+        {
+            <div class="col-md-4 mb-3">
+                <div class="form-check form-switch cga-switch mt-md-4 pt-md-2">
+                    <input asp-for="EsHistorico" class="form-check-input" role="switch" />
+                    <label asp-for="EsHistorico" class="form-check-label fw-semibold"></label>
+                </div>
+            </div>
+        }
+
         <div class="col-md-4 mb-3">
             <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">
                 Estado del equipo
@@ -145,7 +153,7 @@
             <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
         </div>
 
-        <div class="col-md-8 mb-3">
+        <div class="col-md-4 mb-3">
             <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
                 Justificación extraordinaria
             </label>
@@ -157,6 +165,18 @@
 
             <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
         </div>
+
+        @if (User.IsInRole("Administrador"))
+        {
+            <div class="col-md-12 mb-3">
+                <label asp-for="ObservacionCargaHistorica" class="form-label fw-semibold"></label>
+                <textarea asp-for="ObservacionCargaHistorica"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Referencia u observación del registro histórico."></textarea>
+                <span asp-validation-for="ObservacionCargaHistorica" class="text-danger"></span>
+            </div>
+        }
     </div>
 
     <div class="mb-4">
@@ -188,26 +208,32 @@
         </button>
     </div>
 
-    <div class="table-responsive mb-4">
-        <table class="table table-hover align-middle" id="tablaResultados">
-            <thead class="table-light">
+    <div class="table-responsive checklist-table-shell mb-4">
+        <table class="table checklist-table align-middle mb-0" id="tablaResultados">
+            <thead>
                 <tr>
-                    <th>Condición a verificar</th>
-                    <th style="width:120px;">Cumple</th>
-                    <th>Observaciones</th>
-                    <th class="text-end" style="width:100px;">Acción</th>
+                    <th class="checklist-head-order checklist-order-column">#</th>
+                    <th class="checklist-head-description">Descripción</th>
+                    <th class="checklist-head-status checklist-status-column">Cumple</th>
+                    <th class="checklist-head-notes">Observaciones</th>
+                    <th class="checklist-head-evidence">Evidencia del ítem</th>
+                    <th class="checklist-head-action text-end checklist-action-column">Acción</th>
                 </tr>
             </thead>
 
             <tbody>
                 @for (int i = 0; i < Model.Resultados.Count; i++)
                 {
-                    <tr>
+                    <tr class="checklist-row" data-resultado-row>
+                        <td>
+                            <span class="checklist-row-number">@(i + 1)</span>
+                        </td>
 
                         <td>
 
                             <input type="hidden"
-                                   asp-for="Resultados[i].EventoVerificacionResultadoId" />
+                                   asp-for="Resultados[i].EventoVerificacionResultadoId"
+                                   data-field="id" />
 
                             <input type="hidden"
                                    asp-for="Resultados[i].Orden"
@@ -222,17 +248,20 @@
 
                         <td class="text-center">
 
-                            <input type="checkbox"
-                                   name="Resultados[@i].Cumple"
-                                   data-field="cumple"
-                                   value="true"
-                                   class="form-check-input"
-                            @(Model.Resultados[i].Cumple ? "checked" : "") />
+                            <label class="verification-check checklist-status-pill">
+                                <input type="checkbox"
+                                       name="Resultados[@i].Cumple"
+                                       data-field="cumple"
+                                       value="true"
+                                       class="form-check-input"
+                                @(Model.Resultados[i].Cumple ? "checked" : "") />
 
-                            <input type="hidden"
-                                   name="Resultados[@i].Cumple"
-                                   data-field="cumple-hidden"
-                                   value="false" />
+                                <input type="hidden"
+                                       name="Resultados[@i].Cumple"
+                                       data-field="cumple-hidden"
+                                       value="false" />
+                                <span>Sí</span>
+                            </label>
 
                         </td>
 
@@ -243,6 +272,33 @@
                                    class="form-control"
                                    placeholder="Observaciones" />
 
+                        </td>
+
+                        <td>
+                            <div class="checklist-evidence-actions">
+                                <label class="btn btn-outline-primary btn-sm mb-0">
+                                    Subir imagen
+                                    <input asp-for="Resultados[i].EvidenciaImagen"
+                                           data-field="evidencia"
+                                           type="file"
+                                           accept="image/*"
+                                           class="visually-hidden" />
+                                </label>
+
+                                @if (!string.IsNullOrWhiteSpace(Model.Resultados[i].EvidenciaRutaArchivo))
+                                {
+                                    <a href="@Model.Resultados[i].EvidenciaRutaArchivo"
+                                       target="_blank"
+                                       class="btn btn-outline-secondary btn-sm"
+                                       title="@Model.Resultados[i].EvidenciaNombreArchivo">
+                                        Ver imagen
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="checklist-evidence-note">Sin imagen</span>
+                                }
+                            </div>
                         </td>
 
                         <td class="text-end">
@@ -346,14 +402,20 @@
 
         function reindexarResultados() {
 
-            document.querySelectorAll("#tablaResultados tbody tr").forEach((row, i) => {
+            document.querySelectorAll("[data-resultado-row]").forEach((row, i) => {
 
+                const id = row.querySelector("input[data-field='id']");
                 const orden = row.querySelector("input[data-field='orden']");
                 const descripcion = row.querySelector("input[data-field='descripcion']");
                 const cumpleHidden = row.querySelector("input[data-field='cumple-hidden']");
                 const cumple = row.querySelector("input[data-field='cumple']");
                 const observaciones = row.querySelector("input[data-field='observaciones']");
+                const evidencia = row.querySelector("input[data-field='evidencia']");
+                const number = row.querySelector(".checklist-row-number");
 
+                if (number) number.textContent = i + 1;
+
+                if (id) id.name = `Resultados[${i}].EventoVerificacionResultadoId`;
                 if (orden) {
                     orden.name = `Resultados[${i}].Orden`;
                     orden.value = i + 1;
@@ -363,9 +425,10 @@
                 if (cumpleHidden) cumpleHidden.name = `Resultados[${i}].Cumple`;
                 if (cumple) cumple.name = `Resultados[${i}].Cumple`;
                 if (observaciones) observaciones.name = `Resultados[${i}].Observaciones`;
+                if (evidencia) evidencia.name = `Resultados[${i}].EvidenciaImagen`;
             });
 
-            index = document.querySelectorAll("#tablaResultados tbody tr").length;
+            index = document.querySelectorAll("[data-resultado-row]").length;
         }
 
         document.addEventListener("DOMContentLoaded", function () {
@@ -377,12 +440,16 @@
                 addResultadoButton.addEventListener("click", function () {
 
                     const fila = `
-                        <tr>
+                        <tr class="checklist-row" data-resultado-row>
+                            <td>
+                                <span class="checklist-row-number">${index + 1}</span>
+                            </td>
 
                             <td>
 
                                 <input type="hidden"
                                        name="Resultados[${index}].EventoVerificacionResultadoId"
+                                       data-field="id"
                                        value="0" />
 
                                 <input type="hidden"
@@ -399,17 +466,20 @@
 
                             <td class="text-center">
 
-                                <input type="checkbox"
-                                       name="Resultados[${index}].Cumple"
-                                       data-field="cumple"
-                                       value="true"
-                                       class="form-check-input"
-                                       checked />
+                                <label class="verification-check checklist-status-pill">
+                                    <input type="checkbox"
+                                           name="Resultados[${index}].Cumple"
+                                           data-field="cumple"
+                                           value="true"
+                                           class="form-check-input"
+                                           checked />
 
-                                <input type="hidden"
-                                       name="Resultados[${index}].Cumple"
-                                       data-field="cumple-hidden"
-                                       value="false" />
+                                    <input type="hidden"
+                                           name="Resultados[${index}].Cumple"
+                                           data-field="cumple-hidden"
+                                           value="false" />
+                                    <span>Sí</span>
+                                </label>
 
                             </td>
 
@@ -420,6 +490,20 @@
                                        class="form-control"
                                        placeholder="Observaciones" />
 
+                            </td>
+
+                            <td>
+                                <div class="checklist-evidence-actions">
+                                    <label class="btn btn-outline-primary btn-sm mb-0">
+                                        Subir imagen
+                                        <input name="Resultados[${index}].EvidenciaImagen"
+                                               data-field="evidencia"
+                                               type="file"
+                                               accept="image/*"
+                                               class="visually-hidden" />
+                                    </label>
+                                    <span class="checklist-evidence-note">Sin imagen</span>
+                                </div>
                             </td>
 
                             <td class="text-end">
@@ -445,7 +529,7 @@
 
             if (e.target.classList.contains("eliminar")) {
 
-                e.target.closest("tr").remove();
+                e.target.closest("[data-resultado-row]").remove();
                 reindexarResultados();
             }
         });

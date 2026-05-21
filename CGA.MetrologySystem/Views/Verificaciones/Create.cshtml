@@ -95,14 +95,23 @@
             <div>
                 <strong>Regla automática</strong>
                 <p class="mb-0">
-                    Si la verificación se registra fuera del periodo esperado, el sistema la marcará automáticamente como extraordinaria.
+                    Si la verificación es no programada, selecciona el subtipo Extraordinario y justifícala.
+                    El sistema también lo solicitará si la fecha se desvía del periodo esperado.
                 </p>
             </div>
         </div>
 
-        <input asp-for="EsExtraordinario" type="hidden" />
-
         <div class="row">
+            @if (User.IsInRole("Administrador"))
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="form-check form-switch cga-switch mt-md-4 pt-md-2">
+                        <input asp-for="EsHistorico" class="form-check-input" role="switch" />
+                        <label asp-for="EsHistorico" class="form-check-label fw-semibold"></label>
+                    </div>
+                </div>
+            }
+
             <div class="col-md-4 mb-3">
                 <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">
                     Estado del equipo
@@ -116,16 +125,28 @@
                 <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
             </div>
 
-            <div class="col-md-8 mb-3">
+            <div class="col-md-4 mb-3">
                 <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
                     Justificación extraordinaria
                 </label>
                 <textarea asp-for="JustificacionExtraordinario"
                           class="form-control"
                           rows="2"
-                          placeholder="Completa este campo únicamente si la verificación fue realizada fuera del periodo esperado."></textarea>
+                          placeholder="Motivo del registro extraordinario."></textarea>
                 <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
             </div>
+
+            @if (User.IsInRole("Administrador"))
+            {
+                <div class="col-md-12 mb-3">
+                    <label asp-for="ObservacionCargaHistorica" class="form-label fw-semibold"></label>
+                    <textarea asp-for="ObservacionCargaHistorica"
+                              class="form-control"
+                              rows="2"
+                              placeholder="Referencia u observación del registro histórico."></textarea>
+                    <span asp-validation-for="ObservacionCargaHistorica" class="text-danger"></span>
+                </div>
+            }
         </div>
 
         <div>
@@ -171,69 +192,76 @@
             </div>
         </div>
 
-        <div id="resultadosContainer" class="verification-items-container">
-            @for (int i = 0; i < Model.Resultados.Count; i++)
-            {
-                <div class="verification-item-card checklist-item-enter" data-resultado-card>
-                    <div class="verification-item-top">
-                        <div class="checklist-item-number">
-                            @(i + 1)
-                        </div>
-
-                        <div class="checklist-item-title">
-                            <strong>Condición técnica</strong>
-                            <span>Ítem evaluado durante la verificación</span>
-                        </div>
-
-                        <div class="verification-item-actions">
-                            <label class="verification-check">
-                                <input type="checkbox"
-                                       name="Resultados[@i].Cumple"
-                                       data-field="cumple"
-                                       value="true"
-                                       class="form-check-input"
-                                @(Model.Resultados[i].Cumple ? "checked" : "") />
-
-                                <input type="hidden"
-                                       name="Resultados[@i].Cumple"
-                                       data-field="cumple-hidden"
-                                       value="false" />
-
-                                <span>Cumple</span>
-                            </label>
-
-                            <button type="button" class="btn btn-outline-danger btn-sm eliminar">
-                                Eliminar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="verification-item-body">
-                        <input type="hidden"
-                               asp-for="Resultados[i].Orden"
-                               data-field="orden" />
-
-                        <div class="row">
-                            <div class="col-md-7 mb-3 mb-md-0">
-                                <label class="form-label fw-semibold">Condición a verificar</label>
+        <div class="table-responsive checklist-table-shell">
+            <table class="table checklist-table align-middle mb-0" id="tablaResultados">
+                <thead>
+                    <tr>
+                        <th class="checklist-head-order checklist-order-column">#</th>
+                        <th class="checklist-head-description">Descripción</th>
+                        <th class="checklist-head-status checklist-status-column">Cumple</th>
+                        <th class="checklist-head-notes">Observaciones</th>
+                        <th class="checklist-head-evidence">Evidencia del ítem</th>
+                        <th class="checklist-head-action text-end checklist-action-column">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="resultadosContainer">
+                    @for (int i = 0; i < Model.Resultados.Count; i++)
+                    {
+                        <tr class="checklist-row checklist-item-enter" data-resultado-row>
+                            <td>
+                                <span class="checklist-row-number">@(i + 1)</span>
+                                <input type="hidden" asp-for="Resultados[i].Orden" data-field="orden" />
+                            </td>
+                            <td>
                                 <input asp-for="Resultados[i].DescripcionItem"
                                        data-field="descripcion"
                                        class="form-control"
                                        placeholder="Ej. Cable de alimentación libre de daños visibles" />
                                 <span asp-validation-for="Resultados[i].DescripcionItem" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-5">
-                                <label class="form-label fw-semibold">Observaciones</label>
+                            </td>
+                            <td class="text-center">
+                                <label class="verification-check checklist-status-pill">
+                                    <input type="checkbox"
+                                           name="Resultados[@i].Cumple"
+                                           data-field="cumple"
+                                           value="true"
+                                           class="form-check-input"
+                                    @(Model.Resultados[i].Cumple ? "checked" : "") />
+                                    <input type="hidden"
+                                           name="Resultados[@i].Cumple"
+                                           data-field="cumple-hidden"
+                                           value="false" />
+                                    <span>Sí</span>
+                                </label>
+                            </td>
+                            <td>
                                 <input asp-for="Resultados[i].Observaciones"
                                        data-field="observaciones"
                                        class="form-control"
                                        placeholder="Sin novedades / detalle del hallazgo" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
+                            </td>
+                            <td>
+                                <div class="checklist-evidence-actions">
+                                    <label class="btn btn-outline-primary btn-sm mb-0">
+                                        Subir imagen
+                                        <input asp-for="Resultados[i].EvidenciaImagen"
+                                               data-field="evidencia"
+                                               type="file"
+                                               accept="image/*"
+                                               class="visually-hidden" />
+                                    </label>
+                                    <span class="checklist-evidence-note">Opcional</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
 
         <div id="emptyResultadosMessage" class="empty-checklist-message d-none">
@@ -296,14 +324,14 @@
         let index = @Model.Resultados.Count;
 
         function actualizarNumeracionResultados() {
-            document.querySelectorAll("[data-resultado-card]").forEach((card, i) => {
-                const number = card.querySelector(".checklist-item-number");
+            document.querySelectorAll("[data-resultado-row]").forEach((row, i) => {
+                const number = row.querySelector(".checklist-row-number");
                 if (number) number.textContent = i + 1;
             });
         }
 
         function actualizarMensajeResultadosVacio() {
-            const totalItems = document.querySelectorAll("[data-resultado-card]").length;
+            const totalItems = document.querySelectorAll("[data-resultado-row]").length;
             const emptyMessage = document.getElementById("emptyResultadosMessage");
 
             if (!emptyMessage) return;
@@ -316,12 +344,13 @@
         }
 
         function reindexarResultados() {
-            document.querySelectorAll("[data-resultado-card]").forEach((card, i) => {
-                const orden = card.querySelector("input[data-field='orden']");
-                const descripcion = card.querySelector("input[data-field='descripcion']");
-                const cumpleHidden = card.querySelector("input[data-field='cumple-hidden']");
-                const cumple = card.querySelector("input[data-field='cumple']");
-                const observaciones = card.querySelector("input[data-field='observaciones']");
+            document.querySelectorAll("[data-resultado-row]").forEach((row, i) => {
+                const orden = row.querySelector("input[data-field='orden']");
+                const descripcion = row.querySelector("input[data-field='descripcion']");
+                const cumpleHidden = row.querySelector("input[data-field='cumple-hidden']");
+                const cumple = row.querySelector("input[data-field='cumple']");
+                const observaciones = row.querySelector("input[data-field='observaciones']");
+                const evidencia = row.querySelector("input[data-field='evidencia']");
 
                 if (orden) {
                     orden.name = `Resultados[${i}].Orden`;
@@ -347,9 +376,14 @@
                     observaciones.name = `Resultados[${i}].Observaciones`;
                     observaciones.id = `Resultados_${i}__Observaciones`;
                 }
+
+                if (evidencia) {
+                    evidencia.name = `Resultados[${i}].EvidenciaImagen`;
+                    evidencia.id = `Resultados_${i}__EvidenciaImagen`;
+                }
             });
 
-            index = document.querySelectorAll("[data-resultado-card]").length;
+            index = document.querySelectorAll("[data-resultado-row]").length;
             actualizarNumeracionResultados();
             actualizarMensajeResultadosVacio();
         }
@@ -374,65 +408,60 @@
             if (addResultadoButton) {
                 addResultadoButton.addEventListener("click", function () {
                     const item = `
-                        <div class="verification-item-card checklist-item-enter" data-resultado-card>
-                            <div class="verification-item-top">
-                                <div class="checklist-item-number">
-                                    ${index + 1}
-                                </div>
-
-                                <div class="checklist-item-title">
-                                    <strong>Condición técnica</strong>
-                                    <span>Ítem evaluado durante la verificación</span>
-                                </div>
-
-                                <div class="verification-item-actions">
-                                    <label class="verification-check">
-                                        <input type="checkbox"
-                                               name="Resultados[${index}].Cumple"
-                                               data-field="cumple"
-                                               value="true"
-                                               class="form-check-input"
-                                               checked />
-
-                                        <input type="hidden"
-                                               name="Resultados[${index}].Cumple"
-                                               data-field="cumple-hidden"
-                                               value="false" />
-
-                                        <span>Cumple</span>
-                                    </label>
-
-                                    <button type="button" class="btn btn-outline-danger btn-sm eliminar">
-                                        Eliminar
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="verification-item-body">
+                        <tr class="checklist-row checklist-item-enter" data-resultado-row>
+                            <td>
+                                <span class="checklist-row-number">${index + 1}</span>
                                 <input type="hidden"
                                        name="Resultados[${index}].Orden"
                                        data-field="orden"
                                        value="${index + 1}" />
-
-                                <div class="row">
-                                    <div class="col-md-7 mb-3 mb-md-0">
-                                        <label class="form-label fw-semibold">Condición a verificar</label>
-                                        <input name="Resultados[${index}].DescripcionItem"
-                                               data-field="descripcion"
-                                               class="form-control"
-                                               placeholder="Ej. Carcasa libre de fisuras o deformaciones" />
-                                    </div>
-
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-semibold">Observaciones</label>
-                                        <input name="Resultados[${index}].Observaciones"
-                                               data-field="observaciones"
-                                               class="form-control"
-                                               placeholder="Sin novedades / detalle del hallazgo" />
-                                    </div>
+                            </td>
+                            <td>
+                                <input name="Resultados[${index}].DescripcionItem"
+                                       data-field="descripcion"
+                                       class="form-control"
+                                       placeholder="Ej. Carcasa libre de fisuras o deformaciones" />
+                            </td>
+                            <td class="text-center">
+                                <label class="verification-check checklist-status-pill">
+                                    <input type="checkbox"
+                                           name="Resultados[${index}].Cumple"
+                                           data-field="cumple"
+                                           value="true"
+                                           class="form-check-input"
+                                           checked />
+                                    <input type="hidden"
+                                           name="Resultados[${index}].Cumple"
+                                           data-field="cumple-hidden"
+                                           value="false" />
+                                    <span>Sí</span>
+                                </label>
+                            </td>
+                            <td>
+                                <input name="Resultados[${index}].Observaciones"
+                                       data-field="observaciones"
+                                       class="form-control"
+                                       placeholder="Sin novedades / detalle del hallazgo" />
+                            </td>
+                            <td>
+                                <div class="checklist-evidence-actions">
+                                    <label class="btn btn-outline-primary btn-sm mb-0">
+                                        Subir imagen
+                                        <input name="Resultados[${index}].EvidenciaImagen"
+                                               data-field="evidencia"
+                                               type="file"
+                                               accept="image/*"
+                                               class="visually-hidden" />
+                                    </label>
+                                    <span class="checklist-evidence-note">Opcional</span>
                                 </div>
-                            </div>
-                        </div>`;
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>`;
 
                     document.getElementById("resultadosContainer").insertAdjacentHTML("beforeend", item);
                     index++;
@@ -446,7 +475,7 @@
 
         document.addEventListener("click", function (e) {
             if (e.target.classList.contains("eliminar")) {
-                e.target.closest("[data-resultado-card]").remove();
+                e.target.closest("[data-resultado-row]").remove();
                 reindexarResultados();
             }
         });

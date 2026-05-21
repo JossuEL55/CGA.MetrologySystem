@@ -20,9 +20,18 @@ namespace CGA.MetrologySystem.Infrastructure.Services
             int equipoId,
             int tipoEventoMetrologicoId,
             DateTime fechaEvento,
-            string? justificacionExtraordinario)
+            int subtipoEventoId,
+            string? justificacionExtraordinario,
+            bool esHistorico = false)
         {
             var resultado = new ResultadoReglaMetrologicaDto();
+
+            var esSubtipoExtraordinario = await _context.SubtiposEvento
+                .AsNoTracking()
+                .AnyAsync(s =>
+                    s.SubtipoEventoId == subtipoEventoId &&
+                    s.Activo &&
+                    s.Nombre == "Extraordinario");
 
             var configuracion = await _context.ConfiguracionesControlEquipo
                 .AsNoTracking()
@@ -42,9 +51,19 @@ namespace CGA.MetrologySystem.Infrastructure.Services
             resultado.TieneConfiguracion = true;
             resultado.RequiereControl = configuracion.RequiereControl;
             resultado.PermitePorIngreso = configuracion.PermitePorIngreso;
+            resultado.EsExtraordinario = esSubtipoExtraordinario;
 
             if (!configuracion.RequiereControl)
             {
+                if (resultado.EsExtraordinario &&
+                    string.IsNullOrWhiteSpace(justificacionExtraordinario))
+                {
+                    resultado.EsValido = false;
+                    resultado.Mensaje =
+                        "El evento es extraordinario y requiere una justificación.";
+                    return resultado;
+                }
+
                 resultado.EsValido = true;
                 resultado.Mensaje = "El equipo no requiere control para este tipo de evento.";
                 return resultado;
@@ -78,22 +97,41 @@ namespace CGA.MetrologySystem.Infrastructure.Services
                     configuracion.PeriodicidadValor.Value,
                     configuracion.PeriodicidadUnidad);
 
-                resultado.DiasDesviacion = Math.Abs(
-                    (fechaEvento.Date - resultado.FechaEsperada.Value.Date).Days);
-
-                if (resultado.DiasDesviacion > DiasPermitidosDesviacion)
+                if (!esHistorico)
                 {
-                    resultado.EsExtraordinario = true;
-                    resultado.Advertencia =
-                        $"El evento se desvía {resultado.DiasDesviacion} días de la fecha esperada.";
+                    resultado.DiasDesviacion = Math.Abs(
+                        (fechaEvento.Date - resultado.FechaEsperada.Value.Date).Days);
 
-                    if (string.IsNullOrWhiteSpace(justificacionExtraordinario))
+                    if (resultado.DiasDesviacion > DiasPermitidosDesviacion)
                     {
-                        resultado.EsValido = false;
-                        resultado.Mensaje =
-                            "El evento es extraordinario y requiere una justificación.";
+                        resultado.EsExtraordinario = true;
+                        resultado.Advertencia =
+                            $"El evento se desvía {resultado.DiasDesviacion} días de la fecha esperada.";
+
+                        if (!esSubtipoExtraordinario)
+                        {
+                            resultado.EsValido = false;
+                            resultado.Mensaje =
+                                "La fecha registrada requiere clasificar el evento con el subtipo 'Extraordinario' y justificarlo.";
+                        }
                     }
                 }
+            }
+
+            if (resultado.EsValido &&
+                resultado.EsExtraordinario &&
+                string.IsNullOrWhiteSpace(justificacionExtraordinario))
+            {
+                resultado.EsValido = false;
+                resultado.Mensaje =
+                    "El evento es extraordinario y requiere una justificación.";
+            }
+
+            if (esSubtipoExtraordinario &&
+                string.IsNullOrWhiteSpace(resultado.Advertencia))
+            {
+                resultado.Advertencia =
+                    "El evento será registrado como extraordinario y quedará trazado con su justificación.";
             }
 
             resultado.FechaProximaCalculada = CalcularFechaPorPeriodicidad(

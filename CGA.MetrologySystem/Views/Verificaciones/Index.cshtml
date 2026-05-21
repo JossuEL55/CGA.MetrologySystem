@@ -24,6 +24,21 @@
     </div>
 }
 
+<form method="get" class="metro-filter-card event-filter-card mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-xl-4 col-lg-4 col-md-6">
+            <label class="form-label">Buscar</label>
+            <input name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Código, equipo o responsable" />
+        </div>
+        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Estado</label><select name="estado" class="form-select" asp-items="ViewBag.Estados"><option value="">Todos</option></select></div>
+        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Subtipo</label><select name="subtipoEventoId" class="form-select" asp-items="ViewBag.SubtiposEvento"><option value="">Todos</option></select></div>
+        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Clasificación</label><select name="clasificacion" class="form-select" asp-items="ViewBag.Clasificaciones"><option value="">Todas</option></select></div>
+        <div class="col-xl-1 col-md-3"><label class="form-label">Desde</label><input name="desde" value="@(((DateTime?)ViewBag.Desde)?.ToString("yyyy-MM-dd"))" type="date" class="form-control" /></div>
+        <div class="col-xl-1 col-md-3"><label class="form-label">Hasta</label><input name="hasta" value="@(((DateTime?)ViewBag.Hasta)?.ToString("yyyy-MM-dd"))" type="date" class="form-control" /></div>
+        <div class="col-lg-3 col-md-4 event-filter-actions"><button type="submit" class="btn btn-primary">Filtrar</button><a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a></div>
+    </div>
+</form>
+
 <div class="event-index-card">
     <div class="event-index-header">
         <div>
@@ -121,6 +136,20 @@
                                             Extraordinaria
                                         </span>
                                     }
+
+                                    @if (evento.EsHistorico)
+                                    {
+                                        <span class="event-badge event-badge-info">
+                                            Histórica
+                                        </span>
+                                    }
+
+                                    @if (evento.Anulado)
+                                    {
+                                        <span class="event-badge event-badge-dark">
+                                            Anulada
+                                        </span>
+                                    }
                                 </div>
                             </td>
 
@@ -147,17 +176,30 @@
                                         Detalle
                                     </a>
 
-                                    <a asp-action="Edit"
-                                       asp-route-id="@item.EventoVerificacionDatoId"
-                                       class="btn btn-outline-primary btn-sm">
-                                        Editar
-                                    </a>
+                                    @if (!evento.Anulado && evento.Activo &&
+                                        (!evento.EsHistorico || User.IsInRole("Administrador")))
+                                    {
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.EventoVerificacionDatoId"
+                                           class="btn btn-outline-primary btn-sm">
+                                            Editar
+                                        </a>
 
-                                    <a asp-action="Delete"
-                                       asp-route-id="@item.EventoVerificacionDatoId"
-                                       class="btn btn-outline-danger btn-sm">
-                                        Eliminar
-                                    </a>
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.EventoVerificacionDatoId"
+                                           class="btn btn-outline-danger btn-sm">
+                                            Eliminar
+                                        </a>
+                                    }
+
+                                    @if (!evento.Anulado && evento.Activo && User.IsInRole("Administrador"))
+                                    {
+                                        <a asp-action="Anular"
+                                           asp-route-id="@item.EventoVerificacionDatoId"
+                                           class="btn btn-outline-danger btn-sm">
+                                            Anular
+                                        </a>
+                                    }
                                 </div>
                             </td>
                         </tr>

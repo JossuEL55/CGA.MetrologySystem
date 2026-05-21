@@ -18,6 +18,22 @@
 
     <h5 class="mb-3">Información general</h5>
 
+    <div class="equipo-photo-detail mb-4">
+        @if (!string.IsNullOrWhiteSpace(Model.FotoGoogleDriveFileId))
+        {
+            <a href="@Model.FotoRutaArchivo" target="_blank" class="equipo-photo-frame">
+                <img src="https://drive.google.com/thumbnail?id=@Model.FotoGoogleDriveFileId&sz=w1000"
+                     alt="Foto de @Model.Codigo" />
+            </a>
+        }
+        else
+        {
+            <div class="equipo-photo-placeholder">
+                Sin foto
+            </div>
+        }
+    </div>
+
     <div class="row mb-3">
         <div class="col-md-6">
             <label class="form-label">Código</label>

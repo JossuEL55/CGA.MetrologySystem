@@ -3,6 +3,7 @@ using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,8 @@ namespace CGA.MetrologySystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(EquipoViewModel model)
         {
+            ValidarFotoEquipo(model);
+
             if (!ModelState.IsValid)
             {
                 await CargarCombos(model);
@@ -79,6 +82,11 @@ namespace CGA.MetrologySystem.Controllers
 
             var folderId = await _googleDriveService.EnsureEquipoFolderAsync(equipo.Codigo);
             equipo.GoogleDriveFolderId = folderId;
+
+            if (model.FotoEquipo != null && model.FotoEquipo.Length > 0)
+            {
+                await SubirFotoEquipoAsync(equipo, model.FotoEquipo);
+            }
 
             _context.Equipos.Update(equipo);
             await _context.SaveChangesAsync();
@@ -135,7 +143,9 @@ namespace CGA.MetrologySystem.Controllers
                 CatalogoManejoOperacion = equipo.CatalogoManejoOperacion,
                 MantenimientoFabricante = equipo.MantenimientoFabricante,
                 CondicionesOperacion = equipo.CondicionesOperacion,
-                Activo = equipo.Activo
+                Activo = equipo.Activo,
+                FotoActualNombreArchivo = equipo.FotoNombreArchivo,
+                FotoActualRutaArchivo = equipo.FotoRutaArchivo
             };
 
             await CargarCombos(model);
@@ -149,6 +159,8 @@ namespace CGA.MetrologySystem.Controllers
         {
             if (id != model.EquipoId)
                 return NotFound();
+
+            ValidarFotoEquipo(model);
 
             if (!ModelState.IsValid)
             {
@@ -178,6 +190,11 @@ namespace CGA.MetrologySystem.Controllers
             equipo.MantenimientoFabricante = model.MantenimientoFabricante;
             equipo.CondicionesOperacion = model.CondicionesOperacion;
             equipo.Activo = model.Activo;
+
+            if (model.FotoEquipo != null && model.FotoEquipo.Length > 0)
+            {
+                await ReemplazarFotoEquipoAsync(equipo, model.FotoEquipo);
+            }
 
             _context.Update(equipo);
             await _context.SaveChangesAsync();
@@ -257,6 +274,51 @@ namespace CGA.MetrologySystem.Controllers
                     Text = r.NombreCompleto
                 })
                 .ToListAsync();
+        }
+
+        private void ValidarFotoEquipo(EquipoViewModel model)
+        {
+            if (model.FotoEquipo == null || model.FotoEquipo.Length == 0)
+                return;
+
+            if (string.IsNullOrWhiteSpace(model.FotoEquipo.ContentType) ||
+                !model.FotoEquipo.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(
+                    nameof(model.FotoEquipo),
+                    "La foto del equipo debe ser un archivo de imagen.");
+            }
+        }
+
+        private async Task ReemplazarFotoEquipoAsync(Equipo equipo, IFormFile fotoEquipo)
+        {
+            if (!string.IsNullOrWhiteSpace(equipo.FotoGoogleDriveFileId))
+            {
+                await _googleDriveService.DeleteFileAsync(equipo.FotoGoogleDriveFileId);
+            }
+
+            await SubirFotoEquipoAsync(equipo, fotoEquipo);
+        }
+
+        private async Task SubirFotoEquipoAsync(Equipo equipo, IFormFile fotoEquipo)
+        {
+            var folderId = await _googleDriveService.EnsureNestedFolderAsync(
+                equipo.Codigo,
+                "Imagenes",
+                "Equipo");
+
+            await using var stream = fotoEquipo.OpenReadStream();
+            var extension = Path.GetExtension(fotoEquipo.FileName);
+            var nombreArchivo = $"Foto-equipo-{equipo.Codigo}-{DateTime.UtcNow:yyyyMMddHHmmss}{extension}";
+            var uploadResult = await _googleDriveService.UploadFileAsync(
+                stream,
+                nombreArchivo,
+                fotoEquipo.ContentType,
+                folderId);
+
+            equipo.FotoNombreArchivo = uploadResult.FileName;
+            equipo.FotoGoogleDriveFileId = uploadResult.FileId;
+            equipo.FotoRutaArchivo = uploadResult.WebViewLink;
         }
     }
 }

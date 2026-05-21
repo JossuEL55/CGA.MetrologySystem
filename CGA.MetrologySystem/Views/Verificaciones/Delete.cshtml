@@ -125,29 +125,63 @@
 
     @if (evento.ResultadosVerificacion != null && evento.ResultadosVerificacion.Any())
     {
-        <div class="table-responsive mb-4">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
+        <div class="table-responsive checklist-table-shell mx-0 mb-4">
+            <table class="table checklist-table align-middle mb-0">
+                <thead>
                     <tr>
-                        <th>Condición</th>
-                        <th>Resultado</th>
+                        <th class="checklist-head-order checklist-order-column">#</th>
+                        <th class="checklist-head-description">Condición</th>
+                        <th class="checklist-head-status checklist-status-column">Resultado</th>
+                        <th class="checklist-head-notes">Observaciones</th>
+                        <th class="checklist-head-evidence">Evidencia</th>
                     </tr>
                 </thead>
 
                 <tbody>
                     @foreach (var resultado in evento.ResultadosVerificacion.OrderBy(r => r.Orden))
                     {
-                        <tr>
-                            <td>@resultado.DescripcionItem</td>
+                        <tr class="checklist-row @(resultado.Cumple ? "checklist-row-pass" : "checklist-row-fail")">
+                            <td>
+                                <span class="checklist-row-number">@resultado.Orden</span>
+                            </td>
+
+                            <td class="fw-semibold">@resultado.DescripcionItem</td>
 
                             <td>
                                 @if (resultado.Cumple)
                                 {
-                                    <span class="badge bg-success">Cumple</span>
+                                    <span class="checklist-result-badge checklist-result-pass">Cumple</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-danger">No cumple</span>
+                                    <span class="checklist-result-badge checklist-result-fail">No cumple</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(resultado.Observaciones))
+                                {
+                                    @resultado.Observaciones
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin observaciones</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(resultado.EvidenciaRutaArchivo))
+                                {
+                                    <a href="@resultado.EvidenciaRutaArchivo"
+                                       target="_blank"
+                                       class="btn btn-outline-primary btn-sm"
+                                       title="@resultado.EvidenciaNombreArchivo">
+                                        Ver imagen
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin imagen</span>
                                 }
                             </td>
                         </tr>

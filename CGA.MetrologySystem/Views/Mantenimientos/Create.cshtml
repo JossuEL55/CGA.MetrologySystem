@@ -110,22 +110,45 @@
             <div>
                 <strong>Regla automática</strong>
                 <p class="mb-0">
-                    Si el mantenimiento se registra fuera del rango esperado, el sistema lo marcará como extraordinario y solicitará una justificación.
+                    Si el mantenimiento es no programado, selecciona el subtipo Extraordinario y justifícalo.
+                    El sistema también lo solicitará si la fecha se desvía del periodo esperado.
                 </p>
             </div>
         </div>
 
-        <input asp-for="EsExtraordinario" type="hidden" />
+        <div class="row">
+            @if (User.IsInRole("Administrador"))
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="form-check form-switch cga-switch mt-md-4 pt-md-2">
+                        <input asp-for="EsHistorico" class="form-check-input" role="switch" />
+                        <label asp-for="EsHistorico" class="form-check-label fw-semibold"></label>
+                    </div>
+                </div>
+            }
 
-        <div class="mb-3">
-            <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
-                Justificación extraordinaria
-            </label>
-            <textarea asp-for="JustificacionExtraordinario"
-                      class="form-control"
-                      rows="2"
-                      placeholder="Completa este campo únicamente si el mantenimiento fue realizado fuera del periodo esperado."></textarea>
-            <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+            <div class="@(User.IsInRole("Administrador") ? "col-md-8" : "col-md-12") mb-3">
+                <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
+                    Justificación extraordinaria
+                </label>
+                <textarea asp-for="JustificacionExtraordinario"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Motivo del registro extraordinario."></textarea>
+                <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+            </div>
+
+            @if (User.IsInRole("Administrador"))
+            {
+                <div class="col-md-12 mb-3">
+                    <label asp-for="ObservacionCargaHistorica" class="form-label fw-semibold"></label>
+                    <textarea asp-for="ObservacionCargaHistorica"
+                              class="form-control"
+                              rows="2"
+                              placeholder="Referencia u observación del registro histórico."></textarea>
+                    <span asp-validation-for="ObservacionCargaHistorica" class="text-danger"></span>
+                </div>
+            }
         </div>
 
         <div>
@@ -169,51 +192,60 @@
             </div>
         </div>
 
-        <div id="actividadesContainer" class="verification-items-container">
-            @for (int i = 0; i < Model.Actividades.Count; i++)
-            {
-                <div class="verification-item-card checklist-item-enter" data-actividad-card>
-                    <div class="verification-item-top">
-                        <div class="checklist-item-number">
-                            @(i + 1)
-                        </div>
-
-                        <div class="checklist-item-title">
-                            <strong>Actividad técnica</strong>
-                            <span>Acción ejecutada durante el mantenimiento</span>
-                        </div>
-
-                        <div class="verification-item-actions">
-                            <button type="button" class="btn btn-outline-danger btn-sm eliminar">
-                                Quitar
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="verification-item-body">
-                        <input type="hidden" asp-for="Actividades[i].Orden" data-field="orden" />
-
-                        <div class="row">
-                            <div class="col-md-7 mb-3 mb-md-0">
-                                <label class="form-label fw-semibold">Actividad realizada</label>
+        <div class="table-responsive checklist-table-shell">
+            <table class="table checklist-table align-middle mb-0" id="tablaActividades">
+                <thead>
+                    <tr>
+                        <th class="checklist-head-order checklist-order-column">#</th>
+                        <th class="checklist-head-description">Actividad realizada</th>
+                        <th class="checklist-head-notes">Observaciones</th>
+                        <th class="checklist-head-evidence">Evidencia del ítem</th>
+                        <th class="checklist-head-action text-end checklist-action-column">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="actividadesContainer">
+                    @for (int i = 0; i < Model.Actividades.Count; i++)
+                    {
+                        <tr class="checklist-row checklist-item-enter" data-actividad-row>
+                            <td>
+                                <span class="checklist-row-number">@(i + 1)</span>
+                                <input type="hidden" asp-for="Actividades[i].Orden" data-field="orden" />
+                            </td>
+                            <td>
                                 <input asp-for="Actividades[i].DescripcionActividad"
                                        data-field="descripcion"
                                        class="form-control"
                                        placeholder="Ej. Limpieza general del equipo" />
                                 <span asp-validation-for="Actividades[i].DescripcionActividad" class="text-danger"></span>
-                            </div>
-
-                            <div class="col-md-5">
-                                <label class="form-label fw-semibold">Observaciones</label>
+                            </td>
+                            <td>
                                 <input asp-for="Actividades[i].Observaciones"
                                        data-field="observaciones"
                                        class="form-control"
                                        placeholder="Observaciones opcionales" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
+                            </td>
+                            <td>
+                                <div class="checklist-evidence-actions">
+                                    <label class="btn btn-outline-primary btn-sm mb-0">
+                                        Subir imagen
+                                        <input asp-for="Actividades[i].EvidenciaImagen"
+                                               data-field="evidencia"
+                                               type="file"
+                                               accept="image/*"
+                                               class="visually-hidden" />
+                                    </label>
+                                    <span class="checklist-evidence-note">Opcional</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                    Quitar
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
 
         <div id="emptyActividadesMessage" class="empty-checklist-message d-none">
@@ -273,14 +305,14 @@
         let index = @Model.Actividades.Count;
 
         function actualizarNumeracionActividades() {
-            document.querySelectorAll("[data-actividad-card]").forEach((card, i) => {
-                const number = card.querySelector(".checklist-item-number");
+            document.querySelectorAll("[data-actividad-row]").forEach((row, i) => {
+                const number = row.querySelector(".checklist-row-number");
                 if (number) number.textContent = i + 1;
             });
         }
 
         function actualizarMensajeActividadesVacio() {
-            const totalItems = document.querySelectorAll("[data-actividad-card]").length;
+            const totalItems = document.querySelectorAll("[data-actividad-row]").length;
             const emptyMessage = document.getElementById("emptyActividadesMessage");
 
             if (!emptyMessage) return;
@@ -293,10 +325,11 @@
         }
 
         function reindexarActividades() {
-            document.querySelectorAll("[data-actividad-card]").forEach((card, i) => {
-                const orden = card.querySelector("input[data-field='orden']");
-                const descripcion = card.querySelector("input[data-field='descripcion']");
-                const observaciones = card.querySelector("input[data-field='observaciones']");
+            document.querySelectorAll("[data-actividad-row]").forEach((row, i) => {
+                const orden = row.querySelector("input[data-field='orden']");
+                const descripcion = row.querySelector("input[data-field='descripcion']");
+                const observaciones = row.querySelector("input[data-field='observaciones']");
+                const evidencia = row.querySelector("input[data-field='evidencia']");
 
                 if (orden) {
                     orden.name = `Actividades[${i}].Orden`;
@@ -313,9 +346,14 @@
                     observaciones.name = `Actividades[${i}].Observaciones`;
                     observaciones.id = `Actividades_${i}__Observaciones`;
                 }
+
+                if (evidencia) {
+                    evidencia.name = `Actividades[${i}].EvidenciaImagen`;
+                    evidencia.id = `Actividades_${i}__EvidenciaImagen`;
+                }
             });
 
-            index = document.querySelectorAll("[data-actividad-card]").length;
+            index = document.querySelectorAll("[data-actividad-row]").length;
             actualizarNumeracionActividades();
             actualizarMensajeActividadesVacio();
         }
@@ -340,49 +378,45 @@
             if (addActividadButton) {
                 addActividadButton.addEventListener("click", function () {
                     const item = `
-                        <div class="verification-item-card checklist-item-enter" data-actividad-card>
-                            <div class="verification-item-top">
-                                <div class="checklist-item-number">
-                                    ${index + 1}
-                                </div>
-
-                                <div class="checklist-item-title">
-                                    <strong>Actividad técnica</strong>
-                                    <span>Acción ejecutada durante el mantenimiento</span>
-                                </div>
-
-                                <div class="verification-item-actions">
-                                    <button type="button" class="btn btn-outline-danger btn-sm eliminar">
-                                        Quitar
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="verification-item-body">
+                        <tr class="checklist-row checklist-item-enter" data-actividad-row>
+                            <td>
+                                <span class="checklist-row-number">${index + 1}</span>
                                 <input type="hidden"
                                        name="Actividades[${index}].Orden"
                                        data-field="orden"
                                        value="${index + 1}" />
-
-                                <div class="row">
-                                    <div class="col-md-7 mb-3 mb-md-0">
-                                        <label class="form-label fw-semibold">Actividad realizada</label>
-                                        <input name="Actividades[${index}].DescripcionActividad"
-                                               data-field="descripcion"
-                                               class="form-control"
-                                               placeholder="Ej. Limpieza general del equipo" />
-                                    </div>
-
-                                    <div class="col-md-5">
-                                        <label class="form-label fw-semibold">Observaciones</label>
-                                        <input name="Actividades[${index}].Observaciones"
-                                               data-field="observaciones"
-                                               class="form-control"
-                                               placeholder="Observaciones opcionales" />
-                                    </div>
+                            </td>
+                            <td>
+                                <input name="Actividades[${index}].DescripcionActividad"
+                                       data-field="descripcion"
+                                       class="form-control"
+                                       placeholder="Ej. Limpieza general del equipo" />
+                            </td>
+                            <td>
+                                <input name="Actividades[${index}].Observaciones"
+                                       data-field="observaciones"
+                                       class="form-control"
+                                       placeholder="Observaciones opcionales" />
+                            </td>
+                            <td>
+                                <div class="checklist-evidence-actions">
+                                    <label class="btn btn-outline-primary btn-sm mb-0">
+                                        Subir imagen
+                                        <input name="Actividades[${index}].EvidenciaImagen"
+                                               data-field="evidencia"
+                                               type="file"
+                                               accept="image/*"
+                                               class="visually-hidden" />
+                                    </label>
+                                    <span class="checklist-evidence-note">Opcional</span>
                                 </div>
-                            </div>
-                        </div>`;
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                    Quitar
+                                </button>
+                            </td>
+                        </tr>`;
 
                     document.getElementById("actividadesContainer").insertAdjacentHTML("beforeend", item);
                     index++;
@@ -396,7 +430,7 @@
 
         document.addEventListener("click", function (e) {
             if (e.target.classList.contains("eliminar")) {
-                e.target.closest("[data-actividad-card]").remove();
+                e.target.closest("[data-actividad-row]").remove();
                 reindexarActividades();
             }
         });

@@ -85,12 +85,11 @@
             <div>
                 <strong>Regla automática</strong>
                 <p class="mb-0">
-                    Si la calibración se registra fuera del periodo esperado, el sistema la marcará como extraordinaria y solicitará una justificación.
+                    Si la calibración es no programada, selecciona el subtipo Extraordinario y justifícala.
+                    El sistema también lo solicitará si la fecha se desvía del periodo esperado.
                 </p>
             </div>
         </div>
-
-        <input asp-for="EsExtraordinario" type="hidden" />
 
         <div class="row">
             <div class="col-md-4 mb-3">
@@ -111,7 +110,7 @@
                 <textarea asp-for="JustificacionExtraordinario"
                           class="form-control"
                           rows="2"
-                          placeholder="Completa este campo únicamente si la calibración fue realizada fuera del periodo esperado."></textarea>
+                          placeholder="Motivo del registro extraordinario."></textarea>
                 <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
             </div>
         </div>
