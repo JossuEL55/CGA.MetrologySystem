@@ -145,7 +145,11 @@
                 </p>
 
                 <div class="d-grid gap-2">
-                    <a href="@Model.RutaCertificado" target="_blank" class="btn btn-primary">
+                    <a asp-controller="Documentos"
+                       asp-action="VerPdf"
+                       asp-route-tipo="calibracion"
+                       asp-route-id="@Model.EventoCalibracionDatoId"
+                       class="btn btn-primary">
                         Ver certificado
                     </a>
                 </div>

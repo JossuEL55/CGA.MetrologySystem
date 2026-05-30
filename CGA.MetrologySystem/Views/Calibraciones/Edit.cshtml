@@ -173,7 +173,11 @@
                 @nombreArchivoCertificado
             </div>
 
-            <a href="@rutaCertificado" target="_blank" class="btn btn-outline-primary btn-sm">
+            <a asp-controller="Documentos"
+               asp-action="VerPdf"
+               asp-route-tipo="calibracion"
+               asp-route-id="@ViewBag.EventoCalibracionDatoId"
+               class="btn btn-outline-primary btn-sm">
                 Ver certificado actual
             </a>
         }

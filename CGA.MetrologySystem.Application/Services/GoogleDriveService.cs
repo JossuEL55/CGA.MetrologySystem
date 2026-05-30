@@ -3,6 +3,7 @@ using CGA.MetrologySystem.Application.Interfaces;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Auth.OAuth2.Responses;
+using Google.Apis.Download;
 using Google.Apis.Drive.v3;
 using Google.Apis.Services;
 using Google.Apis.Upload;
@@ -150,6 +151,40 @@ namespace CGA.MetrologySystem.Application.Services
             catch (Exception ex)
             {
                 throw new Exception($"Error al subir archivo a Google Drive: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<GoogleDriveFileContentDto> DownloadFileAsync(string fileId)
+        {
+            if (string.IsNullOrWhiteSpace(fileId))
+                throw new Exception("El identificador del archivo en Google Drive es obligatorio.");
+
+            try
+            {
+                var metadataRequest = _driveService.Files.Get(fileId);
+                metadataRequest.Fields = "id, name, mimeType";
+                var metadata = await metadataRequest.ExecuteAsync();
+
+                await using var memoryStream = new MemoryStream();
+                var downloadRequest = _driveService.Files.Get(fileId);
+                var progress = await downloadRequest.DownloadAsync(memoryStream);
+
+                if (progress.Status != DownloadStatus.Completed)
+                {
+                    var detalle = progress.Exception?.Message ?? "Google Drive no devolvió detalle adicional.";
+                    throw new Exception($"Descarga incompleta. Estado: {progress.Status}. Detalle: {detalle}");
+                }
+
+                return new GoogleDriveFileContentDto
+                {
+                    Content = memoryStream.ToArray(),
+                    FileName = metadata.Name ?? "documento",
+                    MimeType = metadata.MimeType ?? "application/octet-stream"
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error al descargar archivo desde Google Drive: {ex.Message}", ex);
             }
         }
 

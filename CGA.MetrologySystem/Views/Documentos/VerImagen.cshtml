@@ -1,0 +1,160 @@
+@model CGA.MetrologySystem.Models.Documentos.ImageViewerViewModel
+
+@{
+    ViewData["Title"] = Model.Titulo;
+}
+
+<div class="document-viewer-shell image-viewer-shell" id="imageViewerShell">
+    <div class="document-viewer-header">
+        <div class="document-viewer-title">
+            <h1>@Model.Titulo</h1>
+            <div class="document-viewer-meta">
+                <span>@Model.CodigoEquipo</span>
+                <span>@Model.NombreEquipo</span>
+            </div>
+        </div>
+
+        <div class="document-viewer-actions">
+            <a href="@Model.ReturnUrl" class="btn btn-outline-secondary">
+                Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="document-viewer-filebar">
+        <div class="document-viewer-file-info">
+            <span class="document-viewer-file-icon image-viewer-file-icon">IMG</span>
+            <span class="document-viewer-file-name">@Model.EtiquetaDocumento</span>
+        </div>
+    </div>
+
+    <div class="document-pdf-toolbar image-viewer-toolbar">
+        <button type="button" class="document-tool-button" id="zoomOutButton" title="Alejar">
+            -
+        </button>
+
+        <span class="document-zoom-label" id="zoomLabel">
+            Ancho
+        </span>
+
+        <button type="button" class="document-tool-button" id="zoomInButton" title="Acercar">
+            +
+        </button>
+
+        <button type="button" class="document-tool-button document-tool-wide" id="fitWidthButton">
+            Ancho
+        </button>
+
+        <span class="document-tool-spacer"></span>
+
+        <button type="button" class="document-tool-button document-tool-wide" id="fullscreenButton">
+            Pantalla completa
+        </button>
+    </div>
+
+    <div class="image-viewer-frame" id="imageFrame">
+        <div class="document-pdf-loading" id="imageLoader">
+            Cargando imagen...
+        </div>
+
+        <div class="document-pdf-error d-none" id="imageError">
+            No se pudo cargar la imagen.
+        </div>
+
+        <div class="image-viewer-stage image-viewer-stage-hidden" id="imageStage">
+            <img src="@Model.ImagenUrl"
+                 alt="@Model.EtiquetaDocumento"
+                 class="image-viewer-media"
+                 id="viewerImage" />
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const shell = document.getElementById('imageViewerShell');
+            const frame = document.getElementById('imageFrame');
+            const stage = document.getElementById('imageStage');
+            const image = document.getElementById('viewerImage');
+            const loader = document.getElementById('imageLoader');
+            const error = document.getElementById('imageError');
+            const zoomOutButton = document.getElementById('zoomOutButton');
+            const zoomInButton = document.getElementById('zoomInButton');
+            const fitWidthButton = document.getElementById('fitWidthButton');
+            const fullscreenButton = document.getElementById('fullscreenButton');
+            const zoomLabel = document.getElementById('zoomLabel');
+
+            const minScale = 0.2;
+            const maxScale = 4;
+            const zoomStep = 0.15;
+            let scale = 1;
+            let fitWidthMode = true;
+
+            function clamp(value, min, max) {
+                return Math.min(Math.max(value, min), max);
+            }
+
+            function updateImageScale() {
+                image.style.width = `${image.naturalWidth * scale}px`;
+                zoomLabel.textContent = fitWidthMode ? 'Ancho' : 'Zoom';
+            }
+
+            function fitToWidth() {
+                if (!image.naturalWidth) return;
+
+                const availableWidth = Math.max(stage.clientWidth - 32, 240);
+                scale = clamp(availableWidth / image.naturalWidth, minScale, maxScale);
+                fitWidthMode = true;
+                updateImageScale();
+            }
+
+            function setZoom(nextScale) {
+                scale = clamp(nextScale, minScale, maxScale);
+                fitWidthMode = false;
+                updateImageScale();
+            }
+
+            function showImage() {
+                fitToWidth();
+                loader.classList.add('d-none');
+                stage.classList.remove('image-viewer-stage-hidden');
+                stage.classList.add('image-viewer-stage-visible');
+            }
+
+            image.addEventListener('load', showImage);
+
+            image.addEventListener('error', () => {
+                loader.classList.add('d-none');
+                error.classList.remove('d-none');
+            });
+
+            zoomOutButton.addEventListener('click', () => setZoom(scale - zoomStep));
+            zoomInButton.addEventListener('click', () => setZoom(scale + zoomStep));
+            fitWidthButton.addEventListener('click', fitToWidth);
+
+            fullscreenButton.addEventListener('click', async () => {
+                if (!document.fullscreenElement) {
+                    await shell.requestFullscreen();
+                } else {
+                    await document.exitFullscreen();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                if (fitWidthMode) fitToWidth();
+            });
+
+            document.addEventListener('fullscreenchange', () => {
+                fullscreenButton.textContent = document.fullscreenElement ? 'Salir' : 'Pantalla completa';
+                if (fitWidthMode) {
+                    requestAnimationFrame(fitToWidth);
+                }
+            });
+
+            if (image.complete && image.naturalWidth) {
+                showImage();
+            }
+        })();
+    </script>
+}

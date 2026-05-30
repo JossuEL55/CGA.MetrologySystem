@@ -222,10 +222,12 @@
                                         }
                                     </td>
                                     <td>
-                                        @if (!string.IsNullOrWhiteSpace(actividad.EvidenciaRutaArchivo))
+                                        @if (!string.IsNullOrWhiteSpace(actividad.EvidenciaGoogleDriveFileId))
                                         {
-                                            <a href="@actividad.EvidenciaRutaArchivo"
-                                               target="_blank"
+                                            <a asp-controller="Documentos"
+                                               asp-action="VerImagen"
+                                               asp-route-tipo="evidencia-mantenimiento-item"
+                                               asp-route-id="@actividad.EventoMantenimientoActividadId"
                                                class="btn btn-outline-primary btn-sm"
                                                title="@actividad.EvidenciaNombreArchivo">
                                                 Ver imagen
@@ -262,8 +264,12 @@
                 </p>
 
                 <div class="d-grid gap-2">
-                    <a href="@Model.RutaPdf" target="_blank" class="btn btn-primary">
-                        Ver PDF en Drive
+                    <a asp-controller="Documentos"
+                       asp-action="VerPdf"
+                       asp-route-tipo="mantenimiento"
+                       asp-route-id="@Model.EventoMantenimientoDatoId"
+                       class="btn btn-primary">
+                        Ver PDF
                     </a>
 
                     <a asp-action="ExportarPdf"
@@ -302,7 +308,11 @@
                                 @evidencia.FechaCarga.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                             </div>
 
-                            <a href="@evidencia.RutaArchivo" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <a asp-controller="Documentos"
+                               asp-action="VerImagen"
+                               asp-route-tipo="evidencia-evento"
+                               asp-route-id="@evidencia.EvidenciaEventoMetrologicoId"
+                               class="btn btn-outline-primary btn-sm">
                                 Abrir evidencia
                             </a>
                         </div>

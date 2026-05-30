@@ -125,10 +125,12 @@
                                 }
                             </td>
                             <td>
-                                @if (!string.IsNullOrWhiteSpace(actividad.EvidenciaRutaArchivo))
+                                @if (!string.IsNullOrWhiteSpace(actividad.EvidenciaGoogleDriveFileId))
                                 {
-                                    <a href="@actividad.EvidenciaRutaArchivo"
-                                       target="_blank"
+                                    <a asp-controller="Documentos"
+                                       asp-action="VerImagen"
+                                       asp-route-tipo="evidencia-mantenimiento-item"
+                                       asp-route-id="@actividad.EventoMantenimientoActividadId"
                                        class="btn btn-outline-primary btn-sm"
                                        title="@actividad.EvidenciaNombreArchivo">
                                         Ver imagen

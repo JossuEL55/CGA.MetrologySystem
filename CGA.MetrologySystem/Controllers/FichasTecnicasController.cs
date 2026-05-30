@@ -64,13 +64,16 @@ namespace CGA.MetrologySystem.Controllers
             if (ficha == null)
                 return NotFound();
 
-            if (string.IsNullOrWhiteSpace(ficha.RutaPdf))
+            if (string.IsNullOrWhiteSpace(ficha.GoogleDriveFileId))
             {
                 TempData["Error"] = "La ficha técnica no tiene un enlace PDF disponible.";
                 return RedirectToAction(nameof(Index), new { equipoId = ficha.EquipoId });
             }
 
-            return Redirect(ficha.RutaPdf);
+            return RedirectToAction(
+                "VerPdf",
+                "Documentos",
+                new { tipo = "ficha-tecnica", id = ficha.FichaTecnicaEquipoId });
         }
 
         private async Task<FichasTecnicasIndexViewModel> ConstruirIndexViewModelAsync(

@@ -170,10 +170,12 @@
                             </td>
 
                             <td>
-                                @if (!string.IsNullOrWhiteSpace(resultado.EvidenciaRutaArchivo))
+                                @if (!string.IsNullOrWhiteSpace(resultado.EvidenciaGoogleDriveFileId))
                                 {
-                                    <a href="@resultado.EvidenciaRutaArchivo"
-                                       target="_blank"
+                                    <a asp-controller="Documentos"
+                                       asp-action="VerImagen"
+                                       asp-route-tipo="evidencia-verificacion-item"
+                                       asp-route-id="@resultado.EventoVerificacionResultadoId"
                                        class="btn btn-outline-primary btn-sm"
                                        title="@resultado.EvidenciaNombreArchivo">
                                         Ver imagen

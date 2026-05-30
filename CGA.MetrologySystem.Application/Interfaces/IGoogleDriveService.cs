@@ -16,6 +16,8 @@ namespace CGA.MetrologySystem.Application.Interfaces
             string mimeType,
             string parentFolderId);
 
+        Task<GoogleDriveFileContentDto> DownloadFileAsync(string fileId);
+
         string BuildViewUrl(string fileId);
 
         Task<string> EnsureEquiposRootFolderAsync();

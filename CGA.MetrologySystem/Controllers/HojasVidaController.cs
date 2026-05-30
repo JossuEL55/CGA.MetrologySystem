@@ -64,13 +64,16 @@ namespace CGA.MetrologySystem.Controllers
             if (hojaVida == null)
                 return NotFound();
 
-            if (string.IsNullOrWhiteSpace(hojaVida.RutaPdf))
+            if (string.IsNullOrWhiteSpace(hojaVida.GoogleDriveFileId))
             {
                 TempData["Error"] = "La hoja de vida no tiene un enlace PDF disponible.";
                 return RedirectToAction(nameof(Index), new { equipoId = hojaVida.EquipoId });
             }
 
-            return Redirect(hojaVida.RutaPdf);
+            return RedirectToAction(
+                "VerPdf",
+                "Documentos",
+                new { tipo = "hoja-vida", id = hojaVida.HojaVidaEquipoId });
         }
 
         private async Task<HojasVidaIndexViewModel> ConstruirIndexViewModelAsync(
