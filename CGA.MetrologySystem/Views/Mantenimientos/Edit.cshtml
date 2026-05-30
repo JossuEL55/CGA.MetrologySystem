@@ -219,10 +219,13 @@
                                            class="visually-hidden" />
                                 </label>
 
-                                @if (!string.IsNullOrWhiteSpace(Model.Actividades[i].EvidenciaRutaArchivo))
+                                @if (!string.IsNullOrWhiteSpace(Model.Actividades[i].EvidenciaRutaArchivo) &&
+                                                            Model.Actividades[i].EventoMantenimientoActividadId > 0)
                                 {
-                                    <a href="@Model.Actividades[i].EvidenciaRutaArchivo"
-                                       target="_blank"
+                                    <a asp-controller="Documentos"
+                                       asp-action="VerImagen"
+                                       asp-route-tipo="evidencia-mantenimiento-item"
+                                       asp-route-id="@Model.Actividades[i].EventoMantenimientoActividadId"
                                        class="btn btn-outline-secondary btn-sm"
                                        title="@Model.Actividades[i].EvidenciaNombreArchivo">
                                         Ver imagen
@@ -265,7 +268,11 @@
                             <div class="text-muted small mb-2">
                                 @evidencia.FechaCarga.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                             </div>
-                            <a href="@evidencia.RutaArchivo" target="_blank" class="btn btn-outline-primary btn-sm">
+                            <a asp-controller="Documentos"
+                               asp-action="VerImagen"
+                               asp-route-tipo="evidencia-evento"
+                               asp-route-id="@evidencia.EvidenciaEventoMetrologicoId"
+                               class="btn btn-outline-primary btn-sm">
                                 Abrir evidencia
                             </a>
                         </div>

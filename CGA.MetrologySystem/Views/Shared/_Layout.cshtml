@@ -55,6 +55,18 @@
                     Control metrológico
                 </a>
 
+                <a class="sidebar-link"
+                   asp-controller="FichasTecnicas"
+                   asp-action="Index">
+                    Fichas técnicas
+                </a>
+
+                <a class="sidebar-link"
+                   asp-controller="HojasVida"
+                   asp-action="Index">
+                    Hojas de vida
+                </a>
+
                 @if (User.IsInRole("Administrador"))
                 {
                     <div class="sidebar-section-title">Administración</div>

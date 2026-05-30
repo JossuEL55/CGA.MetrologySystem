@@ -156,8 +156,10 @@
                             <td class="text-center">
                                 @if (!string.IsNullOrWhiteSpace(item.RutaPdf))
                                 {
-                                    <a href="@item.RutaPdf"
-                                       target="_blank"
+                                    <a asp-controller="Documentos"
+                                       asp-action="VerPdf"
+                                       asp-route-tipo="verificacion"
+                                       asp-route-id="@item.EventoVerificacionDatoId"
                                        class="btn btn-outline-primary btn-sm event-document-button">
                                         Ver PDF
                                     </a>
