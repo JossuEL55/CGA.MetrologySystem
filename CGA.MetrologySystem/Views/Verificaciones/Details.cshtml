@@ -30,22 +30,13 @@
 
     <div class="d-flex gap-2">
 
-        @if (!evento.Anulado && evento.Activo &&
+        @if (evento.Activo &&
             (!evento.EsHistorico || User.IsInRole("Administrador")))
         {
             <a asp-action="Edit"
                    asp-route-id="@Model.EventoVerificacionDatoId"
                    class="btn btn-primary">
                 Editar
-            </a>
-        }
-
-        @if (!evento.Anulado && evento.Activo && User.IsInRole("Administrador"))
-        {
-            <a asp-action="Anular"
-               asp-route-id="@Model.EventoVerificacionDatoId"
-               class="btn btn-outline-danger">
-                Anular
             </a>
         }
 
@@ -109,13 +100,6 @@
                     {
                         <span class="badge bg-info text-dark fs-6 ms-1">
                             Histórica
-                        </span>
-                    }
-
-                    @if (evento.Anulado)
-                    {
-                        <span class="badge bg-danger fs-6 ms-1">
-                            Anulada
                         </span>
                     }
 
@@ -234,36 +218,6 @@
 
                     <div>
                         @evento.ObservacionCargaHistorica
-                    </div>
-                </div>
-            }
-
-            @if (evento.Anulado)
-            {
-                <div class="alert alert-danger">
-                    <div class="fw-semibold mb-1">
-                        Anulación metrológica
-                    </div>
-
-                    <div>
-                        <strong>Fecha:</strong>
-                        @(evento.FechaAnulacion.HasValue
-                            ? evento.FechaAnulacion.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                            : "No definida")
-                    </div>
-
-                    <div>
-                        <strong>Responsable:</strong>
-                        @(string.IsNullOrWhiteSpace(evento.UsuarioAnulacionNombre)
-                            ? "No identificado"
-                            : evento.UsuarioAnulacionNombre)
-                    </div>
-
-                    <div class="mt-2">
-                        <strong>Motivo:</strong>
-                        @(string.IsNullOrWhiteSpace(evento.MotivoAnulacion)
-                            ? "No registrado"
-                            : evento.MotivoAnulacion)
                     </div>
                 </div>
             }
@@ -389,7 +343,7 @@
             @if (!string.IsNullOrWhiteSpace(Model.RutaPdf))
             {
                 <p class="text-muted">
-                    El PDF interno fue generado automáticamente y almacenado en Google Drive.
+                    El PDF interno fue generado automáticamente y almacenado en el repositorio documental.
                 </p>
 
                 <div class="d-grid gap-2">

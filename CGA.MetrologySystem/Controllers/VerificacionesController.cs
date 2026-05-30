@@ -85,10 +85,9 @@ namespace CGA.MetrologySystem.Controllers
 
             query = clasificacion switch
             {
-                "historicas" => query.Where(v => v.EventoMetrologico.EsHistorico && !v.EventoMetrologico.Anulado),
-                "extraordinarias" => query.Where(v => v.EventoMetrologico.EsExtraordinario && !v.EventoMetrologico.Anulado),
-                "anuladas" => query.Where(v => v.EventoMetrologico.Anulado),
-                "operativas" => query.Where(v => !v.EventoMetrologico.EsHistorico && !v.EventoMetrologico.Anulado),
+                "historicas" => query.Where(v => v.EventoMetrologico.EsHistorico),
+                "extraordinarias" => query.Where(v => v.EventoMetrologico.EsExtraordinario),
+                "operativas" => query.Where(v => !v.EventoMetrologico.EsHistorico),
                 _ => query
             };
 
@@ -296,7 +295,7 @@ namespace CGA.MetrologySystem.Controllers
 
             var evento = verificacion.EventoMetrologico;
 
-            if (evento.Anulado || !evento.Activo)
+            if (!evento.Activo)
                 return Forbid();
 
             if (evento.EsHistorico && !EsAdministrador())
@@ -390,7 +389,7 @@ namespace CGA.MetrologySystem.Controllers
 
                 var evento = verificacion.EventoMetrologico;
 
-                if (evento.Anulado || !evento.Activo)
+                if (!evento.Activo)
                     return Forbid();
 
                 if (evento.EsHistorico && !EsAdministrador())
@@ -485,7 +484,7 @@ namespace CGA.MetrologySystem.Controllers
 
             if (verificacion == null) return NotFound();
 
-            if (verificacion.EventoMetrologico.Anulado || !verificacion.EventoMetrologico.Activo)
+            if (!verificacion.EventoMetrologico.Activo)
                 return Forbid();
 
             if (verificacion.EventoMetrologico.EsHistorico && !EsAdministrador())
@@ -513,7 +512,7 @@ namespace CGA.MetrologySystem.Controllers
 
             if (verificacion == null) return NotFound();
 
-            if (verificacion.EventoMetrologico.Anulado || !verificacion.EventoMetrologico.Activo)
+            if (!verificacion.EventoMetrologico.Activo)
                 return Forbid();
 
             if (verificacion.EventoMetrologico.EsHistorico && !EsAdministrador())
@@ -551,65 +550,6 @@ namespace CGA.MetrologySystem.Controllers
                 TempData["Error"] = "Ocurrió un error al eliminar la verificación.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
-        }
-
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> Anular(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var verificacion = await CargarVerificacionParaAnulacionAsync(id.Value);
-
-            if (verificacion == null) return NotFound();
-
-            if (verificacion.EventoMetrologico.Anulado || !verificacion.EventoMetrologico.Activo)
-            {
-                TempData["Error"] = "La verificación ya no se encuentra activa para anulación.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            return View(CrearModeloAnulacion(verificacion));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> Anular(int id, AnularVerificacionViewModel model)
-        {
-            if (id != model.EventoVerificacionDatoId)
-                return NotFound();
-
-            var verificacion = await CargarVerificacionParaAnulacionAsync(id);
-
-            if (verificacion == null) return NotFound();
-
-            if (verificacion.EventoMetrologico.Anulado || !verificacion.EventoMetrologico.Activo)
-            {
-                TempData["Error"] = "La verificación ya fue anulada o no está activa.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (!ModelState.IsValid)
-            {
-                CompletarModeloAnulacion(model, verificacion);
-                return View(model);
-            }
-
-            var usuarioActual = await _userManager.GetUserAsync(User);
-            var evento = verificacion.EventoMetrologico;
-
-            evento.Anulado = true;
-            evento.Activo = false;
-            evento.FechaAnulacion = DateTime.UtcNow;
-            evento.MotivoAnulacion = model.MotivoAnulacion.Trim();
-            evento.UsuarioAnulacionId = usuarioActual?.Id;
-            evento.UsuarioAnulacionNombre = usuarioActual?.NombreCompleto ?? User.Identity?.Name;
-
-            await _context.SaveChangesAsync();
-            await RegistrarAnulacionAsync(verificacion, usuarioActual);
-
-            TempData["Mensaje"] = "Verificación anulada. El registro se conserva para trazabilidad y ya no participa en los cálculos operativos.";
-            return RedirectToAction(nameof(Details), new { id });
         }
 
         private async Task CargarCombosAsync(VerificacionViewModel model)
@@ -673,8 +613,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 new("Operativas", "operativas", clasificacion == "operativas"),
                 new("Históricas", "historicas", clasificacion == "historicas"),
-                new("Extraordinarias", "extraordinarias", clasificacion == "extraordinarias"),
-                new("Anuladas", "anuladas", clasificacion == "anuladas")
+                new("Extraordinarias", "extraordinarias", clasificacion == "extraordinarias")
             };
         }
 
@@ -742,46 +681,6 @@ namespace CGA.MetrologySystem.Controllers
                     .ToList();
 
             return verificacion;
-        }
-
-        private async Task<EventoVerificacionDato?> CargarVerificacionParaAnulacionAsync(int eventoVerificacionDatoId)
-        {
-            return await _context.EventosVerificacionDato
-                .Include(v => v.EventoMetrologico)
-                    .ThenInclude(e => e.Equipo)
-                .Include(v => v.EventoMetrologico)
-                    .ThenInclude(e => e.ResponsableInterno)
-                .Include(v => v.EventoMetrologico)
-                    .ThenInclude(e => e.SubtipoEvento)
-                .FirstOrDefaultAsync(v => v.EventoVerificacionDatoId == eventoVerificacionDatoId);
-        }
-
-        private static AnularVerificacionViewModel CrearModeloAnulacion(EventoVerificacionDato verificacion)
-        {
-            var model = new AnularVerificacionViewModel
-            {
-                EventoVerificacionDatoId = verificacion.EventoVerificacionDatoId,
-                EventoMetrologicoId = verificacion.EventoMetrologicoId
-            };
-
-            CompletarModeloAnulacion(model, verificacion);
-            return model;
-        }
-
-        private static void CompletarModeloAnulacion(
-            AnularVerificacionViewModel model,
-            EventoVerificacionDato verificacion)
-        {
-            var evento = verificacion.EventoMetrologico;
-
-            model.EventoMetrologicoId = evento.EventoMetrologicoId;
-            model.CodigoEquipo = evento.Equipo.Codigo;
-            model.NombreEquipo = evento.Equipo.Nombre;
-            model.ResponsableInterno = evento.ResponsableInterno?.NombreCompleto;
-            model.SubtipoEvento = evento.SubtipoEvento?.Nombre;
-            model.FechaEvento = evento.FechaEvento;
-            model.FechaProxima = evento.FechaProxima;
-            model.EsHistorico = evento.EsHistorico;
         }
 
         private async Task<List<string>> DetectarCambiosCriticosAsync(
@@ -916,31 +815,6 @@ namespace CGA.MetrologySystem.Controllers
             });
         }
 
-        private async Task RegistrarAnulacionAsync(
-            EventoVerificacionDato verificacion,
-            Infrastructure.Identity.UsuarioSistema? usuarioActual)
-        {
-            var evento = verificacion.EventoMetrologico;
-
-            await _auditoriaMetrologicaService.RegistrarAsync(new AuditoriaMetrologicaRegistro
-            {
-                UsuarioId = usuarioActual?.Id,
-                UsuarioNombre = usuarioActual?.NombreCompleto ?? User.Identity?.Name,
-                UsuarioCorreo = usuarioActual?.Email,
-                RolUsuario = ObtenerRolUsuarioActual(),
-                Accion = "Anulacion de verificacion",
-                Entidad = "Verificacion",
-                EntidadId = verificacion.EventoVerificacionDatoId.ToString(),
-                EquipoId = evento.EquipoId,
-                CodigoEquipo = evento.Equipo.Codigo,
-                NombreEquipo = evento.Equipo.Nombre,
-                EventoMetrologicoId = evento.EventoMetrologicoId,
-                TipoEvento = "Verificacion",
-                Detalle = $"Se anulo la verificacion con fecha real {FormatearFecha(evento.FechaEvento)}. Motivo: {evento.MotivoAnulacion}",
-                EsCritico = true
-            });
-        }
-
         private string ObtenerRolUsuarioActual()
         {
             if (User.IsInRole("Administrador"))
@@ -1047,6 +921,10 @@ namespace CGA.MetrologySystem.Controllers
                 return;
             }
 
+            await ValidarFechaHistoricaVerificacionAsync(
+                model,
+                tipoEventoVerificacion.TipoEventoMetrologicoId);
+
             if (!ValidarEvidencias(model.Evidencias))
             {
                 ModelState.AddModelError(string.Empty, "Solo se permiten evidencias visuales en formato imagen.");
@@ -1083,6 +961,40 @@ namespace CGA.MetrologySystem.Controllers
             if (!string.IsNullOrWhiteSpace(resultadoRegla.Advertencia))
             {
                 TempData["AdvertenciaRegla"] = resultadoRegla.Advertencia;
+            }
+        }
+
+        private async Task ValidarFechaHistoricaVerificacionAsync(
+            VerificacionViewModel model,
+            int tipoEventoMetrologicoId)
+        {
+            if (!model.EsHistorico)
+            {
+                return;
+            }
+
+            var ultimaFechaRegistrada = await _context.EventosMetrologicos
+                .AsNoTracking()
+                .Where(e =>
+                    e.Activo &&
+                    e.EquipoId == model.EquipoId &&
+                    e.TipoEventoMetrologicoId == tipoEventoMetrologicoId &&
+                    e.EventoMetrologicoId != model.EventoMetrologicoId)
+                .MaxAsync(e => (DateTime?)e.FechaEvento);
+
+            if (!ultimaFechaRegistrada.HasValue)
+            {
+                ModelState.AddModelError(
+                    nameof(model.FechaEvento),
+                    "No se puede marcar como histórica porque no existe una verificación registrada posterior que sirva como referencia.");
+                return;
+            }
+
+            if (model.FechaEvento.Date >= ultimaFechaRegistrada.Value.Date)
+            {
+                ModelState.AddModelError(
+                    nameof(model.FechaEvento),
+                    $"Una verificación histórica debe tener una fecha anterior a la última verificación registrada del equipo ({ultimaFechaRegistrada.Value:yyyy-MM-dd}).");
             }
         }
 

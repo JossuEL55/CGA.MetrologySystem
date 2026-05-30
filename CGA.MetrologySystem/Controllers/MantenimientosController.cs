@@ -87,10 +87,9 @@ namespace CGA.MetrologySystem.Controllers
 
             query = clasificacion switch
             {
-                "historicos" => query.Where(m => m.EventoMetrologico.EsHistorico && !m.EventoMetrologico.Anulado),
-                "extraordinarios" => query.Where(m => m.EventoMetrologico.EsExtraordinario && !m.EventoMetrologico.Anulado),
-                "anulados" => query.Where(m => m.EventoMetrologico.Anulado),
-                "operativos" => query.Where(m => !m.EventoMetrologico.EsHistorico && !m.EventoMetrologico.Anulado),
+                "historicos" => query.Where(m => m.EventoMetrologico.EsHistorico),
+                "extraordinarios" => query.Where(m => m.EventoMetrologico.EsExtraordinario),
+                "operativos" => query.Where(m => !m.EventoMetrologico.EsHistorico),
                 _ => query
             };
 
@@ -297,7 +296,7 @@ namespace CGA.MetrologySystem.Controllers
 
             var evento = mantenimiento.EventoMetrologico;
 
-            if (evento.Anulado || !evento.Activo)
+            if (!evento.Activo)
                 return Forbid();
 
             if (evento.EsHistorico && !EsAdministrador())
@@ -391,7 +390,7 @@ namespace CGA.MetrologySystem.Controllers
 
                 var evento = mantenimiento.EventoMetrologico;
 
-                if (evento.Anulado || !evento.Activo)
+                if (!evento.Activo)
                     return Forbid();
 
                 if (evento.EsHistorico && !EsAdministrador())
@@ -488,7 +487,7 @@ namespace CGA.MetrologySystem.Controllers
 
             if (mantenimiento == null) return NotFound();
 
-            if (mantenimiento.EventoMetrologico.Anulado || !mantenimiento.EventoMetrologico.Activo)
+            if (!mantenimiento.EventoMetrologico.Activo)
                 return Forbid();
 
             if (mantenimiento.EventoMetrologico.EsHistorico && !EsAdministrador())
@@ -516,7 +515,7 @@ namespace CGA.MetrologySystem.Controllers
 
             if (mantenimiento == null) return NotFound();
 
-            if (mantenimiento.EventoMetrologico.Anulado || !mantenimiento.EventoMetrologico.Activo)
+            if (!mantenimiento.EventoMetrologico.Activo)
                 return Forbid();
 
             if (mantenimiento.EventoMetrologico.EsHistorico && !EsAdministrador())
@@ -554,65 +553,6 @@ namespace CGA.MetrologySystem.Controllers
                 TempData["Error"] = "Ocurrió un error al eliminar el mantenimiento.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
-        }
-
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> Anular(int? id)
-        {
-            if (id == null) return NotFound();
-
-            var mantenimiento = await CargarMantenimientoParaAnulacionAsync(id.Value);
-
-            if (mantenimiento == null) return NotFound();
-
-            if (mantenimiento.EventoMetrologico.Anulado || !mantenimiento.EventoMetrologico.Activo)
-            {
-                TempData["Error"] = "El mantenimiento ya no se encuentra activo para anulación.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            return View(CrearModeloAnulacion(mantenimiento));
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> Anular(int id, AnularMantenimientoViewModel model)
-        {
-            if (id != model.EventoMantenimientoDatoId)
-                return NotFound();
-
-            var mantenimiento = await CargarMantenimientoParaAnulacionAsync(id);
-
-            if (mantenimiento == null) return NotFound();
-
-            if (mantenimiento.EventoMetrologico.Anulado || !mantenimiento.EventoMetrologico.Activo)
-            {
-                TempData["Error"] = "El mantenimiento ya fue anulado o no está activo.";
-                return RedirectToAction(nameof(Details), new { id });
-            }
-
-            if (!ModelState.IsValid)
-            {
-                CompletarModeloAnulacion(model, mantenimiento);
-                return View(model);
-            }
-
-            var usuarioActual = await _userManager.GetUserAsync(User);
-            var evento = mantenimiento.EventoMetrologico;
-
-            evento.Anulado = true;
-            evento.Activo = false;
-            evento.FechaAnulacion = DateTime.UtcNow;
-            evento.MotivoAnulacion = model.MotivoAnulacion.Trim();
-            evento.UsuarioAnulacionId = usuarioActual?.Id;
-            evento.UsuarioAnulacionNombre = usuarioActual?.NombreCompleto ?? User.Identity?.Name;
-
-            await _context.SaveChangesAsync();
-            await RegistrarAnulacionAsync(mantenimiento, usuarioActual);
-
-            TempData["Mensaje"] = "Mantenimiento anulado. El registro se conserva para trazabilidad y ya no participa en los cálculos operativos.";
-            return RedirectToAction(nameof(Details), new { id });
         }
 
         private async Task CargarCombosAsync(MantenimientoViewModel model)
@@ -701,8 +641,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 new("Operativos", "operativos", clasificacion == "operativos"),
                 new("Históricos", "historicos", clasificacion == "historicos"),
-                new("Extraordinarios", "extraordinarios", clasificacion == "extraordinarios"),
-                new("Anulados", "anulados", clasificacion == "anulados")
+                new("Extraordinarios", "extraordinarios", clasificacion == "extraordinarios")
             };
         }
 
@@ -770,48 +709,6 @@ namespace CGA.MetrologySystem.Controllers
                     .ToList();
 
             return mantenimiento;
-        }
-
-        private async Task<EventoMantenimientoDato?> CargarMantenimientoParaAnulacionAsync(int eventoMantenimientoDatoId)
-        {
-            return await _context.EventosMantenimientoDato
-                .Include(m => m.TipoMantenimiento)
-                .Include(m => m.EventoMetrologico)
-                    .ThenInclude(e => e.Equipo)
-                .Include(m => m.EventoMetrologico)
-                    .ThenInclude(e => e.ResponsableInterno)
-                .Include(m => m.EventoMetrologico)
-                    .ThenInclude(e => e.SubtipoEvento)
-                .FirstOrDefaultAsync(m => m.EventoMantenimientoDatoId == eventoMantenimientoDatoId);
-        }
-
-        private static AnularMantenimientoViewModel CrearModeloAnulacion(EventoMantenimientoDato mantenimiento)
-        {
-            var model = new AnularMantenimientoViewModel
-            {
-                EventoMantenimientoDatoId = mantenimiento.EventoMantenimientoDatoId,
-                EventoMetrologicoId = mantenimiento.EventoMetrologicoId
-            };
-
-            CompletarModeloAnulacion(model, mantenimiento);
-            return model;
-        }
-
-        private static void CompletarModeloAnulacion(
-            AnularMantenimientoViewModel model,
-            EventoMantenimientoDato mantenimiento)
-        {
-            var evento = mantenimiento.EventoMetrologico;
-
-            model.EventoMetrologicoId = evento.EventoMetrologicoId;
-            model.CodigoEquipo = evento.Equipo.Codigo;
-            model.NombreEquipo = evento.Equipo.Nombre;
-            model.TipoMantenimiento = mantenimiento.TipoMantenimiento?.Nombre;
-            model.ResponsableInterno = evento.ResponsableInterno?.NombreCompleto;
-            model.SubtipoEvento = evento.SubtipoEvento?.Nombre;
-            model.FechaEvento = evento.FechaEvento;
-            model.FechaProxima = evento.FechaProxima;
-            model.EsHistorico = evento.EsHistorico;
         }
 
         private async Task<List<string>> DetectarCambiosCriticosAsync(
@@ -946,31 +843,6 @@ namespace CGA.MetrologySystem.Controllers
             });
         }
 
-        private async Task RegistrarAnulacionAsync(
-            EventoMantenimientoDato mantenimiento,
-            Infrastructure.Identity.UsuarioSistema? usuarioActual)
-        {
-            var evento = mantenimiento.EventoMetrologico;
-
-            await _auditoriaMetrologicaService.RegistrarAsync(new AuditoriaMetrologicaRegistro
-            {
-                UsuarioId = usuarioActual?.Id,
-                UsuarioNombre = usuarioActual?.NombreCompleto ?? User.Identity?.Name,
-                UsuarioCorreo = usuarioActual?.Email,
-                RolUsuario = ObtenerRolUsuarioActual(),
-                Accion = "Anulacion de mantenimiento",
-                Entidad = "Mantenimiento",
-                EntidadId = mantenimiento.EventoMantenimientoDatoId.ToString(),
-                EquipoId = evento.EquipoId,
-                CodigoEquipo = evento.Equipo.Codigo,
-                NombreEquipo = evento.Equipo.Nombre,
-                EventoMetrologicoId = evento.EventoMetrologicoId,
-                TipoEvento = "Mantenimiento",
-                Detalle = $"Se anulo el mantenimiento con fecha real {FormatearFecha(evento.FechaEvento)}. Motivo: {evento.MotivoAnulacion}",
-                EsCritico = true
-            });
-        }
-
         private string ObtenerRolUsuarioActual()
         {
             if (User.IsInRole("Administrador"))
@@ -1077,6 +949,10 @@ namespace CGA.MetrologySystem.Controllers
                 return;
             }
 
+            await ValidarFechaHistoricaMantenimientoAsync(
+                model,
+                tipoEventoMantenimiento.TipoEventoMetrologicoId);
+
             if (!ValidarEvidencias(model.Evidencias))
             {
                 ModelState.AddModelError(string.Empty, "Solo se permiten evidencias visuales en formato imagen.");
@@ -1113,6 +989,40 @@ namespace CGA.MetrologySystem.Controllers
             if (!string.IsNullOrWhiteSpace(resultadoRegla.Advertencia))
             {
                 TempData["AdvertenciaRegla"] = resultadoRegla.Advertencia;
+            }
+        }
+
+        private async Task ValidarFechaHistoricaMantenimientoAsync(
+            MantenimientoViewModel model,
+            int tipoEventoMetrologicoId)
+        {
+            if (!model.EsHistorico)
+            {
+                return;
+            }
+
+            var ultimaFechaRegistrada = await _context.EventosMetrologicos
+                .AsNoTracking()
+                .Where(e =>
+                    e.Activo &&
+                    e.EquipoId == model.EquipoId &&
+                    e.TipoEventoMetrologicoId == tipoEventoMetrologicoId &&
+                    e.EventoMetrologicoId != model.EventoMetrologicoId)
+                .MaxAsync(e => (DateTime?)e.FechaEvento);
+
+            if (!ultimaFechaRegistrada.HasValue)
+            {
+                ModelState.AddModelError(
+                    nameof(model.FechaEvento),
+                    "No se puede marcar como histórico porque no existe un mantenimiento registrado posterior que sirva como referencia.");
+                return;
+            }
+
+            if (model.FechaEvento.Date >= ultimaFechaRegistrada.Value.Date)
+            {
+                ModelState.AddModelError(
+                    nameof(model.FechaEvento),
+                    $"Un mantenimiento histórico debe tener una fecha anterior al último mantenimiento registrado del equipo ({ultimaFechaRegistrada.Value:yyyy-MM-dd}).");
             }
         }
 

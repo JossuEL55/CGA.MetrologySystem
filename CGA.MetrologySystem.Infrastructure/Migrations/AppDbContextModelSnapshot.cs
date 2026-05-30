@@ -473,9 +473,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Property<bool>("Activo")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("Anulado")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("ComentariosAdicionales")
                         .HasColumnType("text");
 
@@ -491,9 +488,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
                     b.Property<string>("EstadoEquipoResultado")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("FechaAnulacion")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<DateTime>("FechaEvento")
                         .HasColumnType("date");
 
@@ -505,10 +499,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
 
                     b.Property<string>("JustificacionExtraordinario")
                         .HasColumnType("text");
-
-                    b.Property<string>("MotivoAnulacion")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
 
                     b.Property<string>("ObservacionCargaHistorica")
                         .HasMaxLength(500)
@@ -522,14 +512,6 @@ namespace CGA.MetrologySystem.Infrastructure.Migrations
 
                     b.Property<int>("TipoEventoMetrologicoId")
                         .HasColumnType("integer");
-
-                    b.Property<string>("UsuarioAnulacionId")
-                        .HasMaxLength(450)
-                        .HasColumnType("character varying(450)");
-
-                    b.Property<string>("UsuarioAnulacionNombre")
-                        .HasMaxLength(180)
-                        .HasColumnType("character varying(180)");
 
                     b.HasKey("EventoMetrologicoId");
 
