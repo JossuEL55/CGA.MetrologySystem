@@ -210,15 +210,6 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
             {
                 entity.Property(e => e.ObservacionCargaHistorica)
                     .HasMaxLength(500);
-
-                entity.Property(e => e.MotivoAnulacion)
-                    .HasMaxLength(500);
-
-                entity.Property(e => e.UsuarioAnulacionId)
-                    .HasMaxLength(450);
-
-                entity.Property(e => e.UsuarioAnulacionNombre)
-                    .HasMaxLength(180);
             });
             modelBuilder.Entity<AuditoriaMetrologica>(entity =>
             {

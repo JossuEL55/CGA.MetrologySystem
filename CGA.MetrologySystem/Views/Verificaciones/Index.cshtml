@@ -144,12 +144,6 @@
                                         </span>
                                     }
 
-                                    @if (evento.Anulado)
-                                    {
-                                        <span class="event-badge event-badge-dark">
-                                            Anulada
-                                        </span>
-                                    }
                                 </div>
                             </td>
 
@@ -178,7 +172,7 @@
                                         Detalle
                                     </a>
 
-                                    @if (!evento.Anulado && evento.Activo &&
+                                    @if (evento.Activo &&
                                         (!evento.EsHistorico || User.IsInRole("Administrador")))
                                     {
                                         <a asp-action="Edit"
@@ -194,14 +188,6 @@
                                         </a>
                                     }
 
-                                    @if (!evento.Anulado && evento.Activo && User.IsInRole("Administrador"))
-                                    {
-                                        <a asp-action="Anular"
-                                           asp-route-id="@item.EventoVerificacionDatoId"
-                                           class="btn btn-outline-danger btn-sm">
-                                            Anular
-                                        </a>
-                                    }
                                 </div>
                             </td>
                         </tr>
