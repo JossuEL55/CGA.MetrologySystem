@@ -64,6 +64,39 @@ namespace CGA.MetrologySystem.Services.ControlMetrologico
             };
         }
 
+        public async Task<ControlMetrologicoScoreViewModel> ObtenerVistaScoreAsync(ControlMetrologicoFiltroViewModel filtros)
+        {
+            NormalizarFiltros(filtros);
+
+            var equipos = await ConstruirControlesEquiposAsync(filtros.HorizonteDias);
+            var extraordinariosPorControl = await ObtenerEventosExtraordinariosPorControlAsync();
+
+            var items = new List<ScoreMetrologicoItemViewModel>();
+
+            foreach (var equipo in equipos)
+            {
+                AgregarScoreItem(items, equipo, equipo.Calibracion, extraordinariosPorControl);
+                AgregarScoreItem(items, equipo, equipo.Verificacion, extraordinariosPorControl);
+                AgregarScoreItem(items, equipo, equipo.Mantenimiento, extraordinariosPorControl);
+            }
+
+            items = AplicarFiltrosScore(items, filtros)
+                .OrderByDescending(i => i.ScoreMetrologico)
+                .ThenBy(i => i.FechaProxima ?? DateTime.MaxValue)
+                .ThenBy(i => i.CodigoEquipo)
+                .ThenBy(i => i.TipoEventoNombre)
+                .ToList();
+
+            filtros = await CargarListasFiltrosAsync(filtros);
+
+            return new ControlMetrologicoScoreViewModel
+            {
+                Filtros = filtros,
+                ResumenScore = GenerarResumenScore(items),
+                Items = items
+            };
+        }
+
         private async Task<List<ControlEquipoViewModel>> ConstruirControlesEquiposAsync(int horizonteDias)
         {
             var tiposEvento = await ObtenerTiposEventoControlAsync();
@@ -365,6 +398,39 @@ namespace CGA.MetrologySystem.Services.ControlMetrologico
             return query.ToList();
         }
 
+        private List<ScoreMetrologicoItemViewModel> AplicarFiltrosScore(
+            List<ScoreMetrologicoItemViewModel> items,
+            ControlMetrologicoFiltroViewModel filtros)
+        {
+            var query = items.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(filtros.Buscar))
+            {
+                var buscar = filtros.Buscar.Trim().ToLower();
+
+                query = query.Where(i =>
+                    i.CodigoEquipo.ToLower().Contains(buscar) ||
+                    i.NombreEquipo.ToLower().Contains(buscar));
+            }
+
+            if (filtros.TipoEquipoId.HasValue)
+            {
+                query = query.Where(i => i.TipoEquipoId == filtros.TipoEquipoId.Value);
+            }
+
+            if (filtros.TipoEventoMetrologicoId.HasValue)
+            {
+                query = query.Where(i => i.TipoEventoMetrologicoId == filtros.TipoEventoMetrologicoId.Value);
+            }
+
+            if (filtros.Estado.HasValue)
+            {
+                query = query.Where(i => i.Estado == filtros.Estado.Value);
+            }
+
+            return query.ToList();
+        }
+
         private ControlEventoViewModel? ObtenerControlPorTipoEvento(
             ControlEquipoViewModel equipo,
             int tipoEventoMetrologicoId)
@@ -412,6 +478,186 @@ namespace CGA.MetrologySystem.Services.ControlMetrologico
             });
         }
 
+        private void AgregarScoreItem(
+            List<ScoreMetrologicoItemViewModel> items,
+            ControlEquipoViewModel equipo,
+            ControlEventoViewModel control,
+            Dictionary<(int EquipoId, int TipoEventoMetrologicoId), int> extraordinariosPorControl)
+        {
+            extraordinariosPorControl.TryGetValue(
+                (equipo.EquipoId, control.TipoEventoMetrologicoId),
+                out var cantidadExtraordinarios);
+
+            var factorEstado = CalcularFactorEstado(control.Estado, control.DiasRestantes);
+            var factorExtraordinarios = CalcularFactorExtraordinarios(cantidadExtraordinarios);
+            var factorInformacion = CalcularFactorInformacion(control.Estado);
+            var score = Math.Clamp(
+                factorEstado + factorExtraordinarios + factorInformacion,
+                0,
+                100);
+
+            items.Add(new ScoreMetrologicoItemViewModel
+            {
+                EquipoId = equipo.EquipoId,
+                CodigoEquipo = equipo.CodigoEquipo,
+                NombreEquipo = equipo.NombreEquipo,
+                TipoEquipoId = equipo.TipoEquipoId,
+                TipoEquipo = equipo.TipoEquipo,
+                TipoEventoMetrologicoId = control.TipoEventoMetrologicoId,
+                TipoEventoNombre = control.TipoEventoNombre,
+                Estado = control.Estado,
+                EstadoTexto = ObtenerTextoEstado(control.Estado),
+                CssEstado = control.CssClass,
+                IconoEstado = control.Icono,
+                FechaUltimoEvento = control.FechaUltimoEvento,
+                FechaProxima = control.FechaProxima,
+                DiasRestantes = control.DiasRestantes,
+                CantidadEventosExtraordinarios = cantidadExtraordinarios,
+                ScoreMetrologico = score,
+                NivelPrioridad = ObtenerNivelPrioridad(score),
+                CssPrioridad = ObtenerCssPrioridad(score),
+                ExplicacionScore = ConstruirExplicacionScore(control, cantidadExtraordinarios)
+            });
+        }
+
+        private async Task<Dictionary<(int EquipoId, int TipoEventoMetrologicoId), int>> ObtenerEventosExtraordinariosPorControlAsync()
+        {
+            var registros = await _context.EventosMetrologicos
+                .AsNoTracking()
+                .Where(e => e.Activo && e.EsExtraordinario)
+                .GroupBy(e => new { e.EquipoId, e.TipoEventoMetrologicoId })
+                .Select(g => new
+                {
+                    g.Key.EquipoId,
+                    g.Key.TipoEventoMetrologicoId,
+                    Total = g.Count()
+                })
+                .ToListAsync();
+
+            return registros.ToDictionary(
+                r => (r.EquipoId, r.TipoEventoMetrologicoId),
+                r => r.Total);
+        }
+
+        private static int CalcularFactorEstado(
+            EstadoControlMetrologico estado,
+            int? diasRestantes)
+        {
+            return estado switch
+            {
+                EstadoControlMetrologico.Vencido => 70,
+                EstadoControlMetrologico.ProximoAVencer => CalcularFactorProximoAVencer(diasRestantes),
+                EstadoControlMetrologico.Vigente => CalcularFactorVigente(diasRestantes),
+                EstadoControlMetrologico.SinEventos => 35,
+                EstadoControlMetrologico.SinConfiguracion => 30,
+                EstadoControlMetrologico.NoRequiereControl => 0,
+                _ => 0
+            };
+        }
+
+        private static int CalcularFactorProximoAVencer(int? diasRestantes)
+        {
+            if (!diasRestantes.HasValue)
+            {
+                return 30;
+            }
+
+            return diasRestantes.Value switch
+            {
+                >= 0 and <= 7 => 60,
+                >= 8 and <= 15 => 50,
+                >= 16 and <= 30 => 40,
+                > 30 => 30,
+                _ => 60
+            };
+        }
+
+        private static int CalcularFactorVigente(int? diasRestantes)
+        {
+            if (!diasRestantes.HasValue)
+            {
+                return 10;
+            }
+
+            return diasRestantes.Value switch
+            {
+                >= 31 and <= 60 => 20,
+                > 60 => 10,
+                _ => 10
+            };
+        }
+
+        private static int CalcularFactorExtraordinarios(int cantidadExtraordinarios)
+        {
+            return cantidadExtraordinarios switch
+            {
+                <= 0 => 0,
+                1 => 7,
+                2 => 14,
+                _ => 20
+            };
+        }
+
+        private static int CalcularFactorInformacion(EstadoControlMetrologico estado)
+        {
+            return estado is EstadoControlMetrologico.SinEventos or EstadoControlMetrologico.SinConfiguracion
+                ? 10
+                : 0;
+        }
+
+        private static string ObtenerNivelPrioridad(int score)
+        {
+            return score switch
+            {
+                >= 90 => "Crítico",
+                >= 70 => "Alto",
+                >= 40 => "Medio",
+                _ => "Bajo"
+            };
+        }
+
+        private static string ObtenerCssPrioridad(int score)
+        {
+            return score switch
+            {
+                >= 90 => "prioridad-critico",
+                >= 70 => "prioridad-alto",
+                >= 40 => "prioridad-medio",
+                _ => "prioridad-bajo"
+            };
+        }
+
+        private string ConstruirExplicacionScore(
+            ControlEventoViewModel control,
+            int cantidadExtraordinarios)
+        {
+            var explicacionBase = control.Estado switch
+            {
+                EstadoControlMetrologico.Vencido => "Vencido",
+                EstadoControlMetrologico.ProximoAVencer when control.DiasRestantes.HasValue =>
+                    $"Próximo a vencer en {control.DiasRestantes.Value} día(s)",
+                EstadoControlMetrologico.ProximoAVencer => "Próximo a vencer",
+                EstadoControlMetrologico.SinEventos => "Sin eventos registrados",
+                EstadoControlMetrologico.SinConfiguracion => "Sin configuración de control",
+                EstadoControlMetrologico.NoRequiereControl => "No requiere control",
+                EstadoControlMetrologico.Vigente => "Vigente",
+                _ => ObtenerTextoEstado(control.Estado)
+            };
+
+            if (cantidadExtraordinarios <= 0)
+            {
+                return control.Estado == EstadoControlMetrologico.Vigente
+                    ? $"{explicacionBase}, sin eventos extraordinarios"
+                    : explicacionBase;
+            }
+
+            var textoExtraordinarios = cantidadExtraordinarios == 1
+                ? "1 evento extraordinario"
+                : $"{cantidadExtraordinarios} eventos extraordinarios";
+
+            return $"{explicacionBase} + {textoExtraordinarios}";
+        }
+
         private EstadoControlMetrologico ObtenerPeorEstado(params EstadoControlMetrologico[] estados)
         {
             var prioridad = new Dictionary<EstadoControlMetrologico, int>
@@ -454,6 +700,26 @@ namespace CGA.MetrologySystem.Services.ControlMetrologico
                 SinEventos = eventos.Count(e => e.Estado == EstadoControlMetrologico.SinEventos),
                 SinConfiguracion = eventos.Count(e => e.Estado == EstadoControlMetrologico.SinConfiguracion),
                 NoRequierenControl = eventos.Count(e => e.Estado == EstadoControlMetrologico.NoRequiereControl)
+            };
+        }
+
+        private static ResumenScoreMetrologicoViewModel GenerarResumenScore(List<ScoreMetrologicoItemViewModel> items)
+        {
+            var itemMayorScore = items
+                .OrderByDescending(i => i.ScoreMetrologico)
+                .ThenBy(i => i.FechaProxima ?? DateTime.MaxValue)
+                .FirstOrDefault();
+
+            return new ResumenScoreMetrologicoViewModel
+            {
+                TotalControlesEvaluados = items.Count,
+                ControlesCriticos = items.Count(i => i.NivelPrioridad == "Crítico"),
+                ControlesAltaPrioridad = items.Count(i => i.NivelPrioridad == "Alto"),
+                PromedioScore = items.Any() ? items.Average(i => i.ScoreMetrologico) : 0,
+                MayorScore = itemMayorScore?.ScoreMetrologico ?? 0,
+                EquipoMayorScore = itemMayorScore == null
+                    ? "N/D"
+                    : $"{itemMayorScore.CodigoEquipo} - {itemMayorScore.TipoEventoNombre}"
             };
         }
 

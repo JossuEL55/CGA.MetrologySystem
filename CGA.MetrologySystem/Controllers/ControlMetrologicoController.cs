@@ -60,6 +60,28 @@ namespace CGA.MetrologySystem.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Score(
+            string? buscar,
+            int? tipoEquipoId,
+            int? tipoEventoMetrologicoId,
+            EstadoControlMetrologico? estado,
+            int horizonteDias = 30)
+        {
+            var filtros = new ControlMetrologicoFiltroViewModel
+            {
+                Buscar = buscar,
+                TipoEquipoId = tipoEquipoId,
+                TipoEventoMetrologicoId = tipoEventoMetrologicoId,
+                Estado = estado,
+                HorizonteDias = horizonteDias
+            };
+
+            var model = await _controlMetrologicoService.ObtenerVistaScoreAsync(filtros);
+
+            return View(model);
+        }
+
+        [HttpGet]
         public IActionResult LimpiarFiltros()
         {
             return RedirectToAction(nameof(Index));
@@ -69,6 +91,12 @@ namespace CGA.MetrologySystem.Controllers
         public IActionResult LimpiarFiltrosEventos()
         {
             return RedirectToAction(nameof(Eventos));
+        }
+
+        [HttpGet]
+        public IActionResult LimpiarFiltrosScore()
+        {
+            return RedirectToAction(nameof(Score));
         }
     }
 }
