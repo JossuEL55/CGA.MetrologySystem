@@ -1741,6 +1741,89 @@ a {
     white-space: nowrap;
 }
 
+.score-summary-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.score-kpi-wide small {
+    display: block;
+    margin-top: .35rem;
+    color: #64748b;
+    font-size: .78rem;
+    font-weight: 750;
+    line-height: 1.25;
+    max-width: 190px;
+}
+
+.metro-score-value {
+    display: inline-flex;
+    align-items: baseline;
+    gap: .18rem;
+    padding: .45rem .7rem;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+    .metro-score-value strong {
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 900;
+    }
+
+    .metro-score-value span {
+        color: #64748b;
+        font-size: .75rem;
+        font-weight: 800;
+    }
+
+.metro-extra-pill,
+.metro-priority-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.metro-extra-pill {
+    min-width: 2.2rem;
+    padding: .45rem .7rem;
+    background: #eef6ff;
+    color: #175873;
+    border: 1px solid #bfdbfe;
+}
+
+.metro-priority-pill {
+    padding: .52rem .8rem;
+}
+
+.prioridad-bajo {
+    background: #ecfdf3;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.prioridad-medio {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.prioridad-alto {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+}
+
+.prioridad-critico {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
 .estado-vigente {
     background: #ecfdf3;
     color: #15803d;
