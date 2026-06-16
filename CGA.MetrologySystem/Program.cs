@@ -14,6 +14,7 @@ using CGA.MetrologySystem.Services.Email;
 using CGA.MetrologySystem.Services.Alertas;
 using CGA.MetrologySystem.Services.Notificaciones;
 using CGA.MetrologySystem.Services.Auditoria;
+using CGA.MetrologySystem.Services.DashboardMetrologico;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -56,6 +57,7 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAlertaMetrologicaService, AlertaMetrologicaService>();
 builder.Services.AddScoped<INotificacionMetrologicaService, NotificacionMetrologicaService>();
 builder.Services.AddScoped<IAuditoriaMetrologicaService, AuditoriaMetrologicaService>();
+builder.Services.AddScoped<DashboardMetrologicoService>();
 builder.Services.AddHostedService<AlertasBackgroundService>();
 
 builder.Services.AddDefaultIdentity<UsuarioSistema>(options =>

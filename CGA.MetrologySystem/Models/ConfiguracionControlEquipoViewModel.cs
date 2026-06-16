@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace CGA.MetrologySystem.Models
 {
-    public class ConfiguracionControlEquipoViewModel
+    public class ConfiguracionControlEquipoViewModel : IValidatableObject
     {
         public int ConfiguracionControlEquipoId { get; set; }
 
@@ -15,12 +15,10 @@ namespace CGA.MetrologySystem.Models
         [Display(Name = "Tipo de evento")]
         public int TipoEventoMetrologicoId { get; set; }
 
-        [Required(ErrorMessage = "Debe ingresar la periodicidad.")]
         [Range(1, 120, ErrorMessage = "La periodicidad debe estar entre 1 y 120.")]
         [Display(Name = "Periodicidad")]
         public int? PeriodicidadValor { get; set; }
 
-        [Required(ErrorMessage = "Debe seleccionar la unidad de periodicidad.")]
         [Display(Name = "Unidad")]
         public string? PeriodicidadUnidad { get; set; }
 
@@ -34,6 +32,7 @@ namespace CGA.MetrologySystem.Models
         public bool Activo { get; set; } = true;
 
         public List<SelectListItem> Equipos { get; set; } = new();
+
         public List<SelectListItem> TiposEventoMetrologico { get; set; } = new();
 
         public List<SelectListItem> UnidadesPeriodicidad { get; set; } = new()
@@ -42,5 +41,27 @@ namespace CGA.MetrologySystem.Models
             new SelectListItem { Value = "Meses", Text = "Meses" },
             new SelectListItem { Value = "Anios", Text = "Años" }
         };
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (!RequiereControl)
+            {
+                yield break;
+            }
+
+            if (!PeriodicidadValor.HasValue)
+            {
+                yield return new ValidationResult(
+                    "Debe ingresar la periodicidad.",
+                    new[] { nameof(PeriodicidadValor) });
+            }
+
+            if (string.IsNullOrWhiteSpace(PeriodicidadUnidad))
+            {
+                yield return new ValidationResult(
+                    "Debe seleccionar la unidad de periodicidad.",
+                    new[] { nameof(PeriodicidadUnidad) });
+            }
+        }
     }
 }

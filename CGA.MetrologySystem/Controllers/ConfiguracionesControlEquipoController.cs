@@ -62,6 +62,8 @@ namespace CGA.MetrologySystem.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ConfiguracionControlEquipoViewModel model)
         {
+            NormalizarConfiguracionSinControl(model);
+
             if (!ModelState.IsValid)
             {
                 await CargarCombosAsync(model);
@@ -126,6 +128,8 @@ namespace CGA.MetrologySystem.Controllers
         public async Task<IActionResult> Edit(int id, ConfiguracionControlEquipoViewModel model)
         {
             if (id != model.ConfiguracionControlEquipoId) return NotFound();
+
+            NormalizarConfiguracionSinControl(model);
 
             if (!ModelState.IsValid)
             {
@@ -212,6 +216,19 @@ namespace CGA.MetrologySystem.Controllers
                     Text = t.Nombre
                 })
                 .ToListAsync();
+        }
+
+        private static void NormalizarConfiguracionSinControl(ConfiguracionControlEquipoViewModel model)
+        {
+            if (model.RequiereControl)
+            {
+                return;
+            }
+
+            model.PeriodicidadValor = null;
+            model.PeriodicidadUnidad = null;
+            model.PermitePorIngreso = false;
+            model.Activo = true;
         }
     }
 }

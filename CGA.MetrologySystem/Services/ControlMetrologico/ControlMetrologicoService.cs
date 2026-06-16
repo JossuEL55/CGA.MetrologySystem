@@ -491,10 +491,12 @@ namespace CGA.MetrologySystem.Services.ControlMetrologico
             var factorEstado = CalcularFactorEstado(control.Estado, control.DiasRestantes);
             var factorExtraordinarios = CalcularFactorExtraordinarios(cantidadExtraordinarios);
             var factorInformacion = CalcularFactorInformacion(control.Estado);
-            var score = Math.Clamp(
-                factorEstado + factorExtraordinarios + factorInformacion,
-                0,
-                100);
+            var score = control.Estado == EstadoControlMetrologico.NoRequiereControl
+                ? 0
+                : Math.Clamp(
+                    factorEstado + factorExtraordinarios + factorInformacion,
+                    0,
+                    100);
 
             items.Add(new ScoreMetrologicoItemViewModel
             {
