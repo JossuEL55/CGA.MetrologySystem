@@ -56,7 +56,7 @@
 
     <div class="row">
 
-        <div class="col-md-4 mb-4">
+        <div class="col-md-4 mb-4 control-periodicidad-field">
             <label asp-for="PeriodicidadValor" class="form-label fw-semibold"></label>
 
             <input asp-for="PeriodicidadValor"
@@ -68,7 +68,7 @@
             <span asp-validation-for="PeriodicidadValor" class="text-danger"></span>
         </div>
 
-        <div class="col-md-4 mb-4">
+        <div class="col-md-4 mb-4 control-periodicidad-field">
             <label asp-for="PeriodicidadUnidad" class="form-label fw-semibold"></label>
 
             <select asp-for="PeriodicidadUnidad"
@@ -102,18 +102,40 @@
         <div class="col-md-6 mb-4">
             <div class="content-card h-100">
 
-                <div class="form-check mb-2">
-                    <input asp-for="RequiereControl" class="form-check-input" />
+                <label class="form-label fw-semibold">
+                    ¿Requiere este control?
+                </label>
 
-                    <label asp-for="RequiereControl"
-                           class="form-check-label fw-semibold">
+                <div class="form-check mb-2">
+                    <input class="form-check-input control-requiere-option"
+                           type="radio"
+                           asp-for="RequiereControl"
+                           id="RequiereControlSi"
+                           value="true" />
+                    <label class="form-check-label fw-semibold" for="RequiereControlSi">
+                        Sí, requiere control
+                    </label>
+                </div>
+
+                <div class="form-check mb-2">
+                    <input class="form-check-input control-requiere-option"
+                           type="radio"
+                           asp-for="RequiereControl"
+                           id="RequiereControlNo"
+                           value="false" />
+                    <label class="form-check-label fw-semibold" for="RequiereControlNo">
+                        No requiere control
                     </label>
                 </div>
 
                 <p class="text-muted small mb-0">
-                    Indica si este equipo debe pasar obligatoriamente por control
-                    metrológico para el tipo de evento seleccionado.
+                    Seleccione si este equipo debe pasar por este control metrológico.
                 </p>
+
+                <div id="NoRequiereControlHelp" class="alert alert-info mt-3 mb-0 d-none">
+                    Este control quedará marcado como No requiere control y no será
+                    considerado como vencido ni pendiente.
+                </div>
 
             </div>
         </div>
@@ -122,7 +144,9 @@
             <div class="content-card h-100">
 
                 <div class="form-check mb-2">
-                    <input asp-for="PermitePorIngreso" class="form-check-input" />
+                    <input asp-for="PermitePorIngreso"
+                           class="form-check-input"
+                           id="PermitePorIngreso" />
 
                     <label asp-for="PermitePorIngreso"
                            class="form-check-label fw-semibold">
@@ -162,4 +186,36 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        (() => {
+            const requiereOptions = document.querySelectorAll('.control-requiere-option');
+            const periodicidadFields = document.querySelectorAll('.control-periodicidad-field input, .control-periodicidad-field select');
+            const permitePorIngreso = document.getElementById('PermitePorIngreso');
+            const ayudaNoRequiere = document.getElementById('NoRequiereControlHelp');
+
+            const actualizarEstado = () => {
+                const requiereControl = document.querySelector('.control-requiere-option:checked')?.value === 'true';
+
+                periodicidadFields.forEach(field => {
+                    field.disabled = !requiereControl;
+                    if (!requiereControl) {
+                        field.value = '';
+                    }
+                });
+
+                if (permitePorIngreso) {
+                    permitePorIngreso.disabled = !requiereControl;
+                    if (!requiereControl) {
+                        permitePorIngreso.checked = false;
+                    }
+                }
+
+                ayudaNoRequiere?.classList.toggle('d-none', requiereControl);
+            };
+
+            requiereOptions.forEach(option => option.addEventListener('change', actualizarEstado));
+            actualizarEstado();
+        })();
+    </script>
 }
