@@ -2201,6 +2201,276 @@ a {
         padding: 1.5rem;
     }
 }
+
+.maestro-eq-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 2rem;
+    border-radius: 28px;
+    background: radial-gradient(circle at top right, rgba(255,255,255,.28), transparent 34%), linear-gradient(135deg, #0f172a 0%, #175873 54%, #1f7a8c 100%);
+    color: #fff;
+    box-shadow: 0 22px 55px rgba(15, 23, 42, .22);
+    position: relative;
+    overflow: hidden;
+}
+
+    .maestro-eq-hero::after {
+        content: "";
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        right: -100px;
+        top: -100px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.11);
+    }
+
+    .maestro-eq-hero h1 {
+        font-size: 2rem;
+        font-weight: 850;
+        margin: .35rem 0;
+        letter-spacing: -.03em;
+    }
+
+    .maestro-eq-hero p {
+        margin: 0;
+        max-width: 760px;
+        color: rgba(255,255,255,.84);
+    }
+
+.maestro-eq-actions {
+    display: flex;
+    gap: .65rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.maestro-eq-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.maestro-eq-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.maestro-eq-card {
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, .08);
+    border-radius: 24px;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, .07);
+    overflow: hidden;
+}
+
+.maestro-eq-card-main {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) auto auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+}
+
+.maestro-eq-identity {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    min-width: 0;
+}
+
+    .maestro-eq-identity span,
+    .maestro-eq-identity small {
+        display: block;
+        color: #64748b;
+        line-height: 1.25;
+    }
+
+    .maestro-eq-identity small {
+        margin-top: .18rem;
+        font-weight: 700;
+    }
+
+.maestro-eq-title {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    flex-wrap: wrap;
+}
+
+    .maestro-eq-title strong {
+        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 900;
+    }
+
+.maestro-eq-warning-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .32rem;
+    padding: .28rem .55rem;
+    border-radius: 999px;
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+    font-size: .72rem;
+    font-weight: 850;
+}
+
+.maestro-eq-status-zone {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.maestro-eq-main-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.maestro-eq-toggle {
+    border-radius: 999px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.maestro-eq-collapse {
+    border-top: 1px solid #eef2f7;
+    background: #f8fafc;
+}
+
+.maestro-eq-actions-row {
+    display: flex;
+    gap: .55rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.25rem 0;
+}
+
+    .maestro-eq-actions-row .btn {
+        border-radius: 999px;
+        font-weight: 750;
+    }
+
+.maestro-eq-control-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    padding: 1rem 1.25rem 1.25rem;
+}
+
+.maestro-eq-control-card {
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid transparent;
+    background: #fff;
+}
+
+.maestro-eq-control-top {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+}
+
+    .maestro-eq-control-top strong {
+        display: block;
+        color: #0f172a;
+        font-weight: 900;
+        margin-bottom: .35rem;
+    }
+
+.maestro-eq-control-dates {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .5rem;
+    margin-top: .85rem;
+}
+
+    .maestro-eq-control-dates div {
+        padding: .55rem;
+        border-radius: 12px;
+        background: rgba(255,255,255,.75);
+        border: 1px solid rgba(148, 163, 184, .22);
+    }
+
+    .maestro-eq-control-dates small {
+        display: block;
+        color: #64748b;
+        font-size: .68rem;
+        font-weight: 850;
+        text-transform: uppercase;
+    }
+
+    .maestro-eq-control-dates b {
+        display: block;
+        color: #0f172a;
+        font-size: .78rem;
+        margin-top: .1rem;
+    }
+
+.maestro-eq-control-message {
+    min-height: 2.2rem;
+    margin: .85rem 0 0;
+    color: #475569;
+    font-size: .82rem;
+    line-height: 1.35;
+}
+
+.maestro-eq-control-actions {
+    margin-top: .9rem;
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+    .maestro-eq-control-actions .btn {
+        border-radius: 999px;
+        font-weight: 800;
+    }
+
+@media (max-width: 1200px) {
+    .maestro-eq-card-main {
+        grid-template-columns: 1fr;
+    }
+
+    .maestro-eq-status-zone,
+    .maestro-eq-main-actions {
+        justify-content: flex-start;
+    }
+
+    .maestro-eq-control-grid,
+    .maestro-eq-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .maestro-eq-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .maestro-eq-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .maestro-eq-control-grid,
+    .maestro-eq-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .maestro-eq-control-dates {
+        grid-template-columns: 1fr;
+    }
+}
 .metro-event-pill {
     display: inline-flex;
     align-items: center;

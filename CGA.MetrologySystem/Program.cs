@@ -16,6 +16,7 @@ using CGA.MetrologySystem.Services.Notificaciones;
 using CGA.MetrologySystem.Services.Auditoria;
 using CGA.MetrologySystem.Services.DashboardMetrologico;
 using CGA.MetrologySystem.Services.TendenciasMetrologicas;
+using CGA.MetrologySystem.Services.MaestroEquipos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +61,8 @@ builder.Services.AddScoped<INotificacionMetrologicaService, NotificacionMetrolog
 builder.Services.AddScoped<IAuditoriaMetrologicaService, AuditoriaMetrologicaService>();
 builder.Services.AddScoped<DashboardMetrologicoService>();
 builder.Services.AddScoped<TendenciasMetrologicasService>();
+builder.Services.AddScoped<MaestroEquiposService>();
+builder.Services.AddScoped<MaestroEquiposExcelService>();
 builder.Services.AddHostedService<AlertasBackgroundService>();
 
 builder.Services.AddDefaultIdentity<UsuarioSistema>(options =>
