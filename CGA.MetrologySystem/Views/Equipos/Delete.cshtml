@@ -1,0 +1,72 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.Equipo
+
+@{
+    ViewData["Title"] = "Eliminar equipo";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Eliminar equipo</h2>
+        <p class="page-subtitle">
+            Confirma la eliminación del equipo seleccionado.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
+
+<div class="form-card">
+
+    <div class="alert alert-danger">
+        ¿Estás seguro de que deseas eliminar este equipo?
+        Esta acción no se puede deshacer.
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Código</label>
+            <div class="form-control readonly-highlight">@Model.Codigo</div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Nombre</label>
+            <div class="form-control readonly-highlight">@Model.Nombre</div>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Tipo de equipo</label>
+            <div class="form-control readonly-highlight">
+                @(Model.TipoEquipo?.Nombre ?? "No registrado")
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Proveedor</label>
+            <div class="form-control readonly-highlight">
+                @(Model.Proveedor?.Nombre ?? "No registrado")
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Ubicación</label>
+            <div class="form-control readonly-highlight">
+                @(Model.Ubicacion?.Nombre ?? "No registrada")
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 mt-4">
+        <form asp-action="Delete" method="post">
+            <input type="hidden" asp-for="EquipoId" />
+            <button type="submit" class="btn btn-danger">
+                Eliminar
+            </button>
+        </form>
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+    </div>
+
+</div>

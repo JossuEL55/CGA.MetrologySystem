@@ -1,0 +1,164 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.EventoMantenimientoDato
+
+@{
+    ViewData["Title"] = "Eliminar mantenimiento";
+
+    var evento = Model.EventoMetrologico;
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2 class="page-title text-danger">Eliminar mantenimiento</h2>
+        <p class="page-subtitle">
+            Esta acción eliminará el registro, sus actividades, el PDF generado y las evidencias visuales asociadas.
+        </p>
+    </div>
+
+    <a asp-action="Details" asp-route-id="@Model.EventoMantenimientoDatoId" class="btn btn-outline-secondary">
+        Cancelar
+    </a>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="form-card">
+    <div class="alert alert-danger">
+        <h5 class="alert-heading">Confirmación requerida</h5>
+        <p class="mb-0">
+            Estás a punto de eliminar definitivamente este mantenimiento. Esta operación también intentará borrar los archivos asociados.
+        </p>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="text-muted small">Equipo</div>
+            <div class="fw-semibold">@evento.Equipo?.Codigo - @evento.Equipo?.Nombre</div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="text-muted small">Fecha</div>
+            <div class="fw-semibold">@evento.FechaEvento.ToString("yyyy-MM-dd")</div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="text-muted small">Tipo</div>
+            <div class="fw-semibold">@Model.TipoMantenimiento?.Nombre</div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="text-muted small">Responsable</div>
+            <div class="fw-semibold">@evento.ResponsableInterno?.NombreCompleto</div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="text-muted small">Estado</div>
+            <div class="fw-semibold">@(evento.EstadoEquipoResultado ?? "Sin estado")</div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="text-muted small">Próxima fecha</div>
+            <div class="fw-semibold">
+                @(evento.FechaProxima.HasValue
+                    ? evento.FechaProxima.Value.ToString("yyyy-MM-dd")
+                    : "No definida")
+            </div>
+        </div>
+    </div>
+
+    <div class="border rounded p-3 mb-4">
+        <h6 class="mb-3">Elementos que se eliminarán</h6>
+
+        <ul class="mb-0">
+            <li>Registro principal del mantenimiento.</li>
+            <li>@(evento.ActividadesMantenimiento?.Count ?? 0) actividades técnicas registradas.</li>
+            <li>
+                PDF generado:
+                @if (!string.IsNullOrWhiteSpace(Model.NombreArchivoPdf))
+                {
+                    <strong>@Model.NombreArchivoPdf</strong>
+                }
+                else
+                {
+                    <span class="text-muted">sin PDF asociado</span>
+                }
+            </li>
+            <li>
+                Evidencias visuales:
+                <strong>@(evento.Evidencias?.Count(e => e.Activo) ?? 0)</strong>
+            </li>
+        </ul>
+    </div>
+
+    @if (evento.ActividadesMantenimiento != null && evento.ActividadesMantenimiento.Any())
+    {
+        <div class="table-responsive checklist-table-shell mx-0 mb-4">
+            <table class="table checklist-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="checklist-head-order checklist-order-column">#</th>
+                        <th class="checklist-head-description">Actividad</th>
+                        <th class="checklist-head-notes">Observaciones</th>
+                        <th class="checklist-head-evidence">Evidencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var actividad in evento.ActividadesMantenimiento.OrderBy(a => a.Orden))
+                    {
+                        <tr class="checklist-row">
+                            <td>
+                                <span class="checklist-row-number">@actividad.Orden</span>
+                            </td>
+                            <td class="fw-semibold">@actividad.DescripcionActividad</td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(actividad.Observaciones))
+                                {
+                                    @actividad.Observaciones
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin observaciones</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrWhiteSpace(actividad.EvidenciaGoogleDriveFileId))
+                                {
+                                    <a asp-controller="Documentos"
+                                       asp-action="VerImagen"
+                                       asp-route-tipo="evidencia-mantenimiento-item"
+                                       asp-route-id="@actividad.EventoMantenimientoActividadId"
+                                       class="btn btn-outline-primary btn-sm"
+                                       title="@actividad.EvidenciaNombreArchivo">
+                                        Ver imagen
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin imagen</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="EventoMantenimientoDatoId" />
+
+        <div class="d-flex justify-content-end gap-2">
+            <a asp-action="Details" asp-route-id="@Model.EventoMantenimientoDatoId" class="btn btn-outline-secondary">
+                No eliminar
+            </a>
+
+            <button type="submit" class="btn btn-danger">
+                Sí, eliminar mantenimiento
+            </button>
+        </div>
+    </form>
+</div>

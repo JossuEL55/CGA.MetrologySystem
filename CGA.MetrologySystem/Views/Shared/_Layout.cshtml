@@ -1,50 +1,159 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - CGA.MetrologySystem</title>
-    <script type="importmap"></script>
+    <title>@ViewData["Title"] - CGA Metrology System</title>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CGA.MetrologySystem.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">CGA.MetrologySystem</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
+    <div class="app-layout">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <a asp-controller="Home" asp-action="Index" class="sidebar-brand-link">
+                    <img src="~/images/logo.png" alt="CGA" class="sidebar-logo" />
+                    <div>
+                        <h5 class="sidebar-title mb-0">CGA Metrology</h5>
+                        <small class="sidebar-subtitle">System</small>
+                    </div>
+                </a>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" asp-controller="Home" asp-action="Index">Inicio</a>
+                <a class="sidebar-link" asp-controller="Perfil" asp-action="Index">Mi perfil</a>
+
+                <div class="sidebar-section-title">Metrología</div>
+
+                <a class="sidebar-link" asp-controller="Equipos" asp-action="Index">
+                    Equipos
+                </a>
+
+                <a class="sidebar-link"
+                   asp-controller="MaestroEquipos"
+                   asp-action="Index">
+                    Maestro de equipos
+                </a>
+
+                <a class="sidebar-link" asp-controller="Laboratorios" asp-action="Index">
+                    Laboratorios
+                </a>
+
+                <a class="sidebar-link" asp-controller="Calibraciones" asp-action="Index">
+                    Calibraciones
+                </a>
+
+                <a class="sidebar-link" asp-controller="Verificaciones" asp-action="Index">
+                    Verificaciones
+                </a>
+
+                <a class="sidebar-link" asp-controller="Mantenimientos" asp-action="Index">
+                    Mantenimientos
+                </a>
+
+                <a class="sidebar-link"
+                       asp-controller="ControlMetrologico"
+                       asp-action="Index">
+                    Control metrológico
+                </a>
+
+                <a class="sidebar-link"
+                   asp-controller="DashboardMetrologico"
+                   asp-action="Index">
+                    Dashboard metrológico
+                </a>
+
+                <a class="sidebar-link"
+                   asp-controller="TendenciasMetrologicas"
+                   asp-action="Index">
+                    Desviaciones históricas
+                </a>
+
+                <a class="sidebar-link"
+                   asp-controller="FichasTecnicas"
+                   asp-action="Index">
+                    Fichas técnicas
+                </a>
+
+                <a class="sidebar-link"
+                   asp-controller="HojasVida"
+                   asp-action="Index">
+                    Hojas de vida
+                </a>
+
+                @if (User.IsInRole("Administrador"))
+                {
+                    <div class="sidebar-section-title">Administración</div>
+
+                    <a class="sidebar-link" asp-controller="Usuarios" asp-action="Index">
+                        Usuarios
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="Auditoria" asp-action="Index">
+                        Auditoría de usuarios
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="AuditoriaMetrologica" asp-action="Index">
+                        Bitácora metrológica
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="Alertas" asp-action="Index">
+                        Alertas
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="Notificaciones" asp-action="Index">
+                        Notificaciones
+                    </a>
+
+                    <div class="sidebar-section-title">Configuración</div>
+
+                    <a class="sidebar-link"
+                           asp-controller="PlantillasEvento"
+                           asp-action="Index">
+                        Plantillas de evento
+                    </a>
+
+                    <a class="sidebar-link"
+                           asp-controller="ConfiguracionesControlEquipo"
+                           asp-action="Index">
+                        Configuración control equipo
+                    </a>
+                }
+            </nav>
+        </aside>
+
+        <div class="main-wrapper">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <div class="topbar-page-info">
+                        <h6 class="topbar-title mb-0">@ViewData["Title"]</h6>
+                    </div>
+                </div>
+
+                <div class="topbar-right">
+                    <partial name="_LoginPartial" />
+                </div>
+            </header>
+
+            <main class="main-content">
+                @RenderBody()
+            </main>
+
+            <footer class="app-footer">
+                <span>&copy; 2026 - CGA Metrology System</span>
+                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </footer>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - CGA.MetrologySystem - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

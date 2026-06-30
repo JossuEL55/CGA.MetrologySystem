@@ -1,0 +1,275 @@
+﻿@model CGA.MetrologySystem.Models.PlantillaEventoViewModel
+
+@{
+    ViewData["Title"] = "Crear plantilla";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2 class="page-title">Crear plantilla</h2>
+        <p class="page-subtitle">
+            Construye una plantilla técnica reutilizable para verificaciones o mantenimientos.
+        </p>
+    </div>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver
+    </a>
+</div>
+
+<form asp-action="Create" method="post" class="form-card plantilla-builder-card">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="plantilla-section-header mb-4">
+        <div>
+            <span class="section-kicker">Configuración inicial</span>
+            <h5 class="mb-1">Datos generales de la plantilla</h5>
+            <p class="page-subtitle">
+                Define el tipo de equipo y evento al que pertenecerá este checklist técnico.
+            </p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="TipoEquipoId" class="form-label fw-semibold">Tipo de equipo</label>
+            <select asp-for="TipoEquipoId" asp-items="Model.TiposEquipo" class="form-select"></select>
+            <span asp-validation-for="TipoEquipoId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="TipoEventoMetrologicoId" class="form-label fw-semibold">Tipo de evento</label>
+            <select asp-for="TipoEventoMetrologicoId" asp-items="Model.TiposEventoMetrologico" class="form-select"></select>
+            <span asp-validation-for="TipoEventoMetrologicoId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label fw-semibold">Nombre de la plantilla</label>
+        <input asp-for="Nombre" class="form-control" placeholder="Ej. Checklist preventivo para Yoke" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label fw-semibold">Descripción técnica</label>
+        <textarea asp-for="Descripcion"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Describe brevemente el propósito técnico de esta plantilla."></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
+    </div>
+
+    <div class="plantilla-status-box mb-4">
+        <div>
+            <strong>Estado de la plantilla</strong>
+            <p class="mb-0">
+                Una plantilla activa podrá utilizarse como base para registrar eventos técnicos.
+            </p>
+        </div>
+
+        <div class="form-check form-switch cga-switch">
+            <input asp-for="Activo" class="form-check-input" role="switch" />
+            <label asp-for="Activo" class="form-check-label fw-semibold">Activa</label>
+        </div>
+    </div>
+
+    <div class="checklist-builder">
+        <div class="checklist-builder-header">
+            <div class="checklist-header-left">
+                <div class="checklist-header-icon">
+                    ✓
+                </div>
+
+                <div>
+                    <span class="section-kicker">Constructor técnico</span>
+                    <h5 class="mb-1">Checklist de la plantilla</h5>
+                    <p class="page-subtitle">
+                        Define condiciones técnicas reutilizables para eventos de verificación o mantenimiento.
+                    </p>
+                </div>
+            </div>
+
+            <button type="button" id="addItem" class="btn btn-primary checklist-add-button">
+                + Agregar ítem
+            </button>
+        </div>
+
+        <div class="checklist-info-strip">
+            <div class="checklist-info-icon">i</div>
+            <div>
+                <strong>Recomendación técnica</strong>
+                <p class="mb-0">
+                    Redacta cada ítem como una condición verificable. Ejemplo:
+                    “Cable de alimentación libre de daños visibles”.
+                </p>
+            </div>
+        </div>
+
+        <div id="itemsContainer" class="checklist-items-container">
+            @for (int i = 0; i < Model.Items.Count; i++)
+            {
+                <div class="checklist-item-card checklist-item-enter" data-item-card>
+                    <div class="checklist-item-top">
+                        <div class="checklist-item-number">
+                            @(i + 1)
+                        </div>
+
+                        <div class="checklist-item-title">
+                            <strong>Ítem técnico</strong>
+                            <span>Condición o actividad a evaluar</span>
+                        </div>
+
+                        <div class="checklist-item-actions">
+                            <div class="form-check form-switch cga-switch mb-0">
+                                <input asp-for="Items[i].Activo"
+                                       data-field="activo"
+                                       class="form-check-input"
+                                       role="switch" />
+                                <label class="form-check-label">Activo</label>
+                            </div>
+
+                            <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="checklist-item-body">
+                        <label class="form-label fw-semibold">Condición técnica a verificar</label>
+                        <input asp-for="Items[i].Descripcion"
+                               data-field="descripcion"
+                               class="form-control"
+                               placeholder="Ej. Cable de alimentación libre de daños visibles" />
+                        <span asp-validation-for="Items[i].Descripcion" class="text-danger"></span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div id="emptyChecklistMessage" class="empty-checklist-message d-none">
+            <div class="empty-checklist-icon">+</div>
+            <h6>No hay ítems agregados</h6>
+            <p>
+                Agrega al menos una condición técnica para construir la plantilla.
+            </p>
+        </div>
+    </div>
+
+    <div class="form-actions-sticky">
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar plantilla</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        let index = @Model.Items.Count;
+
+        function actualizarNumeracionVisual() {
+            document.querySelectorAll("[data-item-card]").forEach((card, i) => {
+                const number = card.querySelector(".checklist-item-number");
+                if (number) number.textContent = i + 1;
+            });
+        }
+
+        function actualizarMensajeVacio() {
+            const totalItems = document.querySelectorAll("[data-item-card]").length;
+            const emptyMessage = document.getElementById("emptyChecklistMessage");
+
+            if (!emptyMessage) return;
+
+            if (totalItems === 0) {
+                emptyMessage.classList.remove("d-none");
+            } else {
+                emptyMessage.classList.add("d-none");
+            }
+        }
+
+        function reindexarItems() {
+            document.querySelectorAll("[data-item-card]").forEach((card, i) => {
+                const descripcion = card.querySelector("input[data-field='descripcion']");
+                const activo = card.querySelector("input[data-field='activo']");
+                const activoHidden = card.querySelector("input[data-field='activo-hidden']");
+
+                if (descripcion) {
+                    descripcion.name = `Items[${i}].Descripcion`;
+                    descripcion.id = `Items_${i}__Descripcion`;
+                }
+
+                if (activo) {
+                    activo.name = `Items[${i}].Activo`;
+                    activo.id = `Items_${i}__Activo`;
+                }
+
+                if (activoHidden) {
+                    activoHidden.name = `Items[${i}].Activo`;
+                }
+            });
+
+            index = document.querySelectorAll("[data-item-card]").length;
+            actualizarNumeracionVisual();
+            actualizarMensajeVacio();
+        }
+
+        document.getElementById("addItem").addEventListener("click", function () {
+            const item = `
+                <div class="checklist-item-card checklist-item-enter" data-item-card>
+                    <div class="checklist-item-top">
+                        <div class="checklist-item-number">
+                            ${index + 1}
+                        </div>
+
+                        <div class="checklist-item-title">
+                            <strong>Ítem técnico</strong>
+                            <span>Condición o actividad a evaluar</span>
+                        </div>
+
+                        <div class="checklist-item-actions">
+                            <div class="form-check form-switch cga-switch mb-0">
+                                <input type="checkbox"
+                                       name="Items[${index}].Activo"
+                                       data-field="activo"
+                                       value="true"
+                                       checked
+                                       class="form-check-input"
+                                       role="switch" />
+                                <input type="hidden"
+                                       name="Items[${index}].Activo"
+                                       data-field="activo-hidden"
+                                       value="false" />
+                                <label class="form-check-label">Activo</label>
+                            </div>
+
+                            <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="checklist-item-body">
+                        <label class="form-label fw-semibold">Condición técnica a verificar</label>
+                        <input name="Items[${index}].Descripcion"
+                               data-field="descripcion"
+                               class="form-control"
+                               placeholder="Ej. Carcasa libre de fisuras, golpes o deformaciones" />
+                    </div>
+                </div>`;
+
+            document.getElementById("itemsContainer").insertAdjacentHTML("beforeend", item);
+            index++;
+            reindexarItems();
+        });
+
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("eliminar")) {
+                e.target.closest("[data-item-card]").remove();
+                reindexarItems();
+            }
+        });
+
+        actualizarMensajeVacio();
+        actualizarNumeracionVisual();
+    </script>
+}

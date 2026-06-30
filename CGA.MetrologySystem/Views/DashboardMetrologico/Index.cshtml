@@ -1,0 +1,431 @@
+@using System.Text.Json
+@model CGA.MetrologySystem.Models.DashboardMetrologico.DashboardMetrologicoViewModel
+
+@{
+    ViewData["Title"] = "Dashboard metrológico";
+
+    var estadoLabels = Model.DistribucionEstados.Select(e => e.Estado).ToList();
+    var estadoData = Model.DistribucionEstados.Select(e => e.Cantidad).ToList();
+
+    var tipoLabels = Model.ControlesPorTipo.Select(t => t.TipoControl).ToList();
+    var tipoVigentes = Model.ControlesPorTipo.Select(t => t.Vigentes).ToList();
+    var tipoProximos = Model.ControlesPorTipo.Select(t => t.ProximosAVencer).ToList();
+    var tipoVencidos = Model.ControlesPorTipo.Select(t => t.Vencidos).ToList();
+    var tipoSinEventos = Model.ControlesPorTipo.Select(t => t.SinEventos).ToList();
+    var tipoSinConfiguracion = Model.ControlesPorTipo.Select(t => t.SinConfiguracion).ToList();
+
+    var vencimientoLabels = Model.VencimientosPorMes.Select(v => v.Mes).ToList();
+    var vencimientoData = Model.VencimientosPorMes.Select(v => v.Cantidad).ToList();
+
+    var scoreLabels = Model.TopScore.Select(s => s.Etiqueta).ToList();
+    var scoreData = Model.TopScore.Select(s => s.Score).ToList();
+}
+
+<div class="dash-metro-hero mb-4">
+    <div>
+        <span class="metro-eyebrow">
+            <i class="bi bi-bar-chart-line-fill"></i> Gestión ejecutiva
+        </span>
+
+        <h1>Dashboard de Cumplimiento Metrológico</h1>
+
+        <p>
+            Indicadores globales del estado metrológico, vencimientos y prioridad
+            de atención del parque de equipos.
+        </p>
+    </div>
+
+    <div class="dash-metro-actions">
+        <a asp-controller="ControlMetrologico" asp-action="Index" class="btn btn-light">
+            <i class="bi bi-grid-3x3-gap"></i> Ver semaforización
+        </a>
+
+        <a asp-controller="ControlMetrologico" asp-action="Eventos" class="btn btn-light">
+            <i class="bi bi-list-check"></i> Ver eventos
+        </a>
+
+        <a asp-controller="ControlMetrologico" asp-action="Score" class="btn btn-warning">
+            <i class="bi bi-speedometer2"></i> Ver score
+        </a>
+
+        <a asp-controller="TendenciasMetrologicas" asp-action="Index" class="btn btn-light">
+            <i class="bi bi-graph-up-arrow"></i> Ver desviaciones históricas
+        </a>
+    </div>
+</div>
+
+<div class="metro-filter-card mb-4">
+    <form asp-action="Index" method="get" class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Buscar equipo</label>
+            <div class="metro-input-icon">
+                <i class="bi bi-search"></i>
+                <input name="buscar"
+                       value="@Model.Filtros.Buscar"
+                       class="form-control"
+                       placeholder="Código o nombre del equipo" />
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Tipo de equipo</label>
+            <select name="tipoEquipoId" class="form-select" asp-items="Model.Filtros.TiposEquipo">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Tipo de control</label>
+            <select name="tipoEventoMetrologicoId" class="form-select" asp-items="Model.Filtros.TiposEvento">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-1 col-md-6">
+            <label class="form-label">Horizonte</label>
+            <select name="horizonteDias" class="form-select" asp-items="Model.Filtros.Horizontes"></select>
+        </div>
+
+        <div class="col-lg-2 col-md-6 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100 metro-btn-main">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
+
+            <a asp-action="LimpiarFiltros" class="btn btn-outline-secondary metro-btn-icon" title="Limpiar filtros">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="dash-metro-kpi-grid mb-4">
+    <div class="metro-kpi">
+        <span>Total equipos</span>
+        <strong>@Model.Resumen.TotalEquipos</strong>
+        <i class="bi bi-box-seam"></i>
+    </div>
+
+    <div class="metro-kpi kpi-ok">
+        <span>Cumplimiento</span>
+        <strong>@Model.Resumen.PorcentajeCumplimiento.ToString("0.0")%</strong>
+        <i class="bi bi-patch-check-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-ok">
+        <span>Equipos vigentes</span>
+        <strong>@Model.Resumen.EquiposVigentes</strong>
+        <i class="bi bi-check-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-danger">
+        <span>Equipos vencidos</span>
+        <strong>@Model.Resumen.EquiposVencidos</strong>
+        <i class="bi bi-x-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-warning">
+        <span>Próximos a vencer</span>
+        <strong>@Model.Resumen.EquiposProximosAVencer</strong>
+        <i class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-danger">
+        <span>Controles críticos</span>
+        <strong>@Model.Resumen.ControlesCriticosScore</strong>
+        <i class="bi bi-exclamation-octagon-fill"></i>
+    </div>
+</div>
+
+<div class="dash-metro-chart-grid mb-4">
+    <div class="dash-metro-chart-card">
+        <div class="dash-metro-card-header">
+            <h5>Distribución por estado</h5>
+            <span>Estado global de equipos</span>
+        </div>
+
+        @if (Model.DistribucionEstados.Sum(e => e.Cantidad) == 0)
+        {
+            <div class="dash-metro-empty-chart">No hay datos para graficar.</div>
+        }
+        else
+        {
+            <canvas id="estadoChart"></canvas>
+        }
+    </div>
+
+    <div class="dash-metro-chart-card">
+        <div class="dash-metro-card-header">
+            <h5>Controles por tipo</h5>
+            <span>Calibración, verificación y mantenimiento</span>
+        </div>
+
+        @if (!Model.ControlesPorTipo.Any())
+        {
+            <div class="dash-metro-empty-chart">No hay controles para graficar.</div>
+        }
+        else
+        {
+            <canvas id="tipoControlChart"></canvas>
+        }
+    </div>
+
+    <div class="dash-metro-chart-card">
+        <div class="dash-metro-card-header">
+            <h5>Próximos vencimientos</h5>
+            <span>Controles con fecha próxima en 6 meses</span>
+        </div>
+
+        @if (Model.VencimientosPorMes.Sum(v => v.Cantidad) == 0)
+        {
+            <div class="dash-metro-empty-chart">No hay vencimientos próximos registrados.</div>
+        }
+        else
+        {
+            <canvas id="vencimientosChart"></canvas>
+        }
+    </div>
+
+    <div class="dash-metro-chart-card">
+        <div class="dash-metro-card-header">
+            <h5>Top 10 score</h5>
+            <span>Controles con mayor prioridad</span>
+        </div>
+
+        @if (!Model.TopScore.Any())
+        {
+            <div class="dash-metro-empty-chart">No hay datos de score para graficar.</div>
+        }
+        else
+        {
+            <canvas id="scoreChart"></canvas>
+        }
+    </div>
+</div>
+
+<div class="metro-table-card">
+    <div class="metro-table-header">
+        <div>
+            <h5>Controles críticos o de alta prioridad</h5>
+            <p>Listado operativo tomado del Score Metrológico.</p>
+        </div>
+
+        <span class="metro-table-count">
+            @Model.ControlesCriticos.Count control(es)
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table metro-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Equipo</th>
+                    <th>Tipo equipo</th>
+                    <th>Tipo control</th>
+                    <th>Estado</th>
+                    <th>Fecha próxima</th>
+                    <th>Días restantes</th>
+                    <th>Score</th>
+                    <th>Prioridad</th>
+                    <th class="text-end">Acción</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (!Model.ControlesCriticos.Any())
+                {
+                    <tr>
+                        <td colspan="9" class="text-center py-5">
+                            <div class="metro-empty">
+                                <i class="bi bi-clipboard2-check"></i>
+                                <h5>No hay controles críticos</h5>
+                                <p>No se encontraron controles críticos ni de alta prioridad para los filtros aplicados.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model.ControlesCriticos)
+                    {
+                        <tr>
+                            <td>
+                                <div class="metro-equipo-cell">
+                                    <div class="metro-equipo-avatar">
+                                        <i class="bi bi-tools"></i>
+                                    </div>
+
+                                    <div>
+                                        <strong>@item.CodigoEquipo</strong>
+                                        <span>@item.NombreEquipo</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="metro-type-pill">@item.TipoEquipo</span>
+                            </td>
+
+                            <td>
+                                <div class="metro-event-pill">
+                                    <i class="bi bi-activity"></i>
+                                    <span>@item.TipoControl</span>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="metro-message-text">@item.Estado</span>
+                            </td>
+
+                            <td>
+                                <span class="metro-date-text">
+                                    @(item.FechaProxima.HasValue
+                                        ? item.FechaProxima.Value.ToString("yyyy-MM-dd")
+                                        : "N/D")
+                                </span>
+                            </td>
+
+                            <td>
+                                @if (item.DiasRestantes.HasValue)
+                                {
+                                    <span class="metro-days-pill">
+                                        @item.DiasRestantes día(s)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="metro-days-pill estado-sin-eventos">N/D</span>
+                                }
+                            </td>
+
+                            <td>
+                                <div class="metro-score-value">
+                                    <strong>@item.ScoreMetrologico</strong>
+                                    <span>/100</span>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="metro-priority-pill @item.CssPrioridad">
+                                    @item.NivelPrioridad
+                                </span>
+                            </td>
+
+                            <td class="text-end">
+                                <a asp-controller="Equipos"
+                                   asp-action="Details"
+                                   asp-route-id="@item.EquipoId"
+                                   class="btn btn-sm btn-outline-primary metro-action-btn">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const dashMetroPalette = {
+            vigente: '#16a34a',
+            proximo: '#f59e0b',
+            vencido: '#dc2626',
+            sinEventos: '#64748b',
+            sinConfiguracion: '#7c3aed',
+            noRequiere: '#334155',
+            blue: '#1f7a8c'
+        };
+
+        const createChart = (id, config) => {
+            const element = document.getElementById(id);
+            if (!element || !window.Chart) {
+                return;
+            }
+
+            new Chart(element, config);
+        };
+
+        createChart('estadoChart', {
+            type: 'doughnut',
+            data: {
+                labels: @Html.Raw(JsonSerializer.Serialize(estadoLabels)),
+                datasets: [{
+                    data: @Html.Raw(JsonSerializer.Serialize(estadoData)),
+                    backgroundColor: [
+                        dashMetroPalette.vigente,
+                        dashMetroPalette.proximo,
+                        dashMetroPalette.vencido,
+                        dashMetroPalette.sinEventos,
+                        dashMetroPalette.sinConfiguracion,
+                        dashMetroPalette.noRequiere
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        createChart('tipoControlChart', {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(JsonSerializer.Serialize(tipoLabels)),
+                datasets: [
+                    { label: 'Vigentes', data: @Html.Raw(JsonSerializer.Serialize(tipoVigentes)), backgroundColor: dashMetroPalette.vigente },
+                    { label: 'Próximos', data: @Html.Raw(JsonSerializer.Serialize(tipoProximos)), backgroundColor: dashMetroPalette.proximo },
+                    { label: 'Vencidos', data: @Html.Raw(JsonSerializer.Serialize(tipoVencidos)), backgroundColor: dashMetroPalette.vencido },
+                    { label: 'Sin eventos', data: @Html.Raw(JsonSerializer.Serialize(tipoSinEventos)), backgroundColor: dashMetroPalette.sinEventos },
+                    { label: 'Sin configuración', data: @Html.Raw(JsonSerializer.Serialize(tipoSinConfiguracion)), backgroundColor: dashMetroPalette.sinConfiguracion }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        createChart('vencimientosChart', {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(JsonSerializer.Serialize(vencimientoLabels)),
+                datasets: [{
+                    label: 'Vencimientos',
+                    data: @Html.Raw(JsonSerializer.Serialize(vencimientoData)),
+                    backgroundColor: dashMetroPalette.blue
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        createChart('scoreChart', {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(JsonSerializer.Serialize(scoreLabels)),
+                datasets: [{
+                    label: 'Score',
+                    data: @Html.Raw(JsonSerializer.Serialize(scoreData)),
+                    backgroundColor: dashMetroPalette.vencido
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { x: { beginAtZero: true, max: 100 } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+}

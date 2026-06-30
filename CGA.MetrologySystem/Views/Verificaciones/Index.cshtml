@@ -1,0 +1,199 @@
+﻿@model IEnumerable<CGA.MetrologySystem.Domain.Entities.EventoVerificacionDato>
+
+@{
+    ViewData["Title"] = "Verificaciones";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2 class="page-title">Verificaciones</h2>
+        <p class="page-subtitle">
+            Consulta el historial de verificaciones técnicas, resultados evaluados y documentación generada automáticamente.
+        </p>
+    </div>
+
+    <a asp-action="Create" class="btn btn-primary">
+        + Registrar verificación
+    </a>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<form method="get" class="metro-filter-card event-filter-card mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-xl-4 col-lg-4 col-md-6">
+            <label class="form-label">Buscar</label>
+            <input name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Código, equipo o responsable" />
+        </div>
+        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Estado</label><select name="estado" class="form-select" asp-items="ViewBag.Estados"><option value="">Todos</option></select></div>
+        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Subtipo</label><select name="subtipoEventoId" class="form-select" asp-items="ViewBag.SubtiposEvento"><option value="">Todos</option></select></div>
+        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Clasificación</label><select name="clasificacion" class="form-select" asp-items="ViewBag.Clasificaciones"><option value="">Todas</option></select></div>
+        <div class="col-xl-1 col-md-3"><label class="form-label">Desde</label><input name="desde" value="@(((DateTime?)ViewBag.Desde)?.ToString("yyyy-MM-dd"))" type="date" class="form-control" /></div>
+        <div class="col-xl-1 col-md-3"><label class="form-label">Hasta</label><input name="hasta" value="@(((DateTime?)ViewBag.Hasta)?.ToString("yyyy-MM-dd"))" type="date" class="form-control" /></div>
+        <div class="col-lg-3 col-md-4 event-filter-actions"><button type="submit" class="btn btn-primary">Filtrar</button><a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a></div>
+    </div>
+</form>
+
+<div class="event-index-card">
+    <div class="event-index-header">
+        <div>
+            <span class="section-kicker">Control técnico</span>
+            <h5 class="mb-1">Historial de verificaciones</h5>
+            <p class="page-subtitle">
+                Revisa verificaciones realizadas, próximas fechas, estado operativo y PDF generado.
+            </p>
+        </div>
+
+        <div class="event-count-pill">
+            @Model.Count() registro(s)
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="event-empty-state">
+            <div class="event-empty-icon">V</div>
+            <h5>Aún no hay verificaciones registradas</h5>
+            <p>
+                Cuando registres una verificación aparecerá aquí junto con su PDF, resultados y próximas fechas calculadas.
+            </p>
+            <a asp-action="Create" class="btn btn-primary">
+                Registrar primera verificación
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="event-table-wrapper">
+            <table class="table event-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Equipo</th>
+                        <th>Fechas</th>
+                        <th>Responsable</th>
+                        <th>Estado</th>
+                        <th class="text-center">Documento</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        var evento = item.EventoMetrologico;
+                        var estado = evento.EstadoEquipoResultado ?? "Sin estado";
+
+                        var badgeClass = estado switch
+                        {
+                            "Operativo" => "event-badge event-badge-success",
+                            "No Operativo" => "event-badge event-badge-danger",
+                            "Fuera de Servicio" => "event-badge event-badge-dark",
+                            _ => "event-badge event-badge-muted"
+                        };
+
+                        <tr>
+                            <td>
+                                <div class="event-code">@evento.Equipo?.Codigo</div>
+                                <div class="event-name">@evento.Equipo?.Nombre</div>
+                            </td>
+
+                            <td>
+                                <div class="event-date-stack">
+                                    <div>
+                                        <span>Verificación</span>
+                                        <strong>@evento.FechaEvento.ToString("yyyy-MM-dd")</strong>
+                                    </div>
+
+                                    <div>
+                                        <span>Próxima</span>
+                                        <strong>
+                                            @(evento.FechaProxima.HasValue
+                                                ? evento.FechaProxima.Value.ToString("yyyy-MM-dd")
+                                                : "No definida")
+                                        </strong>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="event-main-text">
+                                    @(evento.ResponsableInterno?.NombreCompleto ?? "No definido")
+                                </div>
+                            </td>
+
+                            <td>
+                                <div class="d-flex flex-column align-items-start gap-1">
+                                    <span class="@badgeClass">@estado</span>
+
+                                    @if (evento.EsExtraordinario)
+                                    {
+                                        <span class="event-badge event-badge-warning">
+                                            Extraordinaria
+                                        </span>
+                                    }
+
+                                    @if (evento.EsHistorico)
+                                    {
+                                        <span class="event-badge event-badge-info">
+                                            Histórica
+                                        </span>
+                                    }
+
+                                </div>
+                            </td>
+
+                            <td class="text-center">
+                                @if (!string.IsNullOrWhiteSpace(item.RutaPdf))
+                                {
+                                    <a asp-controller="Documentos"
+                                       asp-action="VerPdf"
+                                       asp-route-tipo="verificacion"
+                                       asp-route-id="@item.EventoVerificacionDatoId"
+                                       class="btn btn-outline-primary btn-sm event-document-button">
+                                        Ver PDF
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="event-file-muted">Sin PDF</span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                <div class="event-actions">
+                                    <a asp-action="Details"
+                                       asp-route-id="@item.EventoVerificacionDatoId"
+                                       class="btn btn-outline-secondary btn-sm">
+                                        Detalle
+                                    </a>
+
+                                    @if (evento.Activo &&
+                                        (!evento.EsHistorico || User.IsInRole("Administrador")))
+                                    {
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.EventoVerificacionDatoId"
+                                           class="btn btn-outline-primary btn-sm">
+                                            Editar
+                                        </a>
+
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.EventoVerificacionDatoId"
+                                           class="btn btn-outline-danger btn-sm">
+                                            Eliminar
+                                        </a>
+                                    }
+
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

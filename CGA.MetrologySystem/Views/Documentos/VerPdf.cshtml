@@ -1,0 +1,335 @@
+@model CGA.MetrologySystem.Models.Documentos.PdfViewerViewModel
+
+@{
+    ViewData["Title"] = Model.Titulo;
+    var pdfSourceJson = System.Text.Json.JsonSerializer.Serialize(Model.PdfUrl);
+}
+
+<div class="document-viewer-shell" id="pdfViewerShell">
+    <div class="document-viewer-header">
+        <div class="document-viewer-title">
+            <h1>@Model.Titulo</h1>
+
+            <div class="document-viewer-meta">
+                @if (!string.IsNullOrWhiteSpace(Model.CodigoEquipo))
+                {
+                    <span>@Model.CodigoEquipo</span>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.NombreEquipo))
+                {
+                    <span>@Model.NombreEquipo</span>
+                }
+            </div>
+        </div>
+
+        <div class="document-viewer-actions">
+            <a href="@Model.ReturnUrl" class="btn btn-outline-secondary">
+                Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="document-viewer-filebar">
+        <div class="document-viewer-file-info">
+            <div class="document-viewer-file-icon">PDF</div>
+            <div class="document-viewer-file-name text-truncate" title="@Model.EtiquetaDocumento">
+                @Model.EtiquetaDocumento
+            </div>
+        </div>
+
+        <div class="document-viewer-status"></div>
+    </div>
+
+    <div class="document-pdf-toolbar" aria-label="Controles del visor PDF">
+        <button type="button"
+                class="document-tool-button"
+                id="pdfZoomOut"
+                title="Alejar"
+                aria-label="Alejar">
+            -
+        </button>
+
+        <span class="document-zoom-label" id="pdfZoomLabel">Ancho</span>
+
+        <button type="button"
+                class="document-tool-button"
+                id="pdfZoomIn"
+                title="Acercar"
+                aria-label="Acercar">
+            +
+        </button>
+
+        <div class="document-page-indicator" aria-live="polite">
+            <span id="pdfPageNumber">1</span>
+            <span>de</span>
+            <span id="pdfPageCount">1</span>
+        </div>
+
+        <button type="button"
+                class="document-tool-button document-tool-wide"
+                id="pdfFitWidth"
+                title="Ajustar al ancho"
+                aria-label="Ajustar al ancho">
+            Ancho
+        </button>
+
+        <div class="document-tool-spacer"></div>
+
+        <button type="button"
+                class="document-tool-button document-tool-wide"
+                id="pdfFullscreen"
+                title="Pantalla completa"
+                aria-label="Pantalla completa">
+            Pantalla completa
+        </button>
+    </div>
+
+    <div class="document-pdf-frame" id="pdfViewerFrame">
+        <div class="document-pdf-loading" id="pdfLoading">
+            Cargando documento...
+        </div>
+
+        <div class="document-pdf-error d-none" id="pdfError">
+            No se pudo cargar el PDF.
+        </div>
+
+        <div class="document-pdf-stage document-pdf-stage-hidden" id="pdfStage">
+            <div class="document-pdf-pages" id="pdfPages"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="module">
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs';
+
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+
+        const pdfUrl = @Html.Raw(pdfSourceJson);
+        const shell = document.getElementById('pdfViewerShell');
+        const stage = document.getElementById('pdfStage');
+        const pagesContainer = document.getElementById('pdfPages');
+        const loading = document.getElementById('pdfLoading');
+        const error = document.getElementById('pdfError');
+        const pageNumberLabel = document.getElementById('pdfPageNumber');
+        const pageCount = document.getElementById('pdfPageCount');
+        const zoomOutButton = document.getElementById('pdfZoomOut');
+        const zoomInButton = document.getElementById('pdfZoomIn');
+        const fitWidthButton = document.getElementById('pdfFitWidth');
+        const fullscreenButton = document.getElementById('pdfFullscreen');
+        const zoomLabel = document.getElementById('pdfZoomLabel');
+
+        let pdfDocument = null;
+        let currentPageNumber = 1;
+        let currentScale = 1.15;
+        let fitWidthMode = true;
+        let rendering = false;
+        let resizeTimer = null;
+        let pageCanvases = [];
+        let pageViewports = [];
+
+        function resizeViewerToContent() {
+            const shellRect = shell.getBoundingClientRect();
+            const stageStyle = window.getComputedStyle(stage);
+            const verticalPadding =
+                Number.parseFloat(stageStyle.paddingTop) +
+                Number.parseFloat(stageStyle.paddingBottom);
+            const maxAvailableHeight = Math.max(window.innerHeight - shellRect.top - 12, 360);
+            const fixedChromeHeight =
+                shell.querySelector('.document-viewer-header').offsetHeight +
+                shell.querySelector('.document-viewer-filebar').offsetHeight +
+                shell.querySelector('.document-pdf-toolbar').offsetHeight;
+            const maxFrameHeight = Math.max(maxAvailableHeight - fixedChromeHeight, 260);
+            const contentHeight = pagesContainer.scrollHeight + verticalPadding;
+            const frameHeight = Math.min(Math.max(contentHeight, 260), maxFrameHeight);
+
+            stage.style.height = `${frameHeight}px`;
+        }
+
+        function setLoadingState(isLoading) {
+            if (isLoading) {
+                shell.classList.add('document-viewer-loading');
+                loading.classList.remove('d-none');
+                stage.classList.add('document-pdf-stage-hidden');
+                stage.classList.remove('document-pdf-stage-visible');
+                return;
+            }
+
+            shell.classList.remove('document-viewer-loading');
+            loading.classList.add('d-none');
+            stage.classList.remove('document-pdf-stage-hidden');
+            stage.classList.add('document-pdf-stage-visible');
+        }
+
+        function updateControls() {
+            pageNumberLabel.textContent = currentPageNumber;
+            pageCount.textContent = pdfDocument ? pdfDocument.numPages : 1;
+            zoomOutButton.disabled = currentScale <= 0.5 || rendering;
+            zoomInButton.disabled = currentScale >= 3 || rendering;
+            zoomLabel.textContent = fitWidthMode ? 'Ancho' : 'Zoom';
+        }
+
+        async function renderAllPages() {
+            if (!pdfDocument) {
+                return;
+            }
+
+            rendering = true;
+            setLoadingState(true);
+            updateControls();
+            pagesContainer.innerHTML = '';
+            pageCanvases = [];
+            pageViewports = [];
+
+            const outputScale = window.devicePixelRatio || 1;
+
+            for (let pageNumber = 1; pageNumber <= pdfDocument.numPages; pageNumber += 1) {
+                const page = await pdfDocument.getPage(pageNumber);
+                const viewport = page.getViewport({ scale: currentScale });
+                const pageShell = document.createElement('div');
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+
+                pageShell.className = 'document-pdf-page';
+                pageShell.dataset.pageNumber = pageNumber.toString();
+                canvas.width = Math.floor(viewport.width * outputScale);
+                canvas.height = Math.floor(viewport.height * outputScale);
+                canvas.style.width = `${Math.floor(viewport.width)}px`;
+                canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+                pageShell.appendChild(canvas);
+                pagesContainer.appendChild(pageShell);
+                pageCanvases.push(pageShell);
+                pageViewports.push(viewport);
+
+                const transform = outputScale !== 1
+                    ? [outputScale, 0, 0, outputScale, 0, 0]
+                    : null;
+
+                await page.render({
+                    canvasContext: context,
+                    viewport,
+                    transform
+                }).promise;
+            }
+
+            rendering = false;
+            resizeViewerToContent();
+            setLoadingState(false);
+
+            const activePage = pageCanvases[currentPageNumber - 1];
+            if (activePage) {
+                stage.scrollTop = Math.max(activePage.offsetTop - 16, 0);
+            }
+
+            updateCurrentPageFromScroll();
+            updateControls();
+        }
+
+        async function fitToWidth() {
+            if (!pdfDocument) {
+                return;
+            }
+
+            const page = await pdfDocument.getPage(1);
+            const viewport = page.getViewport({ scale: 1 });
+            const availableWidth = Math.max(stage.clientWidth - 32, 320);
+            currentScale = Math.min(Math.max(availableWidth / viewport.width, 0.5), 3);
+            await renderAllPages();
+        }
+
+        function updateCurrentPageFromScroll() {
+            if (pageCanvases.length === 0) {
+                currentPageNumber = 1;
+                updateControls();
+                return;
+            }
+
+            const stageTop = stage.getBoundingClientRect().top;
+            let closestPage = 1;
+            let closestDistance = Number.POSITIVE_INFINITY;
+
+            for (const page of pageCanvases) {
+                const pageNumber = Number.parseInt(page.dataset.pageNumber, 10);
+                const distance = Math.abs(page.getBoundingClientRect().top - stageTop - 16);
+
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestPage = pageNumber;
+                }
+            }
+
+            currentPageNumber = closestPage;
+            updateControls();
+        }
+
+        zoomOutButton.addEventListener('click', async () => {
+            fitWidthMode = false;
+            currentScale = Math.max(currentScale - 0.15, 0.5);
+            await renderAllPages();
+        });
+
+        zoomInButton.addEventListener('click', async () => {
+            fitWidthMode = false;
+            currentScale = Math.min(currentScale + 0.15, 3);
+            await renderAllPages();
+        });
+
+        fitWidthButton.addEventListener('click', async () => {
+            fitWidthMode = true;
+            await fitToWidth();
+        });
+
+        fullscreenButton.addEventListener('click', async () => {
+            if (!document.fullscreenElement) {
+                await shell.requestFullscreen();
+                fitWidthMode = true;
+                await fitToWidth();
+                return;
+            }
+
+            await document.exitFullscreen();
+            fitWidthMode = true;
+            await fitToWidth();
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            fullscreenButton.textContent = document.fullscreenElement
+                ? 'Salir pantalla'
+                : 'Pantalla completa';
+        });
+
+        window.addEventListener('resize', () => {
+            if (!fitWidthMode) {
+                resizeViewerToContent();
+                return;
+            }
+
+            clearTimeout(resizeTimer);
+            resizeTimer = window.setTimeout(() => fitToWidth(), 120);
+        });
+
+        stage.addEventListener('scroll', () => {
+            window.requestAnimationFrame(updateCurrentPageFromScroll);
+        });
+
+        try {
+            setLoadingState(true);
+
+            pdfDocument = await pdfjsLib.getDocument({
+                url: pdfUrl,
+                disableAutoFetch: false,
+                disableStream: false
+            }).promise;
+
+            pageCount.textContent = pdfDocument.numPages;
+            fitWidthMode = true;
+            await fitToWidth();
+        } catch {
+            setLoadingState(false);
+            error.classList.remove('d-none');
+        }
+    </script>
+}

@@ -1,0 +1,148 @@
+@model CGA.MetrologySystem.Models.Notificaciones.NotificacionesIndexViewModel
+
+@{
+    ViewData["Title"] = "Notificaciones";
+}
+
+<div class="metro-hero mb-4">
+    <div>
+        <span class="metro-eyebrow">
+            <i class="bi bi-send-check"></i> Comunicacion por eventos
+        </span>
+
+        <h1>Historial de notificaciones</h1>
+
+        <p>
+            Consulta los correos originados por acciones metrologicas relevantes,
+            sus destinatarios y el resultado de cada intento de envio.
+        </p>
+    </div>
+</div>
+
+<div class="metro-summary-grid mb-4">
+    <div class="metro-kpi">
+        <span>Total notificaciones</span>
+        <strong>@Model.TotalNotificaciones</strong>
+        <i class="bi bi-envelope-paper"></i>
+    </div>
+
+    <div class="metro-kpi kpi-ok">
+        <span>Exitosas</span>
+        <strong>@Model.NotificacionesExitosas</strong>
+        <i class="bi bi-check-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-danger">
+        <span>Fallidas</span>
+        <strong>@Model.NotificacionesFallidas</strong>
+        <i class="bi bi-x-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-warning">
+        <span>Ultimas 24 h</span>
+        <strong>@Model.NotificacionesUltimas24Horas</strong>
+        <i class="bi bi-clock-history"></i>
+    </div>
+</div>
+
+<div class="metro-table-card">
+    <div class="metro-table-header">
+        <div>
+            <h5>Bitacora de notificaciones</h5>
+            <p>Ultimos 100 registros generados por comunicaciones de eventos.</p>
+        </div>
+
+        <span class="metro-table-count">
+            @Model.Notificaciones.Count registro(s)
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table metro-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Fecha envio</th>
+                    <th>Equipo</th>
+                    <th>Notificacion</th>
+                    <th>Evento</th>
+                    <th>Fecha evento</th>
+                    <th>Destinatarios</th>
+                    <th>Estado</th>
+                    <th>Mensaje</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Notificaciones.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="metro-empty">
+                                <i class="bi bi-inbox"></i>
+                                <h5>No hay notificaciones registradas</h5>
+                                <p>Cuando un evento dispare una comunicacion, su intento aparecera aqui.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var notificacion in Model.Notificaciones)
+                    {
+                        <tr>
+                            <td>
+                                <span class="metro-date-text">
+                                    @notificacion.FechaEnvio.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                </span>
+                            </td>
+                            <td>
+                                <div class="metro-equipo-cell">
+                                    <div class="metro-equipo-avatar">
+                                        <i class="bi bi-tools"></i>
+                                    </div>
+
+                                    <div>
+                                        <strong>@notificacion.CodigoEquipo</strong>
+                                        <span>@notificacion.NombreEquipo</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="metro-type-pill">@notificacion.TipoNotificacion</span>
+                            </td>
+                            <td>
+                                <span class="metro-event-pill">
+                                    @notificacion.TipoEvento
+                                </span>
+                            </td>
+                            <td>
+                                <span class="metro-date-text">
+                                    @notificacion.FechaReferencia.ToString("yyyy-MM-dd")
+                                </span>
+                            </td>
+                            <td>
+                                <span class="metro-message-text">@notificacion.Destinatarios</span>
+                            </td>
+                            <td>
+                                @if (notificacion.FueExitosa)
+                                {
+                                    <span class="metro-status-pill estado-vigente">
+                                        <i class="bi bi-check-circle-fill"></i> Exitosa
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="metro-status-pill estado-vencido">
+                                        <i class="bi bi-x-circle-fill"></i> Fallida
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                <span class="metro-message-text">@notificacion.Mensaje</span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

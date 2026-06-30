@@ -1,0 +1,293 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.EventoMantenimientoDato
+
+@{
+    ViewData["Title"] = "Detalle de mantenimiento";
+
+    var evento = Model.EventoMetrologico;
+    var estado = evento.EstadoEquipoResultado ?? "Sin estado";
+
+    var badgeClass = estado switch
+    {
+        "Operativo" => "bg-success",
+        "No Operativo" => "bg-danger",
+        "Fuera de Servicio" => "bg-dark",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2 class="page-title">Detalle de mantenimiento</h2>
+        <p class="page-subtitle">
+            Registro técnico del mantenimiento, actividades ejecutadas, PDF generado y evidencias asociadas.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+        @if (evento.Activo &&
+            (!evento.EsHistorico || User.IsInRole("Administrador")))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.EventoMantenimientoDatoId" class="btn btn-primary">
+                Editar
+            </a>
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Volver
+        </a>
+    </div>
+</div>
+
+@if (TempData["Mensaje"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Mensaje"]
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Error"]
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="form-card h-100">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+                <div>
+                    <h5 class="mb-1">@evento.Equipo?.Codigo - @evento.Equipo?.Nombre</h5>
+                    <p class="text-muted mb-0">
+                        Mantenimiento @Model.TipoMantenimiento?.Nombre
+                    </p>
+                </div>
+
+                <div>
+                    <span class="badge @badgeClass fs-6">@estado</span>
+
+                    @if (evento.EsExtraordinario)
+                    {
+                        <span class="badge bg-warning text-dark fs-6 ms-1">
+                            Extraordinario
+                        </span>
+                    }
+
+                    @if (evento.EsHistorico)
+                    {
+                        <span class="badge bg-info text-dark fs-6 ms-1">
+                            Histórico
+                        </span>
+                    }
+
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Fecha del evento</div>
+                    <div class="fw-semibold">@evento.FechaEvento.ToString("yyyy-MM-dd")</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Próxima fecha</div>
+                    <div class="fw-semibold">
+                        @(evento.FechaProxima.HasValue
+                            ? evento.FechaProxima.Value.ToString("yyyy-MM-dd")
+                            : "No definida")
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Responsable interno</div>
+                    <div class="fw-semibold">@evento.ResponsableInterno?.NombreCompleto</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Subtipo de evento</div>
+                    <div class="fw-semibold">@evento.SubtipoEvento?.Nombre</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Fecha de registro</div>
+                    <div class="fw-semibold">@evento.FechaRegistro.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Tipo</div>
+                    <div class="fw-semibold">@Model.TipoMantenimiento?.Nombre</div>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(evento.ComentariosAdicionales))
+            {
+                <div class="mb-4">
+                    <div class="text-muted small mb-1">Comentarios adicionales</div>
+                    <div class="border rounded p-3 bg-light">
+                        @evento.ComentariosAdicionales
+                    </div>
+                </div>
+            }
+
+            @if (evento.EsExtraordinario)
+            {
+                <div class="alert alert-warning">
+                    <div class="fw-semibold mb-1">Justificación extraordinaria</div>
+                    <div>
+                        @(string.IsNullOrWhiteSpace(evento.JustificacionExtraordinario)
+                            ? "No se registró una justificación."
+                            : evento.JustificacionExtraordinario)
+                    </div>
+                </div>
+            }
+
+            @if (evento.EsHistorico && !string.IsNullOrWhiteSpace(evento.ObservacionCargaHistorica))
+            {
+                <div class="alert alert-info">
+                    <div class="fw-semibold mb-1">Observación histórica</div>
+                    <div>@evento.ObservacionCargaHistorica</div>
+                </div>
+            }
+
+            <hr class="my-4" />
+
+            <h5 class="mb-3">Actividades realizadas</h5>
+
+            @if (evento.ActividadesMantenimiento != null && evento.ActividadesMantenimiento.Any())
+            {
+                <div class="table-responsive checklist-table-shell checklist-detail-scroll mx-0 mb-0">
+                    <table class="table checklist-table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="checklist-head-order checklist-order-column">#</th>
+                                <th class="checklist-head-description">Actividad</th>
+                                <th class="checklist-head-notes">Observaciones</th>
+                                <th class="checklist-head-evidence">Evidencia del ítem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var actividad in evento.ActividadesMantenimiento.OrderBy(a => a.Orden))
+                            {
+                                <tr class="checklist-row">
+                                    <td>
+                                        <span class="checklist-row-number">@actividad.Orden</span>
+                                    </td>
+                                    <td class="fw-semibold">
+                                        @actividad.DescripcionActividad
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(actividad.Observaciones))
+                                        {
+                                            @actividad.Observaciones
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Sin observaciones</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(actividad.EvidenciaGoogleDriveFileId))
+                                        {
+                                            <a asp-controller="Documentos"
+                                               asp-action="VerImagen"
+                                               asp-route-tipo="evidencia-mantenimiento-item"
+                                               asp-route-id="@actividad.EventoMantenimientoActividadId"
+                                               class="btn btn-outline-primary btn-sm"
+                                               title="@actividad.EvidenciaNombreArchivo">
+                                                Ver imagen
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Sin imagen</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-light border">
+                    No hay actividades registradas para este mantenimiento.
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="form-card mb-4">
+            <h5 class="mb-3">Documento generado</h5>
+
+            @if (!string.IsNullOrWhiteSpace(Model.RutaPdf))
+            {
+                <p class="text-muted">
+                    El PDF interno de mantenimiento fue generado automáticamente y almacenado en el repositorio documental.
+                </p>
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Documentos"
+                       asp-action="VerPdf"
+                       asp-route-tipo="mantenimiento"
+                       asp-route-id="@Model.EventoMantenimientoDatoId"
+                       class="btn btn-primary">
+                        Ver PDF
+                    </a>
+
+                    <a asp-action="ExportarPdf"
+                           asp-route-id="@Model.EventoMantenimientoDatoId"
+                           class="btn btn-outline-secondary">
+                        Descargar copia
+                    </a>
+                </div>
+
+                <div class="mt-3 small text-muted text-break">
+                    @Model.NombreArchivoPdf
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning mb-0">
+                    Este mantenimiento aún no tiene PDF asociado.
+                </div>
+            }
+        </div>
+
+        <div class="form-card">
+            <h5 class="mb-3">Evidencias visuales</h5>
+
+            @if (evento.Evidencias != null && evento.Evidencias.Any(e => e.Activo))
+            {
+                <div class="d-grid gap-3">
+                    @foreach (var evidencia in evento.Evidencias.Where(e => e.Activo).OrderByDescending(e => e.FechaCarga))
+                    {
+                        <div class="border rounded p-3">
+                            <div class="fw-semibold text-truncate">
+                                @evidencia.NombreArchivo
+                            </div>
+
+                            <div class="text-muted small mb-2">
+                                @evidencia.FechaCarga.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </div>
+
+                            <a asp-controller="Documentos"
+                               asp-action="VerImagen"
+                               asp-route-tipo="evidencia-evento"
+                               asp-route-id="@evidencia.EvidenciaEventoMetrologicoId"
+                               class="btn btn-outline-primary btn-sm">
+                                Abrir evidencia
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-light border mb-0">
+                    No se han registrado evidencias visuales.
+                </div>
+            }
+        </div>
+    </div>
+</div>

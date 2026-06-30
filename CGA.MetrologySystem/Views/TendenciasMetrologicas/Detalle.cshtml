@@ -1,0 +1,293 @@
+@using System.Text.Json
+@model CGA.MetrologySystem.Models.TendenciasMetrologicas.TendenciasMetrologicasDetalleViewModel
+
+@{
+    ViewData["Title"] = "Detalle de desviaciones";
+
+    var datosGrafico = Model.Desviaciones
+        .OrderBy(d => d.FechaEvento)
+        .Select(d => new
+        {
+            fecha = d.FechaEvento.ToString("yyyy-MM-dd"),
+            desviacion = d.DesviacionDias,
+            fechaEsperada = d.FechaEsperada.ToString("yyyy-MM-dd"),
+            fechaReal = d.FechaReal.ToString("yyyy-MM-dd"),
+            tipoControl = d.TipoControl,
+            extraordinario = d.EsExtraordinario,
+            justificacion = string.IsNullOrWhiteSpace(d.JustificacionExtraordinario)
+                ? "Sin justificación registrada"
+                : d.JustificacionExtraordinario
+        })
+        .ToList();
+}
+
+<div class="trend-metro-hero mb-4">
+    <div>
+        <span class="metro-eyebrow">
+            <i class="bi bi-graph-up-arrow"></i> Tendencia del equipo
+        </span>
+
+        <h1>@Model.CodigoEquipo</h1>
+
+        <p>
+            @Model.NombreEquipo · @Model.TipoEquipo
+        </p>
+    </div>
+
+    <div class="trend-metro-actions">
+        <a asp-action="Index" class="btn btn-light">
+            <i class="bi bi-arrow-left"></i> Ranking general
+        </a>
+
+        <a asp-controller="Equipos"
+           asp-action="Details"
+           asp-route-id="@Model.EquipoId"
+           class="btn btn-warning">
+            <i class="bi bi-eye"></i> Ver equipo
+        </a>
+    </div>
+</div>
+
+<div class="metro-filter-card mb-4">
+    <form asp-action="Detalle" method="get" class="row g-3 align-items-end">
+        <input type="hidden" name="equipoId" value="@Model.EquipoId" />
+
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Tipo de control</label>
+            <select name="tipoEventoMetrologicoId" class="form-select" asp-items="Model.Filtros.TiposEvento">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Fecha desde</label>
+            <input name="fechaDesde"
+                   type="date"
+                   value="@(Model.Filtros.FechaDesde?.ToString("yyyy-MM-dd"))"
+                   class="form-control" />
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Fecha hasta</label>
+            <input name="fechaHasta"
+                   type="date"
+                   value="@(Model.Filtros.FechaHasta?.ToString("yyyy-MM-dd"))"
+                   class="form-control" />
+        </div>
+
+        <div class="col-lg-3 col-md-6 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100 metro-btn-main">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
+
+            <a asp-action="LimpiarFiltrosDetalle"
+               asp-route-equipoId="@Model.EquipoId"
+               class="btn btn-outline-secondary metro-btn-icon"
+               title="Limpiar filtros">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="trend-metro-detail-kpi-grid mb-4">
+    <div class="metro-kpi">
+        <span>Eventos analizados</span>
+        <strong>@Model.Resumen.EventosAnalizados</strong>
+        <i class="bi bi-calendar-check"></i>
+    </div>
+
+    <div class="metro-kpi kpi-config">
+        <span>Desviación promedio</span>
+        <strong>@Model.Resumen.DesviacionPromedioGlobal.ToString("0.0")</strong>
+        <small>días</small>
+        <i class="bi bi-activity"></i>
+    </div>
+
+    <div class="metro-kpi kpi-danger">
+        <span>Mayor desviación</span>
+        <strong>@Model.Resumen.MayorDesviacion</strong>
+        <small>días</small>
+        <i class="bi bi-clock-history"></i>
+    </div>
+
+    <div class="metro-kpi kpi-warning">
+        <span>Eventos tardíos</span>
+        <strong>@Model.Resumen.EventosTardios</strong>
+        <i class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-muted">
+        <span>Extraordinarios</span>
+        <strong>@Model.Resumen.EventosExtraordinarios</strong>
+        <i class="bi bi-exclamation-diamond-fill"></i>
+    </div>
+</div>
+
+<div class="trend-metro-chart-card mb-4">
+    <div class="dash-metro-card-header">
+        <h5>Tendencia histórica de desviación</h5>
+        <span>Valores positivos indican retraso, cero indica puntualidad y valores negativos indican anticipación.</span>
+    </div>
+
+    @if (!Model.Desviaciones.Any())
+    {
+        <div class="dash-metro-empty-chart">
+            No hay suficientes eventos para calcular desviaciones históricas con los filtros seleccionados.
+        </div>
+    }
+    else
+    {
+        <canvas id="desviacionHistoricaChart"></canvas>
+    }
+</div>
+
+<div class="metro-table-card">
+    <div class="metro-table-header">
+        <div>
+            <h5>Historial de desviaciones</h5>
+            <p>Eventos calculados a partir de la fecha próxima del evento anterior.</p>
+        </div>
+
+        <span class="metro-table-count">
+            @Model.Desviaciones.Count evento(s)
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table metro-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Fecha evento</th>
+                    <th>Tipo control</th>
+                    <th>Fecha esperada</th>
+                    <th>Fecha real</th>
+                    <th>Desviación días</th>
+                    <th>Extraordinario</th>
+                    <th>Justificación</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Desviaciones.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="metro-empty">
+                                <i class="bi bi-graph-down"></i>
+                                <h5>Sin desviaciones calculables</h5>
+                                <p>El primer evento de cada control no genera desviación y el evento anterior debe tener fecha próxima.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model.Desviaciones)
+                    {
+                        <tr>
+                            <td>@item.FechaEvento.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                <span class="metro-type-pill">@item.TipoControl</span>
+                            </td>
+                            <td>@item.FechaEsperada.ToString("yyyy-MM-dd")</td>
+                            <td>@item.FechaReal.ToString("yyyy-MM-dd")</td>
+                            <td>
+                                <span class="trend-metro-deviation-pill @(item.DesviacionDias > 0 ? "trend-late" : item.DesviacionDias < 0 ? "trend-early" : "trend-on-time")">
+                                    @item.DesviacionDias días
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.EsExtraordinario)
+                                {
+                                    <span class="trend-metro-extra-pill">Sí</span>
+                                }
+                                else
+                                {
+                                    <span class="metro-days-pill estado-sin-eventos">No</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="metro-message-text">
+                                    @(string.IsNullOrWhiteSpace(item.JustificacionExtraordinario)
+                                        ? "N/D"
+                                        : item.JustificacionExtraordinario)
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const desviacionesHistoricas = @Html.Raw(JsonSerializer.Serialize(datosGrafico));
+
+        const canvasDesviacion = document.getElementById('desviacionHistoricaChart');
+
+        if (canvasDesviacion && window.Chart) {
+            new Chart(canvasDesviacion, {
+                type: 'line',
+                data: {
+                    labels: desviacionesHistoricas.map(item => item.fecha),
+                    datasets: [{
+                        label: 'Desviación días',
+                        data: desviacionesHistoricas.map(item => item.desviacion),
+                        borderColor: '#1f7a8c',
+                        backgroundColor: 'rgba(31, 122, 140, .14)',
+                        tension: .32,
+                        fill: true,
+                        pointRadius: desviacionesHistoricas.map(item => item.extraordinario ? 7 : 4),
+                        pointHoverRadius: desviacionesHistoricas.map(item => item.extraordinario ? 9 : 6),
+                        pointBackgroundColor: desviacionesHistoricas.map(item =>
+                            item.extraordinario ? '#dc2626' : item.desviacion > 0 ? '#f59e0b' : item.desviacion < 0 ? '#7c3aed' : '#16a34a')
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Días de desviación'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Fecha del evento'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: context => {
+                                    const item = desviacionesHistoricas[context[0].dataIndex];
+                                    return `${item.fecha} · ${item.tipoControl}`;
+                                },
+                                label: context => {
+                                    const item = desviacionesHistoricas[context.dataIndex];
+                                    return [
+                                        `Fecha esperada: ${item.fechaEsperada}`,
+                                        `Fecha real: ${item.fechaReal}`,
+                                        `Desviación: ${item.desviacion} día(s)`,
+                                        `Extraordinario: ${item.extraordinario ? 'Sí' : 'No'}`,
+                                        `Justificación: ${item.justificacion}`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}

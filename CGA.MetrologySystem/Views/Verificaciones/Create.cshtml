@@ -1,0 +1,483 @@
+﻿@model CGA.MetrologySystem.Models.VerificacionViewModel
+
+@{
+    ViewData["Title"] = "Registrar verificación";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2 class="page-title">Registrar verificación</h2>
+        <p class="page-subtitle">
+            Registra la verificación técnica del equipo, sus condiciones evaluadas y evidencias visuales asociadas.
+        </p>
+    </div>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver al historial
+    </a>
+</div>
+
+@if (TempData["AdvertenciaRegla"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["AdvertenciaRegla"]
+    </div>
+}
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="form-card event-form-card">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+    <div class="plantilla-section-header mb-4">
+        <div>
+            <span class="section-kicker">Evento técnico</span>
+            <h5 class="mb-1">Información general de la verificación</h5>
+            <p class="page-subtitle">
+                Selecciona el equipo y registra la fecha de control. La plantilla se cargará automáticamente según el tipo de equipo.
+            </p>
+        </div>
+    </div>
+
+    <div class="event-section-card mb-4">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="EquipoId" class="form-label fw-semibold">Equipo</label>
+                <select asp-for="EquipoId"
+                        asp-items="Model.Equipos"
+                        class="form-select"
+                        id="EquipoId">
+                    <option value="">Seleccione un equipo...</option>
+                </select>
+                <span asp-validation-for="EquipoId" class="text-danger"></span>
+                <small class="text-muted">
+                    Al seleccionar un equipo se cargará automáticamente la plantilla correspondiente.
+                </small>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="SubtipoEventoId" class="form-label fw-semibold">Subtipo de evento</label>
+                <select asp-for="SubtipoEventoId"
+                        asp-items="Model.SubtiposEvento"
+                        class="form-select">
+                    <option value="">Seleccione un subtipo...</option>
+                </select>
+                <span asp-validation-for="SubtipoEventoId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="ResponsableInternoId" class="form-label fw-semibold">Responsable interno</label>
+                <select asp-for="ResponsableInternoId"
+                        asp-items="Model.ResponsablesInternos"
+                        class="form-select">
+                    <option value="">Seleccione un responsable...</option>
+                </select>
+                <span asp-validation-for="ResponsableInternoId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha de verificación</label>
+                <input asp-for="FechaEvento" class="form-control" type="date" />
+                <span asp-validation-for="FechaEvento" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha calculada</label>
+                <input asp-for="FechaProxima"
+                       class="form-control readonly-highlight"
+                       type="date"
+                       readonly
+                       tabindex="-1" />
+                <span asp-validation-for="FechaProxima" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="checklist-info-strip mb-4 mx-0">
+            <div class="checklist-info-icon">i</div>
+            <div>
+                <strong>Regla automática</strong>
+                <p class="mb-0">
+                    Si la verificación es no programada, selecciona el subtipo Extraordinario y justifícala.
+                    El sistema también lo solicitará si la fecha se desvía del periodo esperado.
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            @if (User.IsInRole("Administrador"))
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="form-check form-switch cga-switch mt-md-4 pt-md-2">
+                        <input asp-for="EsHistorico" class="form-check-input" role="switch" />
+                        <label asp-for="EsHistorico" class="form-check-label fw-semibold"></label>
+                    </div>
+                </div>
+            }
+
+            <div class="col-md-4 mb-3">
+                <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">
+                    Estado del equipo
+                </label>
+                <select asp-for="EstadoEquipoResultado" class="form-select">
+                    <option value="">Seleccione...</option>
+                    <option value="Operativo">Operativo</option>
+                    <option value="No Operativo">No Operativo</option>
+                    <option value="Fuera de Servicio">Fuera de Servicio</option>
+                </select>
+                <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
+                    Justificación extraordinaria
+                </label>
+                <textarea asp-for="JustificacionExtraordinario"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Motivo del registro extraordinario."></textarea>
+                <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+            </div>
+
+            @if (User.IsInRole("Administrador"))
+            {
+                <div class="col-md-12 mb-3">
+                    <label asp-for="ObservacionCargaHistorica" class="form-label fw-semibold"></label>
+                    <textarea asp-for="ObservacionCargaHistorica"
+                              class="form-control"
+                              rows="2"
+                              placeholder="Referencia u observación del registro histórico."></textarea>
+                    <span asp-validation-for="ObservacionCargaHistorica" class="text-danger"></span>
+                </div>
+            }
+        </div>
+
+        <div>
+            <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">
+                Comentarios adicionales
+            </label>
+            <textarea asp-for="ComentariosAdicionales"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Ejemplo: El equipo cumple correctamente las condiciones evaluadas."></textarea>
+            <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="verification-builder mb-4">
+        <div class="verification-builder-header">
+            <div class="checklist-header-left">
+                <div class="checklist-header-icon">
+                    ✓
+                </div>
+
+                <div>
+                    <span class="section-kicker">Sistema de verificación</span>
+                    <h5 class="mb-1">Checklist técnico evaluado</h5>
+                    <p class="page-subtitle">
+                        Marca cada condición como conforme o no conforme y registra observaciones cuando aplique.
+                    </p>
+                </div>
+            </div>
+
+            <button type="button" id="addResultado" class="btn btn-primary checklist-add-button">
+                + Agregar condición
+            </button>
+        </div>
+
+        <div class="checklist-info-strip">
+            <div class="checklist-info-icon">i</div>
+            <div>
+                <strong>Guía de evaluación</strong>
+                <p class="mb-0">
+                    Usa “Cumple” cuando la condición esté conforme. Si detectas un hallazgo, desmarca la condición y describe la novedad en observaciones.
+                </p>
+            </div>
+        </div>
+
+        <div class="table-responsive checklist-table-shell">
+            <table class="table checklist-table align-middle mb-0" id="tablaResultados">
+                <thead>
+                    <tr>
+                        <th class="checklist-head-order checklist-order-column">#</th>
+                        <th class="checklist-head-description">Descripción</th>
+                        <th class="checklist-head-status checklist-status-column">Cumple</th>
+                        <th class="checklist-head-notes">Observaciones</th>
+                        <th class="checklist-head-evidence">Evidencia del ítem</th>
+                        <th class="checklist-head-action text-end checklist-action-column">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="resultadosContainer">
+                    @for (int i = 0; i < Model.Resultados.Count; i++)
+                    {
+                        <tr class="checklist-row checklist-item-enter" data-resultado-row>
+                            <td>
+                                <span class="checklist-row-number">@(i + 1)</span>
+                                <input type="hidden" asp-for="Resultados[i].Orden" data-field="orden" />
+                            </td>
+                            <td>
+                                <input asp-for="Resultados[i].DescripcionItem"
+                                       data-field="descripcion"
+                                       class="form-control"
+                                       placeholder="Ej. Cable de alimentación libre de daños visibles" />
+                                <span asp-validation-for="Resultados[i].DescripcionItem" class="text-danger"></span>
+                            </td>
+                            <td class="text-center">
+                                <label class="verification-check checklist-status-pill">
+                                    <input type="checkbox"
+                                           name="Resultados[@i].Cumple"
+                                           data-field="cumple"
+                                           value="true"
+                                           class="form-check-input"
+                                    @(Model.Resultados[i].Cumple ? "checked" : "") />
+                                    <input type="hidden"
+                                           name="Resultados[@i].Cumple"
+                                           data-field="cumple-hidden"
+                                           value="false" />
+                                    <span>Sí</span>
+                                </label>
+                            </td>
+                            <td>
+                                <input asp-for="Resultados[i].Observaciones"
+                                       data-field="observaciones"
+                                       class="form-control"
+                                       placeholder="Sin novedades / detalle del hallazgo" />
+                            </td>
+                            <td>
+                                <div class="checklist-evidence-actions">
+                                    <label class="btn btn-outline-primary btn-sm mb-0">
+                                        Subir imagen
+                                        <input asp-for="Resultados[i].EvidenciaImagen"
+                                               data-field="evidencia"
+                                               type="file"
+                                               accept="image/*"
+                                               class="visually-hidden" />
+                                    </label>
+                                    <span class="checklist-evidence-note">Opcional</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div id="emptyResultadosMessage" class="empty-checklist-message d-none">
+            <div class="empty-checklist-icon">+</div>
+            <h6>No hay condiciones agregadas</h6>
+            <p>
+                Agrega condiciones técnicas o selecciona un equipo con una plantilla configurada.
+            </p>
+        </div>
+    </div>
+
+    <div class="event-section-card">
+        <div class="plantilla-section-header mb-3">
+            <div>
+                <span class="section-kicker">Evidencias</span>
+                <h5 class="mb-1">Evidencias visuales</h5>
+                <p class="page-subtitle">
+                    Puedes tomar fotografías desde tablet/celular o subir imágenes existentes del dispositivo.
+                </p>
+            </div>
+        </div>
+
+        <div class="event-upload-box">
+            <div>
+                <label asp-for="Evidencias" class="form-label fw-semibold mb-1">
+                    Imágenes de evidencia
+                </label>
+                <p class="mb-0">
+                    Adjunta una o varias imágenes que respalden la condición técnica del equipo.
+                </p>
+            </div>
+
+            <input asp-for="Evidencias"
+                   type="file"
+                   class="form-control"
+                   accept="image/*"
+                   multiple />
+        </div>
+
+        <small class="text-muted d-block mt-2">
+            Formatos permitidos: imágenes. Puedes seleccionar múltiples evidencias.
+        </small>
+    </div>
+
+    <div class="form-actions-sticky">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+
+        <button type="submit" class="btn btn-primary">
+            Guardar verificación
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        let index = @Model.Resultados.Count;
+
+        function actualizarNumeracionResultados() {
+            document.querySelectorAll("[data-resultado-row]").forEach((row, i) => {
+                const number = row.querySelector(".checklist-row-number");
+                if (number) number.textContent = i + 1;
+            });
+        }
+
+        function actualizarMensajeResultadosVacio() {
+            const totalItems = document.querySelectorAll("[data-resultado-row]").length;
+            const emptyMessage = document.getElementById("emptyResultadosMessage");
+
+            if (!emptyMessage) return;
+
+            if (totalItems === 0) {
+                emptyMessage.classList.remove("d-none");
+            } else {
+                emptyMessage.classList.add("d-none");
+            }
+        }
+
+        function reindexarResultados() {
+            document.querySelectorAll("[data-resultado-row]").forEach((row, i) => {
+                const orden = row.querySelector("input[data-field='orden']");
+                const descripcion = row.querySelector("input[data-field='descripcion']");
+                const cumpleHidden = row.querySelector("input[data-field='cumple-hidden']");
+                const cumple = row.querySelector("input[data-field='cumple']");
+                const observaciones = row.querySelector("input[data-field='observaciones']");
+                const evidencia = row.querySelector("input[data-field='evidencia']");
+
+                if (orden) {
+                    orden.name = `Resultados[${i}].Orden`;
+                    orden.id = `Resultados_${i}__Orden`;
+                    orden.value = i + 1;
+                }
+
+                if (descripcion) {
+                    descripcion.name = `Resultados[${i}].DescripcionItem`;
+                    descripcion.id = `Resultados_${i}__DescripcionItem`;
+                }
+
+                if (cumpleHidden) {
+                    cumpleHidden.name = `Resultados[${i}].Cumple`;
+                }
+
+                if (cumple) {
+                    cumple.name = `Resultados[${i}].Cumple`;
+                    cumple.id = `Resultados_${i}__Cumple`;
+                }
+
+                if (observaciones) {
+                    observaciones.name = `Resultados[${i}].Observaciones`;
+                    observaciones.id = `Resultados_${i}__Observaciones`;
+                }
+
+                if (evidencia) {
+                    evidencia.name = `Resultados[${i}].EvidenciaImagen`;
+                    evidencia.id = `Resultados_${i}__EvidenciaImagen`;
+                }
+            });
+
+            index = document.querySelectorAll("[data-resultado-row]").length;
+            actualizarNumeracionResultados();
+            actualizarMensajeResultadosVacio();
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const equipoSelect = document.getElementById("EquipoId");
+
+            if (equipoSelect) {
+                equipoSelect.addEventListener("change", function () {
+                    const equipoId = this.value;
+
+                    if (!equipoId || equipoId === "0") {
+                        return;
+                    }
+
+                    window.location.href = `/Verificaciones/Create?equipoId=${equipoId}`;
+                });
+            }
+
+            const addResultadoButton = document.getElementById("addResultado");
+
+            if (addResultadoButton) {
+                addResultadoButton.addEventListener("click", function () {
+                    const item = `
+                        <tr class="checklist-row checklist-item-enter" data-resultado-row>
+                            <td>
+                                <span class="checklist-row-number">${index + 1}</span>
+                                <input type="hidden"
+                                       name="Resultados[${index}].Orden"
+                                       data-field="orden"
+                                       value="${index + 1}" />
+                            </td>
+                            <td>
+                                <input name="Resultados[${index}].DescripcionItem"
+                                       data-field="descripcion"
+                                       class="form-control"
+                                       placeholder="Ej. Carcasa libre de fisuras o deformaciones" />
+                            </td>
+                            <td class="text-center">
+                                <label class="verification-check checklist-status-pill">
+                                    <input type="checkbox"
+                                           name="Resultados[${index}].Cumple"
+                                           data-field="cumple"
+                                           value="true"
+                                           class="form-check-input"
+                                           checked />
+                                    <input type="hidden"
+                                           name="Resultados[${index}].Cumple"
+                                           data-field="cumple-hidden"
+                                           value="false" />
+                                    <span>Sí</span>
+                                </label>
+                            </td>
+                            <td>
+                                <input name="Resultados[${index}].Observaciones"
+                                       data-field="observaciones"
+                                       class="form-control"
+                                       placeholder="Sin novedades / detalle del hallazgo" />
+                            </td>
+                            <td>
+                                <div class="checklist-evidence-actions">
+                                    <label class="btn btn-outline-primary btn-sm mb-0">
+                                        Subir imagen
+                                        <input name="Resultados[${index}].EvidenciaImagen"
+                                               data-field="evidencia"
+                                               type="file"
+                                               accept="image/*"
+                                               class="visually-hidden" />
+                                    </label>
+                                    <span class="checklist-evidence-note">Opcional</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>`;
+
+                    document.getElementById("resultadosContainer").insertAdjacentHTML("beforeend", item);
+                    index++;
+                    reindexarResultados();
+                });
+            }
+
+            actualizarMensajeResultadosVacio();
+            actualizarNumeracionResultados();
+        });
+
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("eliminar")) {
+                e.target.closest("[data-resultado-row]").remove();
+                reindexarResultados();
+            }
+        });
+    </script>
+}

@@ -1,0 +1,74 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
+
+namespace CGA.MetrologySystem.Models
+{
+    public class CalibracionViewModel
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un equipo.")]
+        [Display(Name = "Equipo")]
+        public int EquipoId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un subtipo de evento.")]
+        [Display(Name = "Subtipo de evento")]
+        public int SubtipoEventoId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un responsable interno.")]
+        [Display(Name = "Responsable interno")]
+        public int ResponsableInternoId { get; set; }
+
+        [Required(ErrorMessage = "La fecha del evento es obligatoria.")]
+        [DataType(DataType.Date)]
+        [Display(Name = "Fecha del evento")]
+        public DateTime FechaEvento { get; set; }
+
+        [DataType(DataType.Date)]
+        [Display(Name = "Próxima fecha")]
+        public DateTime? FechaProxima { get; set; }
+
+        [StringLength(50, ErrorMessage = "El estado del equipo no puede exceder los 50 caracteres.")]
+        [Display(Name = "Estado del equipo")]
+        public string? EstadoEquipoResultado { get; set; }
+
+        [StringLength(500, ErrorMessage = "Los comentarios adicionales no pueden exceder los 500 caracteres.")]
+        [Display(Name = "Comentarios adicionales")]
+        public string? ComentariosAdicionales { get; set; }
+
+        [Display(Name = "Es extraordinario")]
+        public bool EsExtraordinario { get; set; }
+
+        [StringLength(500, ErrorMessage = "La justificación no puede exceder los 500 caracteres.")]
+        [Display(Name = "Justificación extraordinario")]
+        public string? JustificacionExtraordinario { get; set; }
+
+        [StringLength(100, ErrorMessage = "El número de certificado no puede exceder los 100 caracteres.")]
+        [RegularExpression(@"^[a-zA-Z0-9\-_\/. ]+$",
+            ErrorMessage = "El número de certificado solo puede contener letras, números, guiones, slash, puntos y espacios.")]
+        [Display(Name = "Número de certificado")]
+        public string? NumeroCertificado { get; set; }
+
+        [Required(ErrorMessage = "La fecha de calibración es obligatoria.")]
+        [DataType(DataType.Date)]
+        [Display(Name = "Fecha de calibración")]
+        public DateTime? FechaCalibracion { get; set; }
+
+        [Required(ErrorMessage = "Debe seleccionar un laboratorio.")]
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un laboratorio.")]
+        [Display(Name = "Laboratorio")]
+        public int? LaboratorioId { get; set; }
+
+        [StringLength(500, ErrorMessage = "Las observaciones no pueden exceder los 500 caracteres.")]
+        [Display(Name = "Observaciones")]
+        public string? Observaciones { get; set; }
+
+        [Required(ErrorMessage = "Debe subir el certificado en PDF.")]
+        [Display(Name = "Certificado PDF")]
+        public IFormFile? ArchivoCertificado { get; set; }
+
+        public List<SelectListItem> Equipos { get; set; } = new();
+        public List<SelectListItem> SubtiposEvento { get; set; } = new();
+        public List<SelectListItem> ResponsablesInternos { get; set; } = new();
+        public List<SelectListItem> Laboratorios { get; set; } = new();
+    }
+}

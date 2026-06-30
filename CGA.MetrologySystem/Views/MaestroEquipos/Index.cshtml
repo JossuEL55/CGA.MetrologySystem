@@ -1,0 +1,297 @@
+@model CGA.MetrologySystem.Models.MaestroEquipos.MaestroEquiposIndexViewModel
+
+@{
+    ViewData["Title"] = "Maestro de Equipos";
+}
+
+<div class="maestro-eq-hero mb-4">
+    <div>
+        <span class="metro-eyebrow">
+            <i class="bi bi-diagram-3-fill"></i> Vista administrativa
+        </span>
+
+        <h1>Maestro de Equipos</h1>
+
+        <p>
+            Listado administrativo unificado para revisar equipos, controles metrológicos,
+            configuraciones y accesos rápidos.
+        </p>
+    </div>
+
+    <div class="maestro-eq-actions">
+        <a asp-controller="Equipos" asp-action="Create" class="btn btn-warning">
+            <i class="bi bi-plus-circle"></i> Registrar equipo
+        </a>
+
+        <a asp-controller="ControlMetrologico" asp-action="Index" class="btn btn-light">
+            <i class="bi bi-grid-3x3-gap"></i> Ver semaforización
+        </a>
+
+        <a asp-controller="DashboardMetrologico" asp-action="Index" class="btn btn-light">
+            <i class="bi bi-bar-chart-line-fill"></i> Ver dashboard
+        </a>
+
+        <a asp-controller="ControlMetrologico" asp-action="Score" class="btn btn-light">
+            <i class="bi bi-speedometer2"></i> Ver score
+        </a>
+
+        <a asp-action="ExportarExcel"
+           asp-route-buscar="@Model.Filtros.Buscar"
+           asp-route-tipoEquipoId="@Model.Filtros.TipoEquipoId"
+           asp-route-estadoGlobal="@Model.Filtros.EstadoGlobal"
+           asp-route-soloConfiguracionIncompleta="@Model.Filtros.SoloConfiguracionIncompleta"
+           asp-route-horizonteDias="@Model.Filtros.HorizonteDias"
+           class="btn btn-outline-light">
+            <i class="bi bi-file-earmark-excel"></i> Exportar maestro Excel
+        </a>
+    </div>
+</div>
+
+<div class="maestro-eq-summary-grid mb-4">
+    <div class="metro-kpi">
+        <span>Total equipos</span>
+        <strong>@Model.TotalEquipos</strong>
+        <i class="bi bi-box-seam"></i>
+    </div>
+
+    <div class="metro-kpi kpi-danger">
+        <span>Equipos vencidos</span>
+        <strong>@Model.TotalVencidos</strong>
+        <i class="bi bi-x-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-warning">
+        <span>Próximos a vencer</span>
+        <strong>@Model.TotalProximosAVencer</strong>
+        <i class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-config">
+        <span>Configuración incompleta</span>
+        <strong>@Model.TotalConConfiguracionIncompleta</strong>
+        <i class="bi bi-gear-fill"></i>
+    </div>
+</div>
+
+<div class="metro-filter-card mb-4">
+    <form asp-action="Index" method="get" class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Buscar equipo</label>
+            <div class="metro-input-icon">
+                <i class="bi bi-search"></i>
+                <input name="buscar"
+                       value="@Model.Filtros.Buscar"
+                       class="form-control"
+                       placeholder="Código o nombre del equipo" />
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Tipo de equipo</label>
+            <select name="tipoEquipoId" class="form-select" asp-items="Model.Filtros.TiposEquipo">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Estado global</label>
+            <select name="estadoGlobal" class="form-select" asp-items="Model.Filtros.EstadosGlobales">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Configuración</label>
+            <div class="content-card py-2 px-3">
+                <div class="form-check">
+                    @if (Model.Filtros.SoloConfiguracionIncompleta)
+                    {
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="soloConfiguracionIncompleta"
+                               name="soloConfiguracionIncompleta"
+                               value="true"
+                               checked="checked" />
+                    }
+                    else
+                    {
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="soloConfiguracionIncompleta"
+                               name="soloConfiguracionIncompleta"
+                               value="true" />
+                    }
+                    <label class="form-check-label fw-semibold" for="soloConfiguracionIncompleta">
+                        Solo incompletos
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-1 col-md-6">
+            <label class="form-label">Horizonte</label>
+            <input name="horizonteDias"
+                   value="@Model.Filtros.HorizonteDias"
+                   type="number"
+                   min="1"
+                   class="form-control" />
+        </div>
+
+        <div class="col-lg-2 col-md-6 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100 metro-btn-main">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
+
+            <a asp-action="LimpiarFiltros" class="btn btn-outline-secondary metro-btn-icon" title="Limpiar filtros">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="maestro-eq-list">
+    @if (!Model.Equipos.Any())
+    {
+        <div class="metro-table-card">
+            <div class="metro-empty text-center py-5">
+                <i class="bi bi-inboxes"></i>
+                <h5>No se encontraron equipos</h5>
+                <p>No existen resultados para los filtros aplicados.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        foreach (var equipo in Model.Equipos)
+        {
+            var collapseId = $"equipo-controles-{equipo.EquipoId}";
+
+            <div class="maestro-eq-card">
+                <div class="maestro-eq-card-main">
+                    <div class="maestro-eq-identity">
+                        <div class="metro-equipo-avatar">
+                            <i class="bi bi-tools"></i>
+                        </div>
+
+                        <div>
+                            <div class="maestro-eq-title">
+                                <strong>@equipo.CodigoEquipo</strong>
+                                @if (equipo.TieneConfiguracionIncompleta)
+                                {
+                                    <span class="maestro-eq-warning-pill">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Configuración incompleta
+                                    </span>
+                                }
+                            </div>
+                            <span>@equipo.NombreEquipo</span>
+                            <small>@equipo.TipoEquipo</small>
+                        </div>
+                    </div>
+
+                    <div class="maestro-eq-status-zone">
+                        <span class="metro-status-pill @equipo.CssEstadoGlobal">
+                            <i class="bi @equipo.IconoEstadoGlobal"></i>
+                            @equipo.EstadoGlobalTexto
+                        </span>
+
+                        @if (equipo.ScoreMaximo.HasValue)
+                        {
+                            <div class="metro-score-value">
+                                <strong>@equipo.ScoreMaximo</strong>
+                                <span>/100</span>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(equipo.PrioridadMaxima))
+                        {
+                            <span class="metro-priority-pill @equipo.CssPrioridadMaxima">
+                                @equipo.PrioridadMaxima
+                            </span>
+                        }
+                    </div>
+
+                    <div class="maestro-eq-main-actions">
+                        <button class="btn btn-sm btn-outline-primary maestro-eq-toggle"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#@collapseId"
+                                aria-expanded="false"
+                                aria-controls="@collapseId">
+                            <i class="bi bi-chevron-down"></i> Ver controles
+                        </button>
+                    </div>
+                </div>
+
+                <div class="collapse maestro-eq-collapse" id="@collapseId">
+                    <div class="maestro-eq-actions-row">
+                        @foreach (var accion in equipo.Acciones)
+                        {
+                            <a href="@accion.Url" class="@accion.CssClass">
+                                <i class="bi @accion.Icono"></i> @accion.Texto
+                            </a>
+                        }
+                    </div>
+
+                    <div class="maestro-eq-control-grid">
+                        @foreach (var control in equipo.Controles)
+                        {
+                            <div class="maestro-eq-control-card @control.CssEstado">
+                                <div class="maestro-eq-control-top">
+                                    <div class="metro-control-icon">
+                                        <i class="bi @control.IconoEstado"></i>
+                                    </div>
+                                    <div>
+                                        <strong>@control.TipoControl</strong>
+                                        <span class="metro-status-pill @control.CssEstado">
+                                            @control.EstadoTexto
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="maestro-eq-control-dates">
+                                    <div>
+                                        <small>Última</small>
+                                        <b>@(control.FechaUltimoEvento.HasValue ? control.FechaUltimoEvento.Value.ToString("yyyy-MM-dd") : "N/D")</b>
+                                    </div>
+                                    <div>
+                                        <small>Próxima</small>
+                                        <b>@(control.FechaProxima.HasValue ? control.FechaProxima.Value.ToString("yyyy-MM-dd") : "N/D")</b>
+                                    </div>
+                                    <div>
+                                        <small>Días</small>
+                                        <b>@(control.DiasRestantes.HasValue ? $"{control.DiasRestantes} día(s)" : "N/D")</b>
+                                    </div>
+                                </div>
+
+                                <p class="maestro-eq-control-message">
+                                    @control.Mensaje
+                                </p>
+
+                                <div class="maestro-eq-control-actions">
+                                    @if (control.RequiereConfiguracion && !string.IsNullOrWhiteSpace(control.UrlConfigurar))
+                                    {
+                                        <a href="@control.UrlConfigurar" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-gear-fill"></i> Configurar
+                                        </a>
+                                    }
+                                    else if (control.NoRequiereControl && !string.IsNullOrWhiteSpace(control.UrlEditarConfiguracion))
+                                    {
+                                        <a href="@control.UrlEditarConfiguracion" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-pencil-square"></i> Editar configuración
+                                        </a>
+                                    }
+                                    else if (!control.NoRequiereControl && !string.IsNullOrWhiteSpace(control.UrlRegistrarEvento))
+                                    {
+                                        <a href="@control.UrlRegistrarEvento" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-plus-circle"></i> Registrar evento
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>

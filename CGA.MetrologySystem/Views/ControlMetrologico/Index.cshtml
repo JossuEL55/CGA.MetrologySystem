@@ -1,0 +1,215 @@
+﻿@model CGA.MetrologySystem.Models.ControlMetrologico.ControlMetrologicoIndexViewModel
+
+@{
+    ViewData["Title"] = "Control metrológico";
+}
+
+<div class="metro-hero mb-4">
+    <div>
+        <span class="metro-eyebrow">
+            <i class="bi bi-activity"></i> Monitoreo técnico
+        </span>
+
+        <h1>Control metrológico</h1>
+
+        <p>
+            Supervisión ejecutiva del estado de calibraciones, verificaciones y mantenimientos
+            de los equipos activos de CGA-OIL.
+        </p>
+    </div>
+
+    <div class="metro-hero-actions">
+        <a asp-action="Score" class="btn btn-warning me-2">
+            <i class="bi bi-speedometer2"></i> Ver Score
+        </a>
+
+        <a asp-action="Eventos" class="btn btn-light">
+            <i class="bi bi-list-check"></i> Vista por evento
+        </a>
+    </div>
+</div>
+
+<div class="metro-summary-grid mb-4">
+    <div class="metro-kpi">
+        <span>Total equipos</span>
+        <strong>@Model.Resumen.TotalEquipos</strong>
+        <i class="bi bi-box-seam"></i>
+    </div>
+
+    <div class="metro-kpi kpi-ok">
+        <span>Vigentes</span>
+        <strong>@Model.Resumen.Vigentes</strong>
+        <i class="bi bi-check-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-warning">
+        <span>Próximos</span>
+        <strong>@Model.Resumen.ProximosAVencer</strong>
+        <i class="bi bi-exclamation-triangle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-danger">
+        <span>Vencidos</span>
+        <strong>@Model.Resumen.Vencidos</strong>
+        <i class="bi bi-x-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-muted">
+        <span>Sin eventos</span>
+        <strong>@Model.Resumen.SinEventos</strong>
+        <i class="bi bi-calendar-x"></i>
+    </div>
+
+    <div class="metro-kpi kpi-config">
+        <span>Sin configuración</span>
+        <strong>@Model.Resumen.SinConfiguracion</strong>
+        <i class="bi bi-gear-fill"></i>
+    </div>
+</div>
+
+<div class="metro-filter-card mb-4">
+    <form asp-action="Index" method="get" class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Buscar equipo</label>
+            <div class="metro-input-icon">
+                <i class="bi bi-search"></i>
+                <input name="buscar"
+                       value="@Model.Filtros.Buscar"
+                       class="form-control"
+                       placeholder="Código o nombre del equipo" />
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Tipo de equipo</label>
+            <select name="tipoEquipoId" class="form-select" asp-items="Model.Filtros.TiposEquipo">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Tipo de evento</label>
+            <select name="tipoEventoMetrologicoId" class="form-select" asp-items="Model.Filtros.TiposEvento">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Estado</label>
+            <select name="estado" class="form-select" asp-items="Model.Filtros.Estados">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-1 col-md-6">
+            <label class="form-label">Horizonte</label>
+            <select name="horizonteDias" class="form-select" asp-items="Model.Filtros.Horizontes"></select>
+        </div>
+
+        <div class="col-lg-2 col-md-6 d-flex gap-2">
+            <button type="submit" class="btn btn-primary w-100 metro-btn-main">
+                <i class="bi bi-funnel"></i> Filtrar
+            </button>
+
+            <a asp-action="LimpiarFiltros" class="btn btn-outline-secondary metro-btn-icon" title="Limpiar filtros">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="metro-table-card">
+    <div class="metro-table-header">
+        <div>
+            <h5>Estado por equipo</h5>
+            <p>Resumen consolidado de los tres controles metrológicos principales.</p>
+        </div>
+
+        <span class="metro-table-count">
+            @Model.Equipos.Count equipo(s)
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table metro-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Equipo</th>
+                    <th>Tipo</th>
+                    <th>Calibración</th>
+                    <th>Verificación</th>
+                    <th>Mantenimiento</th>
+                    <th>Estado global</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (!Model.Equipos.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="metro-empty">
+                                <i class="bi bi-inboxes"></i>
+                                <h5>No se encontraron equipos</h5>
+                                <p>No existen resultados para los filtros aplicados.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var equipo in Model.Equipos)
+                    {
+                        <tr>
+                            <td>
+                                <div class="metro-equipo-cell">
+                                    <div class="metro-equipo-avatar">
+                                        <i class="bi bi-tools"></i>
+                                    </div>
+
+                                    <div>
+                                        <strong>@equipo.CodigoEquipo</strong>
+                                        <span>@equipo.NombreEquipo</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="metro-type-pill">@equipo.TipoEquipo</span>
+                            </td>
+
+                            <td>
+                                @await Html.PartialAsync("_ControlEventoMiniCard", equipo.Calibracion)
+                            </td>
+
+                            <td>
+                                @await Html.PartialAsync("_ControlEventoMiniCard", equipo.Verificacion)
+                            </td>
+
+                            <td>
+                                @await Html.PartialAsync("_ControlEventoMiniCard", equipo.Mantenimiento)
+                            </td>
+
+                            <td>
+                                <span class="metro-status-pill @equipo.EstadoGlobalCssClass">
+                                    <i class="bi @equipo.EstadoGlobalIcono"></i>
+                                    @equipo.EstadoGlobalTexto
+                                </span>
+                            </td>
+
+                            <td class="text-end">
+                                <a asp-controller="Equipos"
+                                       asp-action="Details"
+                                       asp-route-id="@equipo.EquipoId"
+                                       class="btn btn-sm btn-outline-primary metro-action-btn">
+                                    <i class="bi bi-eye"></i> Ver
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

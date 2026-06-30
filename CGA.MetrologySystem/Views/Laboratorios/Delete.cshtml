@@ -1,0 +1,97 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.Laboratorio
+
+@{
+    ViewData["Title"] = "Eliminar laboratorio";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Eliminar laboratorio</h2>
+        <p class="page-subtitle">
+            Confirma la eliminación del laboratorio seleccionado.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
+
+<div class="form-card">
+    <div class="alert alert-danger">
+        ¿Estás seguro de que deseas eliminar este laboratorio? Esta acción no se puede deshacer.
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Nombre</label>
+            <input class="form-control readonly-highlight" value="@Model.Nombre" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Estado</label>
+            <input class="form-control readonly-highlight" value="@(Model.Activo ? "Activo" : "Inactivo")" readonly />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Norma de acreditación</label>
+            <input class="form-control readonly-highlight" value="@Model.NormaAcreditacion" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Número de acreditación</label>
+            <input class="form-control readonly-highlight" value="@Model.NumeroAcreditacion" readonly />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Alcance</label>
+        <input class="form-control readonly-highlight" value="@Model.Alcance" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Dirección</label>
+        <input class="form-control readonly-highlight" value="@Model.Direccion" readonly />
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Ciudad</label>
+            <input class="form-control readonly-highlight" value="@Model.Ciudad" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">País</label>
+            <input class="form-control readonly-highlight" value="@Model.Pais" readonly />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Teléfono</label>
+            <input class="form-control readonly-highlight" value="@Model.Telefono" readonly />
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label class="form-label fw-semibold">Correo electrónico</label>
+            <input class="form-control readonly-highlight" value="@Model.Email" readonly />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Sitio web</label>
+        <input class="form-control readonly-highlight" value="@Model.SitioWeb" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label fw-semibold">Observaciones</label>
+        <textarea class="form-control readonly-highlight" rows="3" readonly>@Model.Observaciones</textarea>
+    </div>
+
+    <form asp-action="Delete" method="post" class="mt-4">
+        <input type="hidden" asp-for="LaboratorioId" />
+        <div class="d-flex justify-content-end gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-danger">Eliminar</button>
+        </div>
+    </form>
+</div>

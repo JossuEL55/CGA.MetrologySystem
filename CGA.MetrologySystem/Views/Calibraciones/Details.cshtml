@@ -1,0 +1,169 @@
+﻿@model CGA.MetrologySystem.Domain.Entities.EventoCalibracionDato
+
+@{
+    ViewData["Title"] = "Detalle de calibración";
+
+    var evento = Model.EventoMetrologico;
+    var estado = evento.EstadoEquipoResultado ?? "Sin estado";
+
+    var badgeClass = estado switch
+    {
+        "Operativo" => "bg-success",
+        "No Operativo" => "bg-danger",
+        "Fuera de Servicio" => "bg-dark",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2 class="page-title">Detalle de calibración</h2>
+        <p class="page-subtitle">
+            Información del evento metrológico, certificado del laboratorio y trazabilidad del documento.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+        @if (User.IsInRole("Administrador"))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.EventoCalibracionDatoId" class="btn btn-primary">
+                Editar
+            </a>
+        }
+
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Volver
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="form-card h-100">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4">
+                <div>
+                    <h5 class="mb-1">@evento.Equipo?.Codigo - @evento.Equipo?.Nombre</h5>
+                    <p class="text-muted mb-0">
+                        Certificado: @(string.IsNullOrWhiteSpace(Model.NumeroCertificado) ? "Sin número" : Model.NumeroCertificado)
+                    </p>
+                </div>
+
+                <div>
+                    <span class="badge @badgeClass fs-6">@estado</span>
+
+                    @if (evento.EsExtraordinario)
+                    {
+                        <span class="badge bg-warning text-dark fs-6 ms-1">
+                            Extraordinaria
+                        </span>
+                    }
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Fecha del evento</div>
+                    <div class="fw-semibold">@evento.FechaEvento.ToString("yyyy-MM-dd")</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Fecha de calibración</div>
+                    <div class="fw-semibold">
+                        @(Model.FechaCalibracion.HasValue
+                            ? Model.FechaCalibracion.Value.ToString("yyyy-MM-dd")
+    :                       "No definida")
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Próxima fecha</div>
+                    <div class="fw-semibold">
+                        @(evento.FechaProxima.HasValue
+                            ? evento.FechaProxima.Value.ToString("yyyy-MM-dd")
+                            : "No definida")
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Laboratorio</div>
+                    <div class="fw-semibold">@Model.Laboratorio?.Nombre</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Responsable interno</div>
+                    <div class="fw-semibold">@evento.ResponsableInterno?.NombreCompleto</div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="text-muted small">Subtipo de evento</div>
+                    <div class="fw-semibold">@evento.SubtipoEvento?.Nombre</div>
+                </div>
+            </div>
+
+            @if (evento.EsExtraordinario)
+            {
+                <div class="alert alert-warning">
+                    <div class="fw-semibold mb-1">Justificación extraordinaria</div>
+                    <div>
+                        @(string.IsNullOrWhiteSpace(evento.JustificacionExtraordinario)
+                            ? "No se registró una justificación."
+                            : evento.JustificacionExtraordinario)
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(evento.ComentariosAdicionales))
+            {
+                <div class="mb-4">
+                    <div class="text-muted small mb-1">Comentarios adicionales</div>
+                    <div class="border rounded p-3 bg-light">
+                        @evento.ComentariosAdicionales
+                    </div>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.Observaciones))
+            {
+                <div class="mb-4">
+                    <div class="text-muted small mb-1">Observaciones del certificado</div>
+                    <div class="border rounded p-3 bg-light">
+                        @Model.Observaciones
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4 mb-4">
+        <div class="form-card">
+            <h5 class="mb-3">Certificado de calibración</h5>
+
+            @if (!string.IsNullOrWhiteSpace(Model.RutaCertificado))
+            {
+                <p class="text-muted">
+                    Documento oficial cargado y almacenado en el repositorio documental.
+                </p>
+
+                <div class="d-grid gap-2">
+                    <a asp-controller="Documentos"
+                       asp-action="VerPdf"
+                       asp-route-tipo="calibracion"
+                       asp-route-id="@Model.EventoCalibracionDatoId"
+                       class="btn btn-primary">
+                        Ver certificado
+                    </a>
+                </div>
+
+                <div class="mt-3 small text-muted text-break">
+                    @Model.NombreArchivoCertificado
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning mb-0">
+                    Esta calibración no tiene certificado asociado.
+                </div>
+            }
+        </div>
+    </div>
+</div>

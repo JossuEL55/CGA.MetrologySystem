@@ -1,0 +1,60 @@
+﻿@model CGA.MetrologySystem.Models.Perfil.CambiarContrasenaViewModel
+
+@{
+    ViewData["Title"] = "Cambiar contraseña";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h2 class="page-title">Cambiar contraseña</h2>
+        <p class="page-subtitle">
+            Actualiza tu contraseña de acceso al sistema.
+        </p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
+</div>
+
+@if (TempData["MensajeExito"] != null)
+{
+    <div class="alert alert-success">@TempData["MensajeExito"]</div>
+}
+
+@if (TempData["MensajeError"] != null)
+{
+    <div class="alert alert-danger">@TempData["MensajeError"]</div>
+}
+
+<div class="form-card">
+    <form asp-action="CambiarContrasena" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label asp-for="ContrasenaActual" class="form-label fw-semibold"></label>
+                <input asp-for="ContrasenaActual" type="password" class="form-control" />
+                <span asp-validation-for="ContrasenaActual" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label asp-for="NuevaContrasena" class="form-label fw-semibold"></label>
+                <input asp-for="NuevaContrasena" type="password" class="form-control" />
+                <span asp-validation-for="NuevaContrasena" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label asp-for="ConfirmarNuevaContrasena" class="form-label fw-semibold"></label>
+                <input asp-for="ConfirmarNuevaContrasena" type="password" class="form-control" />
+                <span asp-validation-for="ConfirmarNuevaContrasena" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar nueva contraseña</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

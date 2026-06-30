@@ -1,0 +1,410 @@
+﻿@model CGA.MetrologySystem.Models.MantenimientoViewModel
+
+@{
+    ViewData["Title"] = "Editar mantenimiento";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2 class="page-title">Editar mantenimiento</h2>
+        <p class="page-subtitle">
+            Actualiza la información técnica del mantenimiento. Al guardar, el PDF será regenerado y reemplazado automáticamente.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a asp-action="Details" asp-route-id="@Model.EventoMantenimientoDatoId" class="btn btn-outline-primary">
+            Ver detalle
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Volver
+        </a>
+    </div>
+</div>
+
+@if (TempData["AdvertenciaRegla"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["AdvertenciaRegla"]
+    </div>
+}
+
+<form asp-action="Edit" asp-route-id="@Model.EventoMantenimientoDatoId" method="post" enctype="multipart/form-data" class="form-card">
+    <input asp-for="EventoMetrologicoId" type="hidden" />
+    <input asp-for="EventoMantenimientoDatoId" type="hidden" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+    <div class="mb-4">
+        <h5 class="mb-1">Información del mantenimiento</h5>
+        <p class="text-muted mb-0">
+            Modifica los datos principales del evento. El motor de reglas recalculará la próxima fecha al guardar.
+        </p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="EquipoId" class="form-label fw-semibold">Equipo</label>
+            <select asp-for="EquipoId" asp-items="Model.Equipos" class="form-select">
+                <option value="">Seleccione un equipo...</option>
+            </select>
+            <span asp-validation-for="EquipoId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="TipoMantenimientoId" class="form-label fw-semibold">Tipo de mantenimiento</label>
+            <select asp-for="TipoMantenimientoId" asp-items="Model.TiposMantenimiento" class="form-select">
+                <option value="">Seleccione un tipo...</option>
+            </select>
+            <span asp-validation-for="TipoMantenimientoId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="SubtipoEventoId" class="form-label fw-semibold">Subtipo de evento</label>
+            <select asp-for="SubtipoEventoId" asp-items="Model.SubtiposEvento" class="form-select">
+                <option value="">Seleccione un subtipo...</option>
+            </select>
+            <span asp-validation-for="SubtipoEventoId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="ResponsableInternoId" class="form-label fw-semibold">Responsable interno</label>
+            <select asp-for="ResponsableInternoId" asp-items="Model.ResponsablesInternos" class="form-select">
+                <option value="">Seleccione un responsable...</option>
+            </select>
+            <span asp-validation-for="ResponsableInternoId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha del mantenimiento</label>
+            <input asp-for="FechaEvento" class="form-control" type="date" />
+            <span asp-validation-for="FechaEvento" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha calculada</label>
+            <input asp-for="FechaProxima"
+                   class="form-control bg-light"
+                   type="date"
+                   readonly
+                   tabindex="-1" />
+            <span asp-validation-for="FechaProxima" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">Estado del equipo</label>
+            <select asp-for="EstadoEquipoResultado" class="form-select">
+                <option value="">Seleccione...</option>
+                <option value="Operativo">Operativo</option>
+                <option value="No Operativo">No Operativo</option>
+                <option value="Fuera de Servicio">Fuera de Servicio</option>
+            </select>
+            <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="alert alert-light border mb-4">
+        <strong>Nota:</strong> Si cambias la fecha del mantenimiento, el sistema volverá a evaluar si el evento es ordinario o extraordinario.
+    </div>
+
+    <div class="row">
+        @if (User.IsInRole("Administrador"))
+        {
+            <div class="col-md-4 mb-3">
+                <div class="form-check form-switch cga-switch mt-md-4 pt-md-2">
+                    <input asp-for="EsHistorico" class="form-check-input" role="switch" />
+                    <label asp-for="EsHistorico" class="form-check-label fw-semibold"></label>
+                </div>
+            </div>
+        }
+
+        <div class="@(User.IsInRole("Administrador") ? "col-md-8" : "col-md-12") mb-3">
+            <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
+                Justificación extraordinaria
+            </label>
+            <textarea asp-for="JustificacionExtraordinario"
+                      class="form-control"
+                      rows="2"
+                      placeholder="Completa este campo si el mantenimiento fue extraordinario."></textarea>
+            <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+        </div>
+
+        @if (User.IsInRole("Administrador"))
+        {
+            <div class="col-md-12 mb-3">
+                <label asp-for="ObservacionCargaHistorica" class="form-label fw-semibold"></label>
+                <textarea asp-for="ObservacionCargaHistorica"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Referencia u observación del registro histórico."></textarea>
+                <span asp-validation-for="ObservacionCargaHistorica" class="text-danger"></span>
+            </div>
+        }
+    </div>
+
+    <div class="mb-4">
+        <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">Comentarios adicionales</label>
+        <textarea asp-for="ComentariosAdicionales"
+                  class="form-control"
+                  rows="3"
+                  placeholder="Comentarios generales del mantenimiento."></textarea>
+        <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
+    </div>
+
+    <hr class="my-4" />
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h5 class="mb-1">Actividades técnicas realizadas</h5>
+            <p class="text-muted mb-0">
+                Puedes corregir, agregar o quitar actividades. El PDF se actualizará con estos datos.
+            </p>
+        </div>
+
+        <button type="button" id="addActividad" class="btn btn-outline-primary">
+            Agregar actividad
+        </button>
+    </div>
+
+    <div class="table-responsive checklist-table-shell mb-4">
+        <table class="table checklist-table align-middle mb-0" id="tablaActividades">
+            <thead>
+                <tr>
+                    <th class="checklist-head-order checklist-order-column">#</th>
+                    <th class="checklist-head-description">Actividad realizada</th>
+                    <th class="checklist-head-notes">Observaciones</th>
+                    <th class="checklist-head-evidence">Evidencia del ítem</th>
+                    <th class="checklist-head-action text-end checklist-action-column">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Actividades.Count; i++)
+                {
+                    <tr class="checklist-row" data-actividad-row>
+                        <td>
+                            <span class="checklist-row-number">@(i + 1)</span>
+                        </td>
+                        <td>
+                            <input type="hidden"
+                                   asp-for="Actividades[i].EventoMantenimientoActividadId"
+                                   data-field="id" />
+                            <input type="hidden" asp-for="Actividades[i].Orden" data-field="orden" />
+
+                            <input asp-for="Actividades[i].DescripcionActividad"
+                                   data-field="descripcion"
+                                   class="form-control"
+                                   placeholder="Ejemplo: Limpieza general del equipo" />
+
+                            <span asp-validation-for="Actividades[i].DescripcionActividad" class="text-danger"></span>
+                        </td>
+
+                        <td>
+                            <input asp-for="Actividades[i].Observaciones"
+                                   data-field="observaciones"
+                                   class="form-control"
+                                   placeholder="Observaciones opcionales" />
+                        </td>
+
+                        <td>
+                            <div class="checklist-evidence-actions">
+                                <label class="btn btn-outline-primary btn-sm mb-0">
+                                    Subir imagen
+                                    <input asp-for="Actividades[i].EvidenciaImagen"
+                                           data-field="evidencia"
+                                           type="file"
+                                           accept="image/*"
+                                           class="visually-hidden" />
+                                </label>
+
+                                @if (!string.IsNullOrWhiteSpace(Model.Actividades[i].EvidenciaRutaArchivo) &&
+                                                            Model.Actividades[i].EventoMantenimientoActividadId > 0)
+                                {
+                                    <a asp-controller="Documentos"
+                                       asp-action="VerImagen"
+                                       asp-route-tipo="evidencia-mantenimiento-item"
+                                       asp-route-id="@Model.Actividades[i].EventoMantenimientoActividadId"
+                                       class="btn btn-outline-secondary btn-sm"
+                                       title="@Model.Actividades[i].EvidenciaNombreArchivo">
+                                        Ver imagen
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="checklist-evidence-note">Sin imagen</span>
+                                }
+                            </div>
+                        </td>
+
+                        <td class="text-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                Quitar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <hr class="my-4" />
+
+    <div class="mb-4">
+        <h5 class="mb-1">Evidencias visuales</h5>
+        <p class="text-muted">
+            Las evidencias existentes se conservan. Puedes agregar nuevas fotografías o imágenes.
+        </p>
+
+        @if (Model.EvidenciasExistentes != null && Model.EvidenciasExistentes.Any())
+        {
+            <div class="row mb-3">
+                @foreach (var evidencia in Model.EvidenciasExistentes)
+                {
+                    <div class="col-md-4 mb-3">
+                        <div class="border rounded p-3 h-100">
+                            <div class="fw-semibold text-truncate">@evidencia.NombreArchivo</div>
+                            <div class="text-muted small mb-2">
+                                @evidencia.FechaCarga.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </div>
+                            <a asp-controller="Documentos"
+                               asp-action="VerImagen"
+                               asp-route-tipo="evidencia-evento"
+                               asp-route-id="@evidencia.EvidenciaEventoMetrologicoId"
+                               class="btn btn-outline-primary btn-sm">
+                                Abrir evidencia
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-light border">
+                Este mantenimiento aún no tiene evidencias visuales registradas.
+            </div>
+        }
+
+        <input asp-for="Evidencias"
+               type="file"
+               class="form-control"
+               accept="image/*"
+               multiple />
+
+        <small class="text-muted">
+            Puedes tomar fotos desde el dispositivo o cargar imágenes existentes.
+        </small>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <a asp-action="Details" asp-route-id="@Model.EventoMantenimientoDatoId" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary">
+            Guardar cambios
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        let index = @Model.Actividades.Count;
+
+        function reindexarActividades() {
+            document.querySelectorAll("[data-actividad-row]").forEach((row, i) => {
+                const id = row.querySelector("input[data-field='id']");
+                const orden = row.querySelector("input[data-field='orden']");
+                const descripcion = row.querySelector("input[data-field='descripcion']");
+                const observaciones = row.querySelector("input[data-field='observaciones']");
+                const evidencia = row.querySelector("input[data-field='evidencia']");
+                const number = row.querySelector(".checklist-row-number");
+
+                if (number) number.textContent = i + 1;
+
+                if (id) id.name = `Actividades[${i}].EventoMantenimientoActividadId`;
+                if (orden) {
+                    orden.name = `Actividades[${i}].Orden`;
+                    orden.value = i + 1;
+                }
+
+                if (descripcion) descripcion.name = `Actividades[${i}].DescripcionActividad`;
+                if (observaciones) observaciones.name = `Actividades[${i}].Observaciones`;
+                if (evidencia) evidencia.name = `Actividades[${i}].EvidenciaImagen`;
+            });
+
+            index = document.querySelectorAll("[data-actividad-row]").length;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const addActividadButton = document.getElementById("addActividad");
+
+            if (addActividadButton) {
+                addActividadButton.addEventListener("click", function () {
+                    const fila = `
+                        <tr class="checklist-row" data-actividad-row>
+                            <td>
+                                <span class="checklist-row-number">${index + 1}</span>
+                            </td>
+                            <td>
+                                <input type="hidden"
+                                       name="Actividades[${index}].EventoMantenimientoActividadId"
+                                       data-field="id"
+                                       value="0" />
+
+                                <input type="hidden"
+                                       name="Actividades[${index}].Orden"
+                                       data-field="orden"
+                                       value="${index + 1}" />
+
+                                <input name="Actividades[${index}].DescripcionActividad"
+                                       data-field="descripcion"
+                                       class="form-control"
+                                       placeholder="Ejemplo: Limpieza general del equipo" />
+                            </td>
+
+                            <td>
+                                <input name="Actividades[${index}].Observaciones"
+                                       data-field="observaciones"
+                                       class="form-control"
+                                       placeholder="Observaciones opcionales" />
+                            </td>
+
+                            <td>
+                                <div class="checklist-evidence-actions">
+                                    <label class="btn btn-outline-primary btn-sm mb-0">
+                                        Subir imagen
+                                        <input name="Actividades[${index}].EvidenciaImagen"
+                                               data-field="evidencia"
+                                               type="file"
+                                               accept="image/*"
+                                               class="visually-hidden" />
+                                    </label>
+                                    <span class="checklist-evidence-note">Sin imagen</span>
+                                </div>
+                            </td>
+
+                            <td class="text-end">
+                                <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                    Quitar
+                                </button>
+                            </td>
+                        </tr>`;
+
+                    document.querySelector("#tablaActividades tbody").insertAdjacentHTML("beforeend", fila);
+                    index++;
+                });
+            }
+        });
+
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("eliminar")) {
+                e.target.closest("[data-actividad-row]").remove();
+                reindexarActividades();
+            }
+        });
+    </script>
+}

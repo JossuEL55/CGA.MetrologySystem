@@ -1,0 +1,200 @@
+﻿@model CGA.MetrologySystem.Models.CalibracionViewModel
+
+@{
+    ViewData["Title"] = "Registrar calibración";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2 class="page-title">Registrar calibración</h2>
+        <p class="page-subtitle">
+            Registra la calibración del equipo y adjunta el certificado oficial emitido por el laboratorio.
+        </p>
+    </div>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver al historial
+    </a>
+</div>
+
+@if (TempData["AdvertenciaRegla"] != null)
+{
+    <div class="alert alert-warning">
+        @TempData["AdvertenciaRegla"]
+    </div>
+}
+
+<form asp-action="Create" method="post" enctype="multipart/form-data" class="form-card event-form-card">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+    <div class="plantilla-section-header mb-4">
+        <div>
+            <span class="section-kicker">Evento metrológico</span>
+            <h5 class="mb-1">Información general de la calibración</h5>
+            <p class="page-subtitle">
+                Selecciona el equipo, responsable y fecha del evento. La próxima fecha se calcula según la configuración definida.
+            </p>
+        </div>
+    </div>
+
+    <div class="event-section-card mb-4">
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label asp-for="EquipoId" class="form-label fw-semibold">Equipo</label>
+                <select asp-for="EquipoId" asp-items="Model.Equipos" class="form-select">
+                    <option value="">Seleccione un equipo...</option>
+                </select>
+                <span asp-validation-for="EquipoId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="SubtipoEventoId" class="form-label fw-semibold">Subtipo de evento</label>
+                <select asp-for="SubtipoEventoId" asp-items="Model.SubtiposEvento" class="form-select">
+                    <option value="">Seleccione un subtipo...</option>
+                </select>
+                <span asp-validation-for="SubtipoEventoId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label asp-for="ResponsableInternoId" class="form-label fw-semibold">Responsable interno</label>
+                <select asp-for="ResponsableInternoId" asp-items="Model.ResponsablesInternos" class="form-select">
+                    <option value="">Seleccione un responsable...</option>
+                </select>
+                <span asp-validation-for="ResponsableInternoId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha del evento</label>
+                <input asp-for="FechaEvento" class="form-control" type="date" />
+                <span asp-validation-for="FechaEvento" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <label asp-for="FechaProxima" class="form-label fw-semibold">Próxima fecha calculada</label>
+                <input asp-for="FechaProxima"
+                       class="form-control readonly-highlight"
+                       type="date"
+                       readonly
+                       tabindex="-1" />
+                <span asp-validation-for="FechaProxima" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="checklist-info-strip mb-4 mx-0">
+            <div class="checklist-info-icon">i</div>
+            <div>
+                <strong>Regla automática</strong>
+                <p class="mb-0">
+                    Si la calibración es no programada, selecciona el subtipo Extraordinario y justifícala.
+                    El sistema también lo solicitará si la fecha se desvía del periodo esperado.
+                </p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label asp-for="EstadoEquipoResultado" class="form-label fw-semibold">Estado del equipo</label>
+                <select asp-for="EstadoEquipoResultado" class="form-select">
+                    <option value="">Seleccione...</option>
+                    <option value="Operativo">Operativo</option>
+                    <option value="No Operativo">No Operativo</option>
+                    <option value="Fuera de Servicio">Fuera de Servicio</option>
+                </select>
+                <span asp-validation-for="EstadoEquipoResultado" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-8 mb-3">
+                <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
+                    Justificación extraordinaria
+                </label>
+                <textarea asp-for="JustificacionExtraordinario"
+                          class="form-control"
+                          rows="2"
+                          placeholder="Motivo del registro extraordinario."></textarea>
+                <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div>
+            <label asp-for="ComentariosAdicionales" class="form-label fw-semibold">Comentarios adicionales</label>
+            <textarea asp-for="ComentariosAdicionales"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Ejemplo: Certificado recibido y equipo disponible para operación."></textarea>
+            <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="plantilla-section-header mb-4">
+        <div>
+            <span class="section-kicker">Certificado externo</span>
+            <h5 class="mb-1">Datos del certificado de calibración</h5>
+            <p class="page-subtitle">
+                Registra la información del documento oficial entregado por el laboratorio externo.
+            </p>
+        </div>
+    </div>
+
+    <div class="event-section-card">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label asp-for="NumeroCertificado" class="form-label fw-semibold">Número de certificado</label>
+                <input asp-for="NumeroCertificado"
+                       class="form-control"
+                       placeholder="Ej. CGA-LAB-FLE-075-25" />
+                <span asp-validation-for="NumeroCertificado" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label asp-for="FechaCalibracion" class="form-label fw-semibold">Fecha de calibración</label>
+                <input asp-for="FechaCalibracion" class="form-control" type="date" />
+                <span asp-validation-for="FechaCalibracion" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label asp-for="LaboratorioId" class="form-label fw-semibold">Laboratorio</label>
+                <select asp-for="LaboratorioId" asp-items="Model.Laboratorios" class="form-select">
+                    <option value="">Seleccione un laboratorio...</option>
+                </select>
+                <span asp-validation-for="LaboratorioId" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Observaciones" class="form-label fw-semibold">Observaciones del certificado</label>
+            <textarea asp-for="Observaciones"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Registra observaciones propias del certificado o del laboratorio."></textarea>
+            <span asp-validation-for="Observaciones" class="text-danger"></span>
+        </div>
+
+        <div class="event-upload-box">
+            <div>
+                <label asp-for="ArchivoCertificado" class="form-label fw-semibold mb-1">Certificado PDF</label>
+                <p class="mb-0">
+                    El certificado será almacenado en el repositorio documental del equipo.
+                </p>
+            </div>
+
+            <input asp-for="ArchivoCertificado"
+                   class="form-control"
+                   type="file"
+                   accept="application/pdf,.pdf" />
+            <span asp-validation-for="ArchivoCertificado" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="form-actions-sticky">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            Cancelar
+        </a>
+        <button type="submit" class="btn btn-primary">
+            Guardar calibración
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

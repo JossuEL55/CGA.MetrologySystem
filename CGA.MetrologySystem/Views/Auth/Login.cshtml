@@ -1,0 +1,52 @@
+﻿@model CGA.MetrologySystem.Models.Auth.LoginViewModel
+
+@{
+    ViewData["Title"] = "Iniciar sesión";
+    Layout = "_LayoutAuth";
+}
+
+<div class="auth-form-wrapper">
+    <div class="mb-4">
+        <h2 class="page-title mb-2">Iniciar sesión</h2>
+        <p class="page-subtitle">Accede con tu cuenta corporativa.</p>
+    </div>
+
+    <form asp-action="Login" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+        <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+        <div class="mb-3">
+            <label asp-for="Correo" class="form-label fw-semibold"></label>
+            <input asp-for="Correo"
+                   class="form-control"
+                   placeholder="usuario@cga.com.ec"
+                   autofocus />
+            <span asp-validation-for="Correo" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Contrasena" class="form-label fw-semibold"></label>
+            <input asp-for="Contrasena"
+                   type="password"
+                   class="form-control"
+                   placeholder="Ingresa tu contraseña" />
+            <span asp-validation-for="Contrasena" class="text-danger"></span>
+        </div>
+
+        <div class="form-check mb-4">
+            <input asp-for="Recordarme" class="form-check-input" />
+            <label asp-for="Recordarme" class="form-check-label"></label>
+        </div>
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary btn-lg">
+                Ingresar
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

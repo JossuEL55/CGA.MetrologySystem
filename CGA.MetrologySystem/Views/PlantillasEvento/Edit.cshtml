@@ -1,0 +1,207 @@
+﻿@model CGA.MetrologySystem.Models.PlantillaEventoViewModel
+
+@{
+    ViewData["Title"] = "Editar plantilla";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+        <h2 class="page-title">Editar plantilla</h2>
+        <p class="page-subtitle">
+            Modifica los datos generales y los ítems asociados a esta plantilla.
+        </p>
+    </div>
+
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Volver
+    </a>
+</div>
+
+<form asp-action="Edit" method="post" class="form-card">
+    <input type="hidden" asp-for="PlantillaEventoId" />
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <h5 class="mb-3">Datos generales</h5>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="TipoEquipoId" class="form-label fw-semibold">Tipo de equipo</label>
+            <select asp-for="TipoEquipoId" asp-items="Model.TiposEquipo" class="form-select"></select>
+            <span asp-validation-for="TipoEquipoId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <label asp-for="TipoEventoMetrologicoId" class="form-label fw-semibold">Tipo de evento</label>
+            <select asp-for="TipoEventoMetrologicoId" asp-items="Model.TiposEventoMetrologico" class="form-select"></select>
+            <span asp-validation-for="TipoEventoMetrologicoId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label fw-semibold">Nombre</label>
+        <input asp-for="Nombre" class="form-control" placeholder="Ej. Verificación estándar de Yoke" />
+        <span asp-validation-for="Nombre" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Descripcion" class="form-label fw-semibold">Descripción</label>
+        <textarea asp-for="Descripcion" class="form-control" rows="3"
+                  placeholder="Describe brevemente el propósito de esta plantilla."></textarea>
+        <span asp-validation-for="Descripcion" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-4">
+        <input asp-for="Activo" class="form-check-input" />
+        <label asp-for="Activo" class="form-check-label fw-semibold">Plantilla activa</label>
+    </div>
+
+    <hr class="my-4" />
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h5 class="mb-1">Ítems de la plantilla</h5>
+            <p class="page-subtitle">
+                Actualiza las condiciones o actividades que se usarán en el evento.
+            </p>
+        </div>
+
+        <button type="button" id="addItem" class="btn btn-outline-secondary">
+            Agregar ítem
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-4" id="tablaItems">
+            <thead>
+                <tr>
+                    <th>Descripción</th>
+                    <th style="width: 120px;">Activo</th>
+                    <th class="text-end" style="width: 100px;">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Items.Count; i++)
+                {
+                    <tr>
+                        <td>
+                            <input type="hidden"
+                                   asp-for="Items[i].PlantillaEventoItemId"
+                                   data-field="id" />
+
+                            <input type="hidden"
+                                   asp-for="Items[i].Orden"
+                                   data-field="orden" />
+
+                            <input asp-for="Items[i].Descripcion"
+                                   data-field="descripcion"
+                                   class="form-control"
+                                   placeholder="Descripción del ítem" />
+
+                            <span asp-validation-for="Items[i].Descripcion" class="text-danger"></span>
+                        </td>
+
+                        <td class="align-middle">
+                            <input asp-for="Items[i].Activo"
+                                   data-field="activo"
+                                   class="form-check-input" />
+                        </td>
+
+                        <td class="text-end">
+                            <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        let index = @Model.Items.Count;
+
+        function reindexarItems() {
+            document.querySelectorAll("#tablaItems tbody tr").forEach((row, i) => {
+                const id = row.querySelector("input[data-field='id']");
+                const orden = row.querySelector("input[data-field='orden']");
+                const descripcion = row.querySelector("input[data-field='descripcion']");
+                const activo = row.querySelector("input[data-field='activo']");
+                const activoHidden = row.querySelector("input[data-field='activo-hidden']");
+
+                if (id) id.name = `Items[${i}].PlantillaEventoItemId`;
+                if (orden) {
+                    orden.name = `Items[${i}].Orden`;
+                    orden.value = i + 1;
+                }
+
+                if (descripcion) descripcion.name = `Items[${i}].Descripcion`;
+                if (activo) activo.name = `Items[${i}].Activo`;
+                if (activoHidden) activoHidden.name = `Items[${i}].Activo`;
+            });
+
+            index = document.querySelectorAll("#tablaItems tbody tr").length;
+        }
+
+        document.getElementById("addItem").addEventListener("click", function () {
+            const fila = `
+                <tr>
+                    <td>
+                        <input type="hidden"
+                               name="Items[${index}].PlantillaEventoItemId"
+                               data-field="id"
+                               value="0" />
+
+                        <input type="hidden"
+                               name="Items[${index}].Orden"
+                               data-field="orden"
+                               value="${index + 1}" />
+
+                        <input name="Items[${index}].Descripcion"
+                               data-field="descripcion"
+                               class="form-control"
+                               placeholder="Descripción del ítem" />
+                    </td>
+
+                    <td class="align-middle">
+                        <input type="checkbox"
+                               name="Items[${index}].Activo"
+                               data-field="activo"
+                               value="true"
+                               checked
+                               class="form-check-input" />
+
+                        <input type="hidden"
+                               name="Items[${index}].Activo"
+                               data-field="activo-hidden"
+                               value="false" />
+                    </td>
+
+                    <td class="text-end">
+                        <button type="button" class="btn btn-outline-danger btn-sm eliminar">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>`;
+
+            document.querySelector("#tablaItems tbody").insertAdjacentHTML("beforeend", fila);
+            index++;
+        });
+
+        document.addEventListener("click", function (e) {
+            if (e.target.classList.contains("eliminar")) {
+                e.target.closest("tr").remove();
+                reindexarItems();
+            }
+        });
+    </script>
+}

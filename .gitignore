@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Ignorar tokens de Google Drive
+CGA.MetrologySystem/Tokens/
+
+# Ignorar tokens de Google Drive
+CGA.MetrologySystem/Tokens/

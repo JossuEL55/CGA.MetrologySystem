@@ -1,8 +1,113 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Inicio";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="page-header">
+    <h2 class="page-title">Bienvenido al sistema CGA</h2>
+    <p class="page-subtitle">
+        Accede a los módulos principales del sistema desde este panel de inicio.
+    </p>
+</div>
+
+<div class="row">
+
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card p-4">
+            <h5 class="card-title">Equipos</h5>
+            <p class="card-text">Gestiona los equipos registrados en el sistema.</p>
+            <a asp-controller="Equipos" asp-action="Index" class="btn btn-primary">
+                Ir a Equipos
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card p-4">
+            <h5 class="card-title">Laboratorios</h5>
+            <p class="card-text">Administra la información de laboratorios registrados.</p>
+            <a asp-controller="Laboratorios" asp-action="Index" class="btn btn-primary">
+                Ir a Laboratorios
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card p-4">
+            <h5 class="card-title">Calibraciones</h5>
+            <p class="card-text">Registra y consulta calibraciones de equipos con sus certificados.</p>
+            <a asp-controller="Calibraciones" asp-action="Index" class="btn btn-primary">
+                Ir a Calibraciones
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card p-4">
+            <h5 class="card-title">Mi Perfil</h5>
+            <p class="card-text">Gestiona tu información personal.</p>
+            <a asp-controller="Perfil" asp-action="Index" class="btn btn-primary">
+                Ir a Perfil
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card p-4">
+            <h5 class="card-title">Verificaciones</h5>
+            <p class="card-text">Registra y consulta verificaciones internas de los equipos.</p>
+            <a asp-controller="Verificaciones" asp-action="Index" class="btn btn-primary">
+                Ir a Verificaciones
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-4">
+        <div class="dashboard-card p-4">
+            <h5 class="card-title">Mantenimientos</h5>
+            <p class="card-text">Administra mantenimientos preventivos o correctivos de equipos.</p>
+            <a asp-controller="Mantenimientos" asp-action="Index" class="btn btn-primary">
+                Ir a Mantenimientos
+            </a>
+        </div>
+    </div>
+
+    @if (User.IsInRole("Administrador"))
+    {
+        <div class="col-md-4 mb-4">
+            <div class="dashboard-card p-4">
+                <h5 class="card-title">Usuarios</h5>
+                <p class="card-text">Gestiona los usuarios del sistema.</p>
+                <a asp-controller="Usuarios" asp-action="Index" class="btn btn-primary">
+                    Ir a Usuarios
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="dashboard-card p-4">
+                <h5 class="card-title">Auditoría</h5>
+                <p class="card-text">Consulta las acciones realizadas en el sistema.</p>
+                <a asp-controller="Auditoria" asp-action="Index" class="btn btn-primary">
+                    Ver Auditoría
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="dashboard-card p-4">
+                <h5 class="card-title">Configuración de control</h5>
+
+                <p class="card-text">
+                    Define periodicidades, reglas de control y comportamiento del motor metrológico.
+                </p>
+
+                <a asp-controller="ConfiguracionesControlEquipo"
+                       asp-action="Index"
+                       class="btn btn-primary">
+                    Ir a Configuración
+                </a>
+            </div>
+        </div>
+    }
+
 </div>

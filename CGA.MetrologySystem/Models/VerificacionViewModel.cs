@@ -1,0 +1,90 @@
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
+
+namespace CGA.MetrologySystem.Models
+{
+    public class VerificacionViewModel
+    {
+        public int EventoMetrologicoId { get; set; }
+        public int EventoVerificacionDatoId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un equipo.")]
+        [Display(Name = "Equipo")]
+        public int EquipoId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un subtipo de evento.")]
+        [Display(Name = "Subtipo de evento")]
+        public int SubtipoEventoId { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un responsable interno.")]
+        [Display(Name = "Responsable interno")]
+        public int ResponsableInternoId { get; set; }
+
+        [Required(ErrorMessage = "La fecha de verificación es obligatoria.")]
+        [DataType(DataType.Date)]
+        [Display(Name = "Fecha de verificación")]
+        public DateTime FechaEvento { get; set; }
+
+        [DataType(DataType.Date)]
+        [Display(Name = "Próxima fecha de verificación")]
+        public DateTime? FechaProxima { get; set; }
+
+        [StringLength(50, ErrorMessage = "El estado del equipo no puede exceder los 50 caracteres.")]
+        [Display(Name = "Estado del equipo")]
+        public string? EstadoEquipoResultado { get; set; }
+
+        [StringLength(500, ErrorMessage = "Los comentarios adicionales no pueden exceder los 500 caracteres.")]
+        [Display(Name = "Comentarios adicionales")]
+        public string? ComentariosAdicionales { get; set; }
+
+        [Display(Name = "Registro histórico")]
+        public bool EsHistorico { get; set; }
+
+        [StringLength(500, ErrorMessage = "La observación histórica no puede exceder los 500 caracteres.")]
+        [Display(Name = "Observación de carga histórica")]
+        public string? ObservacionCargaHistorica { get; set; }
+
+        [Display(Name = "Es extraordinario")]
+        public bool EsExtraordinario { get; set; }
+
+        [StringLength(500, ErrorMessage = "La justificación no puede exceder los 500 caracteres.")]
+        [Display(Name = "Justificación extraordinaria")]
+        public string? JustificacionExtraordinario { get; set; }
+
+        public List<VerificacionResultadoViewModel> Resultados { get; set; } = new();
+
+        public List<SelectListItem> Equipos { get; set; } = new();
+        public List<SelectListItem> SubtiposEvento { get; set; } = new();
+        public List<SelectListItem> ResponsablesInternos { get; set; } = new();
+        public List<IFormFile> Evidencias { get; set; } = new();
+
+        public List<EvidenciaEventoViewModel> EvidenciasExistentes { get; set; } = new();
+    }
+
+    public class VerificacionResultadoViewModel
+    {
+        public int EventoVerificacionResultadoId { get; set; }
+
+        [Required(ErrorMessage = "La condición a verificar es obligatoria.")]
+        [StringLength(300, ErrorMessage = "La condición a verificar no puede exceder los 300 caracteres.")]
+        [Display(Name = "Condición a verificar")]
+        public string DescripcionItem { get; set; } = string.Empty;
+
+        [Display(Name = "Cumple")]
+        public bool Cumple { get; set; } = true;
+
+        [StringLength(500, ErrorMessage = "Las observaciones no pueden exceder los 500 caracteres.")]
+        [Display(Name = "Observaciones")]
+        public string? Observaciones { get; set; }
+
+        [Display(Name = "Imagen del ítem")]
+        public IFormFile? EvidenciaImagen { get; set; }
+
+        public string? EvidenciaNombreArchivo { get; set; }
+        public string? EvidenciaRutaArchivo { get; set; }
+
+        [Range(0, int.MaxValue, ErrorMessage = "El orden no puede ser negativo.")]
+        public int Orden { get; set; }
+    }
+}

@@ -1,0 +1,213 @@
+@model CGA.MetrologySystem.Models.TendenciasMetrologicas.TendenciasMetrologicasIndexViewModel
+
+@{
+    ViewData["Title"] = "Desviaciones históricas";
+}
+
+<div class="trend-metro-hero mb-4">
+    <div>
+        <span class="metro-eyebrow">
+            <i class="bi bi-graph-up"></i> Análisis histórico
+        </span>
+
+        <h1>Desviaciones históricas</h1>
+
+        <p>
+            Análisis comparativo de la puntualidad histórica del cumplimiento
+            metrológico por equipo y tipo de control.
+        </p>
+    </div>
+
+    <div class="trend-metro-actions">
+        <a asp-controller="DashboardMetrologico" asp-action="Index" class="btn btn-light">
+            <i class="bi bi-bar-chart-line-fill"></i> Dashboard metrológico
+        </a>
+
+        <a asp-controller="ControlMetrologico" asp-action="Index" class="btn btn-light">
+            <i class="bi bi-grid-3x3-gap"></i> Semaforización
+        </a>
+    </div>
+</div>
+
+<div class="metro-filter-card mb-4">
+    <form asp-action="Index" method="get" class="row g-3 align-items-end">
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label">Buscar equipo</label>
+            <div class="metro-input-icon">
+                <i class="bi bi-search"></i>
+                <input name="buscar"
+                       value="@Model.Filtros.Buscar"
+                       class="form-control"
+                       placeholder="Código o nombre del equipo" />
+            </div>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Tipo de equipo</label>
+            <select name="tipoEquipoId" class="form-select" asp-items="Model.Filtros.TiposEquipo">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Tipo de control</label>
+            <select name="tipoEventoMetrologicoId" class="form-select" asp-items="Model.Filtros.TiposEvento">
+                <option value="">Todos</option>
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Fecha desde</label>
+            <input name="fechaDesde"
+                   type="date"
+                   value="@(Model.Filtros.FechaDesde?.ToString("yyyy-MM-dd"))"
+                   class="form-control" />
+        </div>
+
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label">Fecha hasta</label>
+            <input name="fechaHasta"
+                   type="date"
+                   value="@(Model.Filtros.FechaHasta?.ToString("yyyy-MM-dd"))"
+                   class="form-control" />
+        </div>
+
+        <div class="col-lg-1 col-md-6 d-flex gap-2">
+            <button type="submit" class="btn btn-primary metro-btn-main" title="Filtrar">
+                <i class="bi bi-funnel"></i>
+            </button>
+
+            <a asp-action="LimpiarFiltros" class="btn btn-outline-secondary metro-btn-icon" title="Limpiar filtros">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<div class="trend-metro-kpi-grid mb-4">
+    <div class="metro-kpi">
+        <span>Equipos analizados</span>
+        <strong>@Model.Resumen.EquiposAnalizados</strong>
+        <i class="bi bi-box-seam"></i>
+    </div>
+
+    <div class="metro-kpi kpi-ok">
+        <span>Eventos analizados</span>
+        <strong>@Model.Resumen.EventosAnalizados</strong>
+        <i class="bi bi-calendar-check"></i>
+    </div>
+
+    <div class="metro-kpi kpi-config">
+        <span>Desviación promedio</span>
+        <strong>@Model.Resumen.DesviacionPromedioGlobal.ToString("0.0")</strong>
+        <small>días</small>
+        <i class="bi bi-activity"></i>
+    </div>
+
+    <div class="metro-kpi kpi-danger">
+        <span>Eventos tardíos</span>
+        <strong>@Model.Resumen.EventosTardios</strong>
+        <i class="bi bi-clock-history"></i>
+    </div>
+
+    <div class="metro-kpi kpi-warning">
+        <span>Eventos anticipados</span>
+        <strong>@Model.Resumen.EventosAnticipados</strong>
+        <i class="bi bi-arrow-left-circle-fill"></i>
+    </div>
+
+    <div class="metro-kpi kpi-muted">
+        <span>Extraordinarios</span>
+        <strong>@Model.Resumen.EventosExtraordinarios</strong>
+        <i class="bi bi-exclamation-diamond-fill"></i>
+    </div>
+</div>
+
+<div class="metro-table-card">
+    <div class="metro-table-header">
+        <div>
+            <h5>Equipos con mayor desviación promedio</h5>
+            <p>Ranking ordenado desde la mayor desviación promedio hacia la menor.</p>
+        </div>
+
+        <span class="metro-table-count">
+            @Model.Equipos.Count equipo(s)
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table metro-table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Equipo</th>
+                    <th>Tipo equipo</th>
+                    <th>Eventos analizados</th>
+                    <th>Desviación promedio</th>
+                    <th>Mayor desviación</th>
+                    <th>Eventos tardíos</th>
+                    <th>Extraordinarios</th>
+                    <th class="text-end">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Equipos.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <div class="metro-empty">
+                                <i class="bi bi-graph-down"></i>
+                                <h5>No hay suficientes eventos para calcular desviaciones</h5>
+                                <p>Se requiere al menos un evento anterior con fecha próxima para calcular una desviación.</p>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var item in Model.Equipos)
+                    {
+                        <tr>
+                            <td>
+                                <div class="metro-equipo-cell">
+                                    <div class="metro-equipo-avatar">
+                                        <i class="bi bi-tools"></i>
+                                    </div>
+                                    <div>
+                                        <strong>@item.CodigoEquipo</strong>
+                                        <span>@item.NombreEquipo</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="metro-type-pill">@item.TipoEquipo</span>
+                            </td>
+                            <td>@item.EventosAnalizados</td>
+                            <td>
+                                <span class="trend-metro-deviation-pill @(item.DesviacionPromedio > 0 ? "trend-late" : item.DesviacionPromedio < 0 ? "trend-early" : "trend-on-time")">
+                                    @item.DesviacionPromedio.ToString("0.0") días
+                                </span>
+                            </td>
+                            <td>
+                                <span class="trend-metro-deviation-pill @(item.MayorDesviacion > 0 ? "trend-late" : item.MayorDesviacion < 0 ? "trend-early" : "trend-on-time")">
+                                    @item.MayorDesviacion días
+                                </span>
+                            </td>
+                            <td>@item.EventosTardios</td>
+                            <td>@item.EventosExtraordinarios</td>
+                            <td class="text-end">
+                                <a asp-action="Detalle"
+                                   asp-route-equipoId="@item.EquipoId"
+                                   asp-route-tipoEventoMetrologicoId="@Model.Filtros.TipoEventoMetrologicoId"
+                                   asp-route-fechaDesde="@(Model.Filtros.FechaDesde?.ToString("yyyy-MM-dd"))"
+                                   asp-route-fechaHasta="@(Model.Filtros.FechaHasta?.ToString("yyyy-MM-dd"))"
+                                   class="btn btn-sm btn-outline-primary metro-action-btn">
+                                    <i class="bi bi-graph-up-arrow"></i> Ver detalle
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
