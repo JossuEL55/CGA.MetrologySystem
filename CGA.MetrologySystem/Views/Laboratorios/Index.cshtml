@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Laboratorios";
+    var puedeGestionarLaboratorios = !User.IsInRole(RolesSistema.AdministradorSistema) &&
+        User.IsInRole(RolesSistema.AdministradorMetrologico);
 }
 
 <div class="page-header d-flex justify-content-between align-items-center">
@@ -11,7 +13,10 @@
             Gestiona los laboratorios registrados en el sistema.
         </p>
     </div>
-    <a asp-action="Create" class="btn btn-primary">Nuevo laboratorio</a>
+    @if (puedeGestionarLaboratorios)
+    {
+        <a asp-action="Create" class="btn btn-primary">Nuevo laboratorio</a>
+    }
 </div>
 
 <div class="table-card">
@@ -53,15 +58,18 @@
                             </td>
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2 flex-wrap">
-                                    <a asp-action="Edit" asp-route-id="@item.LaboratorioId" class="btn btn-sm btn-outline-primary">
-                                        Editar
-                                    </a>
                                     <a asp-action="Details" asp-route-id="@item.LaboratorioId" class="btn btn-sm btn-outline-secondary">
                                         Detalles
                                     </a>
-                                    <a asp-action="Delete" asp-route-id="@item.LaboratorioId" class="btn btn-sm btn-outline-danger">
-                                        Eliminar
-                                    </a>
+                                    @if (puedeGestionarLaboratorios)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.LaboratorioId" class="btn btn-sm btn-outline-primary">
+                                            Editar
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.LaboratorioId" class="btn btn-sm btn-outline-danger">
+                                            Eliminar
+                                        </a>
+                                    }
                                 </div>
                             </td>
                         </tr>

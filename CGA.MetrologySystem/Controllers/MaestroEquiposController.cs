@@ -1,4 +1,5 @@
 using CGA.MetrologySystem.Models.ControlMetrologico;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Models.MaestroEquipos;
 using CGA.MetrologySystem.Services.MaestroEquipos;
 using Microsoft.AspNetCore.Authorization;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.TodosOperativos)]
     public class MaestroEquiposController : Controller
     {
         private readonly MaestroEquiposService _maestroEquiposService;
@@ -79,32 +80,44 @@ namespace CGA.MetrologySystem.Controllers
 
         private void CompletarAcciones(MaestroEquiposIndexViewModel model)
         {
+            var puedeGestionarMetrologia = PuedeGestionarMetrologia();
+            var puedeRegistrarEventosOperativos = PuedeRegistrarEventosOperativos();
+
             foreach (var equipo in model.Equipos)
             {
-                equipo.Acciones = CrearAccionesEquipo(equipo.EquipoId);
+                equipo.Acciones = CrearAccionesEquipo(equipo.EquipoId, puedeGestionarMetrologia);
 
                 foreach (var control in equipo.Controles)
                 {
-                    control.UrlConfigurar = Url.Action(
-                        "Create",
-                        "ConfiguracionesControlEquipo");
-
-                    if (control.ConfiguracionControlEquipoId.HasValue)
+                    if (puedeGestionarMetrologia)
                     {
-                        control.UrlEditarConfiguracion = Url.Action(
-                            "Edit",
-                            "ConfiguracionesControlEquipo",
-                            new { id = control.ConfiguracionControlEquipoId.Value });
+                        control.UrlConfigurar = Url.Action(
+                            "Create",
+                            "ConfiguracionesControlEquipo");
+
+                        if (control.ConfiguracionControlEquipoId.HasValue)
+                        {
+                            control.UrlEditarConfiguracion = Url.Action(
+                                "Edit",
+                                "ConfiguracionesControlEquipo",
+                                new { id = control.ConfiguracionControlEquipoId.Value });
+                        }
+
                     }
 
-                    control.UrlRegistrarEvento = ObtenerUrlRegistroEvento(
-                        control.TipoControl,
-                        control.EquipoId);
+                    if (PuedeRegistrarEventoDesdeMaestro(control.TipoControl, puedeGestionarMetrologia, puedeRegistrarEventosOperativos))
+                    {
+                        control.UrlRegistrarEvento = ObtenerUrlRegistroEvento(
+                            control.TipoControl,
+                            control.EquipoId);
+                    }
                 }
             }
         }
 
-        private List<MaestroEquipoAccionViewModel> CrearAccionesEquipo(int equipoId)
+        private List<MaestroEquipoAccionViewModel> CrearAccionesEquipo(
+            int equipoId,
+            bool puedeGestionarMetrologia)
         {
             var acciones = new List<MaestroEquipoAccionViewModel>();
 
@@ -115,19 +128,22 @@ namespace CGA.MetrologySystem.Controllers
                 "bi-eye",
                 "btn btn-sm btn-outline-primary");
 
-            AgregarAccion(
-                acciones,
-                "Editar equipo",
-                Url.Action("Edit", "Equipos", new { id = equipoId }),
-                "bi-pencil-square",
-                "btn btn-sm btn-outline-secondary");
+            if (puedeGestionarMetrologia)
+            {
+                AgregarAccion(
+                    acciones,
+                    "Editar equipo",
+                    Url.Action("Edit", "Equipos", new { id = equipoId }),
+                    "bi-pencil-square",
+                    "btn btn-sm btn-outline-secondary");
 
-            AgregarAccion(
-                acciones,
-                "Configurar controles",
-                Url.Action("Index", "ConfiguracionesControlEquipo"),
-                "bi-gear-fill",
-                "btn btn-sm btn-outline-dark");
+                AgregarAccion(
+                    acciones,
+                    "Configurar controles",
+                    Url.Action("Index", "ConfiguracionesControlEquipo"),
+                    "bi-gear-fill",
+                    "btn btn-sm btn-outline-dark");
+            }
 
             AgregarAccion(
                 acciones,
@@ -144,6 +160,39 @@ namespace CGA.MetrologySystem.Controllers
                 "btn btn-sm btn-outline-info");
 
             return acciones;
+        }
+
+        private bool PuedeGestionarMetrologia()
+        {
+            return !User.IsInRole(RolesSistema.AdministradorSistema) &&
+                   User.IsInRole(RolesSistema.AdministradorMetrologico);
+        }
+
+        private bool PuedeRegistrarEventosOperativos()
+        {
+            return !User.IsInRole(RolesSistema.AdministradorSistema) &&
+                   (User.IsInRole(RolesSistema.Tecnico) ||
+                    User.IsInRole(RolesSistema.AdministradorMetrologico));
+        }
+
+        private static bool PuedeRegistrarEventoDesdeMaestro(
+            string tipoControl,
+            bool puedeGestionarMetrologia,
+            bool puedeRegistrarEventosOperativos)
+        {
+            var tipoNormalizado = tipoControl.ToLower();
+
+            if (tipoNormalizado.Contains("calibr"))
+            {
+                return puedeGestionarMetrologia;
+            }
+
+            if (tipoNormalizado.Contains("verific") || tipoNormalizado.Contains("manten"))
+            {
+                return puedeRegistrarEventosOperativos;
+            }
+
+            return false;
         }
 
         private static void AgregarAccion(

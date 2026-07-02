@@ -1,11 +1,12 @@
 using CGA.MetrologySystem.Models.DashboardMetrologico;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Services.DashboardMetrologico;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.SupervisionMetrologica)]
     public class DashboardMetrologicoController : Controller
     {
         private readonly DashboardMetrologicoService _dashboardMetrologicoService;

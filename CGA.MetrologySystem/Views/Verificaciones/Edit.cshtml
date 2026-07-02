@@ -1,14 +1,14 @@
-Ôªø@model CGA.MetrologySystem.Models.VerificacionViewModel
+@model CGA.MetrologySystem.Models.VerificacionViewModel
 
 @{
-    ViewData["Title"] = "Editar verificaci√≥n";
+    ViewData["Title"] = "Editar verificaciÛn";
 }
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-        <h2 class="page-title">Editar verificaci√≥n</h2>
+        <h2 class="page-title">Editar verificaciÛn</h2>
         <p class="page-subtitle">
-            Actualiza la verificaci√≥n t√©cnica. El PDF ser√° regenerado autom√°ticamente y reemplazado en el repositorio documental.
+            Actualiza la verificaciÛn tÈcnica. El PDF ser· regenerado autom·ticamente y reemplazado en el repositorio documental.
         </p>
     </div>
 
@@ -43,10 +43,10 @@
     <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
 
     <div class="mb-4">
-        <h5 class="mb-1">Informaci√≥n de la verificaci√≥n</h5>
+        <h5 class="mb-1">InformaciÛn de la verificaciÛn</h5>
 
         <p class="text-muted mb-0">
-            El motor de reglas recalcular√° autom√°ticamente la pr√≥xima fecha del evento.
+            El motor de reglas recalcular· autom·ticamente la prÛxima fecha del evento.
         </p>
     </div>
 
@@ -97,7 +97,7 @@
 
         <div class="col-md-3 mb-3">
             <label asp-for="FechaEvento" class="form-label fw-semibold">
-                Fecha de verificaci√≥n
+                Fecha de verificaciÛn
             </label>
 
             <input asp-for="FechaEvento"
@@ -109,7 +109,7 @@
 
         <div class="col-md-3 mb-3">
             <label asp-for="FechaProxima" class="form-label fw-semibold">
-                Pr√≥xima fecha calculada
+                PrÛxima fecha calculada
             </label>
 
             <input asp-for="FechaProxima"
@@ -123,12 +123,12 @@
     </div>
 
     <div class="alert alert-light border mb-4">
-        <strong>Nota:</strong> Si modificas la fecha de verificaci√≥n, el sistema volver√° a evaluar si el evento es extraordinario.
+        <strong>Nota:</strong> Si modificas la fecha de verificaciÛn, el sistema volver· a evaluar si el evento es extraordinario.
     </div>
 
     <div class="row">
 
-        @if (User.IsInRole("Administrador"))
+        @if (User.IsInRole(RolesSistema.AdministradorMetrologico))
         {
             <div class="col-md-4 mb-3">
                 <div class="form-check form-switch cga-switch mt-md-4 pt-md-2">
@@ -155,25 +155,25 @@
 
         <div class="col-md-4 mb-3">
             <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
-                Justificaci√≥n extraordinaria
+                JustificaciÛn extraordinaria
             </label>
 
             <textarea asp-for="JustificacionExtraordinario"
                       class="form-control"
                       rows="2"
-                      placeholder="Completa este campo si la verificaci√≥n fue extraordinaria."></textarea>
+                      placeholder="Completa este campo si la verificaciÛn fue extraordinaria."></textarea>
 
             <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
         </div>
 
-        @if (User.IsInRole("Administrador"))
+        @if (User.IsInRole(RolesSistema.AdministradorMetrologico))
         {
             <div class="col-md-12 mb-3">
                 <label asp-for="ObservacionCargaHistorica" class="form-label fw-semibold"></label>
                 <textarea asp-for="ObservacionCargaHistorica"
                           class="form-control"
                           rows="2"
-                          placeholder="Referencia u observaci√≥n del registro hist√≥rico."></textarea>
+                          placeholder="Referencia u observaciÛn del registro histÛrico."></textarea>
                 <span asp-validation-for="ObservacionCargaHistorica" class="text-danger"></span>
             </div>
         }
@@ -187,7 +187,7 @@
         <textarea asp-for="ComentariosAdicionales"
                   class="form-control"
                   rows="3"
-                  placeholder="Comentarios generales de la verificaci√≥n."></textarea>
+                  placeholder="Comentarios generales de la verificaciÛn."></textarea>
 
         <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
     </div>
@@ -204,7 +204,7 @@
         </div>
 
         <button type="button" id="addResultado" class="btn btn-outline-primary">
-            Agregar condici√≥n
+            Agregar condiciÛn
         </button>
     </div>
 
@@ -213,11 +213,11 @@
             <thead>
                 <tr>
                     <th class="checklist-head-order checklist-order-column">#</th>
-                    <th class="checklist-head-description">Descripci√≥n</th>
+                    <th class="checklist-head-description">DescripciÛn</th>
                     <th class="checklist-head-status checklist-status-column">Cumple</th>
                     <th class="checklist-head-notes">Observaciones</th>
-                    <th class="checklist-head-evidence">Evidencia del √≠tem</th>
-                    <th class="checklist-head-action text-end checklist-action-column">Acci√≥n</th>
+                    <th class="checklist-head-evidence">Evidencia del Ìtem</th>
+                    <th class="checklist-head-action text-end checklist-action-column">AcciÛn</th>
                 </tr>
             </thead>
 
@@ -242,7 +242,7 @@
                             <input asp-for="Resultados[i].DescripcionItem"
                                    data-field="descripcion"
                                    class="form-control"
-                                   placeholder="Condici√≥n a verificar" />
+                                   placeholder="CondiciÛn a verificar" />
 
                         </td>
 
@@ -260,7 +260,7 @@
                                        name="Resultados[@i].Cumple"
                                        data-field="cumple-hidden"
                                        value="false" />
-                                <span>S√≠</span>
+                                <span>SÌ</span>
                             </label>
 
                         </td>
@@ -326,7 +326,7 @@
         <h5 class="mb-1">Evidencias visuales</h5>
 
         <p class="text-muted">
-            Las evidencias existentes se conservar√°n. Puedes agregar nuevas im√°genes.
+            Las evidencias existentes se conservar·n. Puedes agregar nuevas im·genes.
         </p>
 
         @if (Model.EvidenciasExistentes != null && Model.EvidenciasExistentes.Any())
@@ -365,7 +365,7 @@
         else
         {
             <div class="alert alert-light border">
-                Esta verificaci√≥n a√∫n no tiene evidencias visuales registradas.
+                Esta verificaciÛn a˙n no tiene evidencias visuales registradas.
             </div>
         }
 
@@ -376,7 +376,7 @@
                multiple />
 
         <small class="text-muted">
-            Puedes tomar fotograf√≠as desde el dispositivo o cargar im√°genes existentes.
+            Puedes tomar fotografÌas desde el dispositivo o cargar im·genes existentes.
         </small>
 
     </div>
@@ -465,7 +465,7 @@
                                 <input name="Resultados[${index}].DescripcionItem"
                                        data-field="descripcion"
                                        class="form-control"
-                                       placeholder="Condici√≥n a verificar" />
+                                       placeholder="CondiciÛn a verificar" />
 
                             </td>
 
@@ -483,7 +483,7 @@
                                            name="Resultados[${index}].Cumple"
                                            data-field="cumple-hidden"
                                            value="false" />
-                                    <span>S√≠</span>
+                                    <span>SÌ</span>
                                 </label>
 
                             </td>

@@ -1,5 +1,6 @@
-ï»¿using CGA.MetrologySystem.Application.Interfaces;
+using CGA.MetrologySystem.Application.Interfaces;
 using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using CGA.MetrologySystem.Services.Auditoria;
@@ -13,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.TodosOperativos)]
     public class VerificacionesController : Controller
     {
         private readonly AppDbContext _context;
@@ -133,6 +134,7 @@ namespace CGA.MetrologySystem.Controllers
             return View(verificacion);
         }
 
+        [Authorize(Roles = RolesSistema.OperacionMetrologica)]
         public async Task<IActionResult> Create(int? equipoId = null)
         {
             var model = new VerificacionViewModel
@@ -163,6 +165,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.OperacionMetrologica)]
         public async Task<IActionResult> Create(VerificacionViewModel model)
         {
             NormalizarResultados(model);
@@ -230,7 +233,7 @@ namespace CGA.MetrologySystem.Controllers
                     verificacionDato.EventoVerificacionDatoId);
 
                 if (verificacionCompleta == null)
-                    throw new Exception("No se pudo recuperar la verificaciÃ³n para generar el PDF.");
+                    throw new Exception("No se pudo recuperar la verificación para generar el PDF.");
 
                 etapaGuardado = "generar el PDF de verificacion";
                 var pdfBytes = _verificacionPdfService.Generar(verificacionCompleta);
@@ -274,12 +277,13 @@ namespace CGA.MetrologySystem.Controllers
 
                 ModelState.AddModelError(
                     string.Empty,
-                    $"OcurriÃ³ un error al guardar la verificaciÃ³n durante: {etapaGuardado}.");
+                    $"Ocurrió un error al guardar la verificación durante: {etapaGuardado}.");
                 await CargarCombosAsync(model);
                 return View(model);
             }
         }
 
+        [Authorize(Roles = RolesSistema.OperacionMetrologica)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -353,6 +357,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.OperacionMetrologica)]
         public async Task<IActionResult> Edit(int id, VerificacionViewModel model)
         {
             if (id != model.EventoVerificacionDatoId)
@@ -422,7 +427,7 @@ namespace CGA.MetrologySystem.Controllers
                     verificacion.EventoVerificacionDatoId);
 
                 if (verificacionCompleta == null)
-                    throw new Exception("No se pudo recuperar la verificaciÃ³n para regenerar el PDF.");
+                    throw new Exception("No se pudo recuperar la verificación para regenerar el PDF.");
 
                 if (!string.IsNullOrWhiteSpace(verificacion.GoogleDriveFileId))
                     await _googleDriveService.DeleteFileAsync(verificacion.GoogleDriveFileId);
@@ -460,13 +465,14 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                ModelState.AddModelError(string.Empty, "OcurriÃ³ un error al actualizar la verificaciÃ³n.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al actualizar la verificación.");
                 await CargarCombosAsync(model);
                 await CargarEvidenciasExistentesEnModeloAsync(model);
                 return View(model);
             }
         }
 
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -501,6 +507,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var verificacion = await _context.EventosVerificacionDato
@@ -547,7 +554,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                TempData["Error"] = "OcurriÃ³ un error al eliminar la verificaciÃ³n.";
+                TempData["Error"] = "Ocurrió un error al eliminar la verificación.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
         }
@@ -612,7 +619,7 @@ namespace CGA.MetrologySystem.Controllers
             return new List<SelectListItem>
             {
                 new("Operativas", "operativas", clasificacion == "operativas"),
-                new("HistÃ³ricas", "historicas", clasificacion == "historicas"),
+                new("Históricas", "historicas", clasificacion == "historicas"),
                 new("Extraordinarias", "extraordinarias", clasificacion == "extraordinarias")
             };
         }
@@ -759,7 +766,7 @@ namespace CGA.MetrologySystem.Controllers
                 EsCritico = true
             });
 
-            if (User.IsInRole("Tecnico") && !User.IsInRole("Administrador"))
+            if (User.IsInRole(RolesSistema.Tecnico) && !EsAdministrador())
             {
                 await _notificacionMetrologicaService.NotificarEdicionCriticaVerificacionAsync(
                     verificacion.EventoVerificacionDatoId,
@@ -817,14 +824,14 @@ namespace CGA.MetrologySystem.Controllers
 
         private string ObtenerRolUsuarioActual()
         {
-            if (User.IsInRole("Administrador"))
+            if (EsAdministrador())
             {
-                return "Administrador";
+                return RolesSistema.ObtenerNombreVisible(RolesSistema.AdministradorMetrologico);
             }
 
-            if (User.IsInRole("Tecnico"))
+            if (User.IsInRole(RolesSistema.Tecnico))
             {
-                return "Tecnico";
+                return RolesSistema.ObtenerNombreVisible(RolesSistema.Tecnico);
             }
 
             return "Usuario";
@@ -832,7 +839,7 @@ namespace CGA.MetrologySystem.Controllers
 
         private bool EsAdministrador()
         {
-            return User.IsInRole("Administrador");
+            return User.IsInRole(RolesSistema.AdministradorMetrologico);
         }
 
         private static bool SonFechasEquivalentes(DateTime? fechaAnterior, DateTime? fechaNueva)
@@ -888,7 +895,7 @@ namespace CGA.MetrologySystem.Controllers
         private async Task<TipoEventoMetrologico?> ObtenerTipoEventoVerificacionAsync()
         {
             return await _context.TiposEventoMetrologico
-                .FirstOrDefaultAsync(t => t.Nombre == "VerificaciÃ³n");
+                .FirstOrDefaultAsync(t => t.Nombre == "Verificación");
         }
 
         private async Task ValidarFormularioVerificacionAsync(
@@ -900,24 +907,24 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    "Solo un administrador puede registrar o corregir verificaciones histÃ³ricas.");
+                    "Solo un administrador puede registrar o corregir verificaciones históricas.");
             }
 
             if (model.EsHistorico && model.FechaEvento.Date >= DateTime.Today)
             {
                 ModelState.AddModelError(
                     nameof(model.FechaEvento),
-                    "Una verificaciÃ³n histÃ³rica debe tener una fecha anterior al dÃ­a actual.");
+                    "Una verificación histórica debe tener una fecha anterior al día actual.");
             }
 
             if (!model.Resultados.Any())
             {
-                ModelState.AddModelError(string.Empty, "Debe agregar al menos una condiciÃ³n de verificaciÃ³n.");
+                ModelState.AddModelError(string.Empty, "Debe agregar al menos una condición de verificación.");
             }
 
             if (tipoEventoVerificacion == null)
             {
-                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'VerificaciÃ³n'.");
+                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'Verificación'.");
                 return;
             }
 
@@ -934,7 +941,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    "Las evidencias por condiciÃ³n deben ser imÃ¡genes.");
+                    "Las evidencias por condición deben ser imágenes.");
             }
 
             var resultadoRegla = await _metrologyRulesService.EvaluarEventoAsync(
@@ -955,7 +962,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrolÃ³gicas.");
+                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrológicas.");
             }
 
             if (!string.IsNullOrWhiteSpace(resultadoRegla.Advertencia))
@@ -986,7 +993,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     nameof(model.FechaEvento),
-                    "No se puede marcar como histÃ³rica porque no existe una verificaciÃ³n registrada posterior que sirva como referencia.");
+                    "No se puede marcar como histórica porque no existe una verificación registrada posterior que sirva como referencia.");
                 return;
             }
 
@@ -994,7 +1001,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     nameof(model.FechaEvento),
-                    $"Una verificaciÃ³n histÃ³rica debe tener una fecha anterior a la Ãºltima verificaciÃ³n registrada del equipo ({ultimaFechaRegistrada.Value:yyyy-MM-dd}).");
+                    $"Una verificación histórica debe tener una fecha anterior a la última verificación registrada del equipo ({ultimaFechaRegistrada.Value:yyyy-MM-dd}).");
             }
         }
 

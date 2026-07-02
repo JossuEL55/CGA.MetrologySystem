@@ -1,0 +1,146 @@
+@model CGA.MetrologySystem.Models.Usuarios.UsuarioListadoViewModel
+@using CGA.MetrologySystem.Infrastructure.Identity
+
+@{
+    ViewData["Title"] = "Detalle de usuario";
+}
+
+@functions {
+    private static string ObtenerInicial(string nombre)
+    {
+        return string.IsNullOrWhiteSpace(nombre) ? "U" : nombre.Trim()[0].ToString().ToUpperInvariant();
+    }
+
+    private static string ObtenerClaseRol(string rolCodigo)
+    {
+        return rolCodigo switch
+        {
+            RolesSistema.AdministradorSistema => "role-badge-system",
+            RolesSistema.AdministradorMetrologico => "role-badge-metrology",
+            RolesSistema.Tecnico => "role-badge-tech",
+            _ => "role-badge-metrology"
+        };
+    }
+}
+
+<section class="security-hero mb-4">
+    <div class="position-relative">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div>
+                <div class="security-eyebrow">Seguridad y accesos</div>
+                <h2 class="page-title mb-2">Detalle de usuario</h2>
+                <p class="security-subtitle mb-0">
+                    Consulta el estado, rol asignado e informaci&oacute;n principal de la cuenta.
+                </p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a asp-action="Index" class="btn btn-light fw-bold">Volver</a>
+                <a asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-warning fw-bold">Editar</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="security-panel h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="user-avatar user-avatar-lg">@ObtenerInicial(Model.NombreCompleto)</div>
+                <div>
+                    <h4 class="mb-1">@Model.NombreCompleto</h4>
+                    <p class="text-muted mb-0">@Model.Correo</p>
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="d-flex flex-column gap-3">
+                <div>
+                    <div class="detail-label">Estado</div>
+                    @if (Model.Activo)
+                    {
+                        <span class="status-badge status-active mt-2">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="status-badge status-inactive mt-2">Inactivo</span>
+                    }
+                </div>
+
+                <div>
+                    <div class="detail-label">Rol asignado</div>
+                    <span class="role-badge @ObtenerClaseRol(Model.RolCodigo) mt-2">@Model.Rol</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="security-panel h-100">
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-4">
+                <div>
+                    <h5 class="security-panel-title mb-1">Informaci&oacute;n de acceso</h5>
+                    <p class="text-muted mb-0">Datos usados para control y auditor&iacute;a administrativa.</p>
+                </div>
+                <a asp-action="ResetPassword" asp-route-id="@Model.Id" class="btn btn-outline-dark">
+                    Restablecer contrase&ntilde;a
+                </a>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="detail-tile">
+                        <div class="detail-label">Correo</div>
+                        <div class="detail-value mt-2">@Model.Correo</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="detail-tile">
+                        <div class="detail-label">Fecha de creaci&oacute;n</div>
+                        <div class="detail-value mt-2">@Model.FechaCreacionTexto</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="detail-tile">
+                        <div class="detail-label">&Uacute;ltimo acceso</div>
+                        <div class="detail-value mt-2">@Model.UltimoAccesoTexto</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="detail-tile">
+                        <div class="detail-label">Identificador interno</div>
+                        <div class="detail-value mt-2">@Model.Id</div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4" />
+
+            <div class="d-flex justify-content-end gap-2 flex-wrap">
+                <a asp-action="Editar" asp-route-id="@Model.Id" class="btn btn-primary">Editar usuario</a>
+
+                @if (Model.Activo)
+                {
+                    <a asp-action="CambiarEstado"
+                       asp-route-id="@Model.Id"
+                       class="btn btn-outline-warning"
+                       onclick="return confirm('Desactivar este usuario?');">
+                        Desactivar usuario
+                    </a>
+                }
+                else
+                {
+                    <a asp-action="CambiarEstado"
+                       asp-route-id="@Model.Id"
+                       class="btn btn-outline-success"
+                       onclick="return confirm('Activar este usuario?');">
+                        Activar usuario
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>

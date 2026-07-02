@@ -1,25 +1,25 @@
-锘緻model CGA.MetrologySystem.Models.ControlMetrologico.ControlMetrologicoEventosViewModel
+@model CGA.MetrologySystem.Models.ControlMetrologico.ControlMetrologicoEventosViewModel
 
 @{
-    ViewData["Title"] = "Eventos metrol贸gicos";
+    ViewData["Title"] = "Eventos metrol骻icos";
 }
 
 <div class="metro-hero mb-4">
     <div>
         <span class="metro-eyebrow">
-            <i class="bi bi-list-check"></i> Planificaci贸n operativa
+            <i class="bi bi-list-check"></i> Planificaci髇 operativa
         </span>
 
-        <h1>Eventos metrol贸gicos</h1>
+        <h1>Eventos metrol骻icos</h1>
 
         <p>
-            Vista detallada por control t茅cnico para identificar calibraciones, verificaciones
-            y mantenimientos vencidos, pr贸ximos o pendientes de configuraci贸n.
+            Vista detallada por control t閏nico para identificar calibraciones, verificaciones
+            y mantenimientos vencidos, pr髕imos o pendientes de configuraci髇.
         </p>
     </div>
 
     <div class="metro-hero-actions">
-        @if (User.IsInRole("Administrador"))
+        @if ((!User.IsInRole(RolesSistema.AdministradorSistema) && User.IsInRole(RolesSistema.AdministradorMetrologico)))
         {
             <form asp-controller="Alertas" asp-action="Procesar" method="post" class="d-inline">
                 @Html.AntiForgeryToken()
@@ -57,7 +57,7 @@
     </div>
 
     <div class="metro-kpi kpi-warning">
-        <span>Pr贸ximos</span>
+        <span>Pr髕imos</span>
         <strong>@Model.Resumen.ProximosAVencer</strong>
         <i class="bi bi-exclamation-triangle-fill"></i>
     </div>
@@ -75,7 +75,7 @@
     </div>
 
     <div class="metro-kpi kpi-config">
-        <span>Sin configuraci贸n</span>
+        <span>Sin configuraci髇</span>
         <strong>@Model.Resumen.SinConfiguracion</strong>
         <i class="bi bi-gear-fill"></i>
     </div>
@@ -90,7 +90,7 @@
                 <input name="buscar"
                        value="@Model.Filtros.Buscar"
                        class="form-control"
-                       placeholder="C贸digo o nombre del equipo" />
+                       placeholder="C骴igo o nombre del equipo" />
             </div>
         </div>
 
@@ -136,7 +136,7 @@
     <div class="metro-table-header">
         <div>
             <h5>Agenda operativa de controles</h5>
-            <p>Listado individual de cada control metrol贸gico asociado a los equipos activos.</p>
+            <p>Listado individual de cada control metrol骻ico asociado a los equipos activos.</p>
         </div>
 
         <span class="metro-table-count">
@@ -152,9 +152,9 @@
                     <th>Tipo equipo</th>
                     <th>Evento</th>
                     <th>Estado</th>
-                    <th>脷ltimo evento</th>
-                    <th>Pr贸xima fecha</th>
-                    <th>D铆as</th>
+                    <th>趌timo evento</th>
+                    <th>Pr髕ima fecha</th>
+                    <th>D韆s</th>
                     <th>Mensaje</th>
                     <th class="text-end">Acciones</th>
                 </tr>
@@ -168,7 +168,7 @@
                             <div class="metro-empty">
                                 <i class="bi bi-calendar2-x"></i>
                                 <h5>No se encontraron eventos</h5>
-                                <p>No existen controles metrol贸gicos para los filtros aplicados.</p>
+                                <p>No existen controles metrol骻icos para los filtros aplicados.</p>
                             </div>
                         </td>
                     </tr>
@@ -229,7 +229,7 @@
                                 @if (evento.DiasRestantes.HasValue)
                                 {
                                     <span class="metro-days-pill @evento.CssClass">
-                                        @evento.DiasRestantes d铆a(s)
+                                        @evento.DiasRestantes d韆(s)
                                     </span>
                                 }
                                 else

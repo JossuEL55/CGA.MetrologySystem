@@ -1,11 +1,12 @@
 using CGA.MetrologySystem.Models.TendenciasMetrologicas;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Services.TendenciasMetrologicas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.SupervisionMetrologica)]
     public class TendenciasMetrologicasController : Controller
     {
         private readonly TendenciasMetrologicasService _tendenciasMetrologicasService;

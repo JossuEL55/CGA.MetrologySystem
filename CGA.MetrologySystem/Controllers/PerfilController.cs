@@ -36,7 +36,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 Correo = usuario.Email ?? string.Empty,
                 NombreCompleto = usuario.NombreCompleto,
-                Rol = roles.FirstOrDefault() ?? "Sin rol",
+                Rol = ObtenerRolVisible(roles),
                 Activo = usuario.Activo
             };
 
@@ -79,7 +79,7 @@ namespace CGA.MetrologySystem.Controllers
             model.Activo = usuario.Activo;
 
             var roles = await _userManager.GetRolesAsync(usuario);
-            model.Rol = roles.FirstOrDefault() ?? "Sin rol";
+            model.Rol = ObtenerRolVisible(roles);
 
             TempData["MensajeExito"] = "Perfil actualizado correctamente.";
             return View(model);
@@ -87,8 +87,9 @@ namespace CGA.MetrologySystem.Controllers
 
         //Métodos para cambiar la contraseña del usuario
         [HttpGet]
-        public IActionResult CambiarContrasena()
+        public async Task<IActionResult> CambiarContrasena()
         {
+            await CargarContextoCambioContrasenaAsync();
             return View(new CambiarContrasenaViewModel());
         }
 
@@ -99,6 +100,7 @@ namespace CGA.MetrologySystem.Controllers
         {
             if (!ModelState.IsValid)
             {
+                await CargarContextoCambioContrasenaAsync();
                 return View(model);
             }
 
@@ -119,6 +121,21 @@ namespace CGA.MetrologySystem.Controllers
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
 
+                await CargarContextoCambioContrasenaAsync(usuario);
+                return View(model);
+            }
+
+            usuario.DebeCambiarContrasena = false;
+            var updateResult = await _userManager.UpdateAsync(usuario);
+
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                await CargarContextoCambioContrasenaAsync(usuario);
                 return View(model);
             }
 
@@ -126,6 +143,26 @@ namespace CGA.MetrologySystem.Controllers
 
             TempData["MensajeExito"] = "Contraseña cambiada correctamente.";
             return RedirectToAction(nameof(Index));
+        }
+
+        private async Task CargarContextoCambioContrasenaAsync(UsuarioSistema? usuario = null)
+        {
+            usuario ??= await _userManager.GetUserAsync(User);
+            ViewBag.RequiereCambioContrasena = usuario?.DebeCambiarContrasena == true;
+        }
+
+        private static string ObtenerRolVisible(IList<string> roles)
+        {
+            if (roles.Contains(RolesSistema.AdministradorSistema))
+                return RolesSistema.ObtenerNombreVisible(RolesSistema.AdministradorSistema);
+
+            if (roles.Contains(RolesSistema.AdministradorMetrologico))
+                return RolesSistema.ObtenerNombreVisible(RolesSistema.AdministradorMetrologico);
+
+            if (roles.Contains(RolesSistema.Tecnico))
+                return RolesSistema.ObtenerNombreVisible(RolesSistema.Tecnico);
+
+            return roles.FirstOrDefault() ?? "Sin rol";
         }
     }
 }

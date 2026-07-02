@@ -6,38 +6,51 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Services.Email;
+using System.Net;
 
 namespace CGA.MetrologySystem.Controllers
 {
     // Controlador para la gestión de usuarios, accesible solo para administradores
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = RolesSistema.AdministracionUsuarios)]
     public class UsuariosController : Controller
     {
         private readonly UserManager<UsuarioSistema> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly AppDbContext _context;
+        private readonly IEmailService _emailService;
+        private readonly IEmailTemplateService _emailTemplateService;
+        private readonly ILogger<UsuariosController> _logger;
 
         //Constructor 
         public UsuariosController(
                UserManager<UsuarioSistema> userManager,
                RoleManager<IdentityRole> roleManager,
-               AppDbContext context)
+               AppDbContext context,
+               IEmailService emailService,
+               IEmailTemplateService emailTemplateService,
+               ILogger<UsuariosController> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _context = context;
+            _emailService = emailService;
+            _emailTemplateService = emailTemplateService;
+            _logger = logger;
         }
 
         // Método para listar todos los usuarios con su información básica y rol asignado
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? busqueda, string? rol, string? estado)
         {
-            var usuarios = _userManager.Users.ToList();
+            var usuarios = _userManager.Users
+                .OrderBy(u => u.NombreCompleto)
+                .ToList();
             var listaUsuarios = new List<UsuarioListadoViewModel>();
 
             foreach (var usuario in usuarios)
             {
                 var roles = await _userManager.GetRolesAsync(usuario);
-                var rol = roles.FirstOrDefault() ?? "Sin rol";
+                var rolCodigo = ObtenerRolPrincipal(roles);
 
                 listaUsuarios.Add(new UsuarioListadoViewModel
                 {
@@ -45,17 +58,56 @@ namespace CGA.MetrologySystem.Controllers
                     Correo = usuario.Email ?? string.Empty,
                     NombreCompleto = usuario.NombreCompleto,
                     Activo = usuario.Activo,
-                    Rol = rol
+                    Rol = RolesSistema.ObtenerNombreVisible(rolCodigo),
+                    RolCodigo = rolCodigo,
+                    FechaCreacionTexto = FormatearFecha(usuario.FechaCreacion),
+                    UltimoAccesoTexto = FormatearFecha(usuario.UltimoAcceso)
                 });
             }
+
+            var usuariosFiltrados = AplicarFiltros(listaUsuarios, busqueda, rol, estado);
 
             var model = new UsuariosIndexViewModel
             {
                 TotalUsuarios = listaUsuarios.Count,
                 UsuariosActivos = listaUsuarios.Count(u => u.Activo),
                 UsuariosInactivos = listaUsuarios.Count(u => !u.Activo),
-                TotalAdministradores = listaUsuarios.Count(u => u.Rol == "Administrador"),
-                Usuarios = listaUsuarios
+                TotalAdministradores = listaUsuarios.Count(u =>
+                    RolesSistema.EsAdministradorSistema(u.RolCodigo)),
+                TotalAdministradoresMetrologicos = listaUsuarios.Count(u =>
+                    RolesSistema.EsAdministradorMetrologico(u.RolCodigo)),
+                TotalTecnicos = listaUsuarios.Count(u => u.RolCodigo == RolesSistema.Tecnico),
+                Busqueda = busqueda,
+                Rol = rol,
+                Estado = estado,
+                Usuarios = usuariosFiltrados
+            };
+
+            CargarRoles();
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Details(string id)
+        {
+            var usuario = await _userManager.FindByIdAsync(id);
+
+            if (usuario == null)
+                return NotFound();
+
+            var roles = await _userManager.GetRolesAsync(usuario);
+            var rolCodigo = ObtenerRolPrincipal(roles);
+
+            var model = new UsuarioListadoViewModel
+            {
+                Id = usuario.Id,
+                Correo = usuario.Email ?? string.Empty,
+                NombreCompleto = usuario.NombreCompleto,
+                Activo = usuario.Activo,
+                Rol = RolesSistema.ObtenerNombreVisible(rolCodigo),
+                RolCodigo = rolCodigo,
+                FechaCreacionTexto = FormatearFecha(usuario.FechaCreacion),
+                UltimoAccesoTexto = FormatearFecha(usuario.UltimoAcceso)
             };
 
             return View(model);
@@ -98,7 +150,9 @@ namespace CGA.MetrologySystem.Controllers
                 Email = model.Correo,
                 NombreCompleto = model.NombreCompleto,
                 EmailConfirmed = true,
-                Activo = model.Activo
+                Activo = model.Activo,
+                FechaCreacion = DateTime.UtcNow,
+                DebeCambiarContrasena = true
             };
 
             var resultado = await _userManager.CreateAsync(usuario, model.Contrasena);
@@ -142,7 +196,12 @@ namespace CGA.MetrologySystem.Controllers
                 usuario,
                 $"Se creó el usuario con rol {model.Rol} y estado activo = {model.Activo}.");
 
-            TempData["MensajeExito"] = "Usuario creado correctamente.";
+            var correoEnviado = await EnviarCorreoBienvenidaAsync(usuario, model.Rol);
+
+            TempData["MensajeExito"] = correoEnviado
+                ? "Usuario creado correctamente. Se envió el correo de bienvenida."
+                : "Usuario creado correctamente. No se pudo enviar el correo de bienvenida; revisa la configuración SMTP o el correo del usuario.";
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -165,7 +224,7 @@ namespace CGA.MetrologySystem.Controllers
             }
 
             // No permitir desactivar al último administrador activo
-            if (usuario.Activo && await _userManager.IsInRoleAsync(usuario, "Administrador"))
+            if (usuario.Activo && await EsAdministradorSistemaAsync(usuario))
             {
                 var totalAdminsActivos = await ContarAdministradoresActivosAsync();
 
@@ -208,7 +267,7 @@ namespace CGA.MetrologySystem.Controllers
                 return NotFound();
 
             var roles = await _userManager.GetRolesAsync(usuario);
-            var rolActual = roles.FirstOrDefault() ?? string.Empty;
+            var rolActual = ObtenerRolPrincipal(roles);
 
             var model = new UsuarioEditarViewModel
             {
@@ -243,9 +302,9 @@ namespace CGA.MetrologySystem.Controllers
 
             var usuarioActualId = _userManager.GetUserId(User);
             var rolesActuales = await _userManager.GetRolesAsync(usuario);
-            var rolActual = rolesActuales.FirstOrDefault() ?? string.Empty;
-            var esAdminActual = rolActual == "Administrador";
-            var seguiraSiendoAdmin = model.Rol == "Administrador";
+            var rolActual = ObtenerRolPrincipal(rolesActuales);
+            var esAdminActual = RolesSistema.EsAdministradorSistema(rolActual);
+            var seguiraSiendoAdmin = model.Rol == RolesSistema.AdministradorSistema;
 
             if (usuario.Id == usuarioActualId && !model.Activo)
             {
@@ -286,23 +345,27 @@ namespace CGA.MetrologySystem.Controllers
                 return View(model);
             }
 
-            if (rolActual != model.Rol)
+            var rolesParaRemover = rolesActuales
+                .Where(r => r != model.Rol)
+                .ToArray();
+
+            if (rolesParaRemover.Any())
             {
-                if (!string.IsNullOrWhiteSpace(rolActual))
+                var removeResult = await _userManager.RemoveFromRolesAsync(usuario, rolesParaRemover);
+                if (!removeResult.Succeeded)
                 {
-                    var removeResult = await _userManager.RemoveFromRoleAsync(usuario, rolActual);
-                    if (!removeResult.Succeeded)
+                    foreach (var error in removeResult.Errors)
                     {
-                        foreach (var error in removeResult.Errors)
-                        {
-                            ModelState.AddModelError(string.Empty, error.Description);
-                        }
-
-                        CargarRoles();
-                        return View(model);
+                        ModelState.AddModelError(string.Empty, error.Description);
                     }
-                }
 
+                    CargarRoles();
+                    return View(model);
+                }
+            }
+
+            if (!rolesActuales.Contains(model.Rol))
+            {
                 var addResult = await _userManager.AddToRoleAsync(usuario, model.Rol);
                 if (!addResult.Succeeded)
                 {
@@ -329,10 +392,11 @@ namespace CGA.MetrologySystem.Controllers
         private void CargarRoles()
         {
             ViewBag.Roles = _roleManager.Roles
+                .Where(r => r.Name != "Administrador")
                 .Select(r => new SelectListItem
                 {
                     Value = r.Name!,
-                    Text = r.Name!
+                    Text = RolesSistema.ObtenerNombreVisible(r.Name!)
                 })
                 .ToList();
         }
@@ -348,13 +412,190 @@ namespace CGA.MetrologySystem.Controllers
                 if (!usuario.Activo)
                     continue;
 
-                if (await _userManager.IsInRoleAsync(usuario, "Administrador"))
+                if (await EsAdministradorSistemaAsync(usuario))
                 {
                     total++;
                 }
             }
 
             return total;
+        }
+
+        private async Task<bool> EsAdministradorSistemaAsync(UsuarioSistema usuario)
+        {
+            return await _userManager.IsInRoleAsync(usuario, RolesSistema.AdministradorSistema);
+        }
+
+        private static string ObtenerRolPrincipal(IList<string> roles)
+        {
+            if (roles.Contains(RolesSistema.AdministradorSistema))
+                return RolesSistema.AdministradorSistema;
+
+            if (roles.Contains(RolesSistema.AdministradorMetrologico))
+                return RolesSistema.AdministradorMetrologico;
+
+            if (roles.Contains(RolesSistema.Tecnico))
+                return RolesSistema.Tecnico;
+
+            return roles.FirstOrDefault() ?? "Sin rol";
+        }
+
+        private static List<UsuarioListadoViewModel> AplicarFiltros(
+            List<UsuarioListadoViewModel> usuarios,
+            string? busqueda,
+            string? rol,
+            string? estado)
+        {
+            var consulta = usuarios.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(busqueda))
+            {
+                var termino = busqueda.Trim();
+                consulta = consulta.Where(u =>
+                    u.NombreCompleto.Contains(termino, StringComparison.OrdinalIgnoreCase) ||
+                    u.Correo.Contains(termino, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(rol))
+            {
+                consulta = consulta.Where(u => u.RolCodigo == rol);
+            }
+
+            if (estado == "activo")
+            {
+                consulta = consulta.Where(u => u.Activo);
+            }
+            else if (estado == "inactivo")
+            {
+                consulta = consulta.Where(u => !u.Activo);
+            }
+
+            return consulta
+                .OrderByDescending(u => u.Activo)
+                .ThenBy(u => u.NombreCompleto)
+                .ToList();
+        }
+
+        private static string FormatearFecha(DateTime? fecha)
+        {
+            if (!fecha.HasValue)
+            {
+                return "No registrado";
+            }
+
+            return fecha.Value
+                .ToLocalTime()
+                .ToString("yyyy-MM-dd HH:mm");
+        }
+
+        private async Task<bool> EnviarCorreoBienvenidaAsync(UsuarioSistema usuario, string rol)
+        {
+            if (string.IsNullOrWhiteSpace(usuario.Email))
+            {
+                return false;
+            }
+
+            try
+            {
+                var urlSistema = Url.Action("Login", "Auth", null, Request.Scheme)
+                    ?? $"{Request.Scheme}://{Request.Host}";
+                var nombre = WebUtility.HtmlEncode(usuario.NombreCompleto);
+                var correo = WebUtility.HtmlEncode(usuario.Email);
+                var rolVisible = WebUtility.HtmlEncode(RolesSistema.ObtenerNombreVisible(rol));
+                var url = WebUtility.HtmlEncode(urlSistema);
+
+                var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
+                {
+                    new EmailTemplateRow("Correo de acceso", usuario.Email),
+                    new EmailTemplateRow("Rol asignado", RolesSistema.ObtenerNombreVisible(rol)),
+                    new EmailTemplateRow("Acceso al sistema", urlSistema)
+                });
+
+                var cuerpo = _emailTemplateService.ConstruirCorreo(new EmailTemplateModel
+                {
+                    Titulo = "Bienvenido a CGA Metrology System",
+                    Preheader = "Tu cuenta de acceso ha sido creada correctamente.",
+                    Etiqueta = "Gestion de usuarios",
+                    Nivel = "exito",
+                    ContenidoHtml = $@"
+                        <p style=""margin:0 0 14px;"">Hola <strong>{nombre}</strong>,</p>
+                        <p style=""margin:0 0 14px;"">La administración del sistema registró tu cuenta para acceder a la plataforma de trazabilidad y control metrológico de CGA.</p>
+                        {tabla}
+                        <p style=""margin:0;"">La contraseña inicial fue definida por administración. Por seguridad, el sistema solicitará cambiarla durante el ingreso correspondiente.</p>",
+                    TextoBoton = "Ingresar al sistema",
+                    UrlBoton = urlSistema
+                });
+
+                await _emailService.EnviarCorreoAsync(
+                    usuario.Email,
+                    "Cuenta creada - CGA Metrology System",
+                    cuerpo);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "No se pudo enviar el correo de bienvenida al usuario {UsuarioId}.",
+                    usuario.Id);
+
+                return false;
+            }
+        }
+
+        private async Task<bool> EnviarCorreoResetPasswordAsync(UsuarioSistema usuario)
+        {
+            if (string.IsNullOrWhiteSpace(usuario.Email))
+            {
+                return false;
+            }
+
+            try
+            {
+                var urlSistema = Url.Action("Login", "Auth", null, Request.Scheme)
+                    ?? $"{Request.Scheme}://{Request.Host}";
+                var nombre = WebUtility.HtmlEncode(usuario.NombreCompleto);
+                var correo = WebUtility.HtmlEncode(usuario.Email);
+                var url = WebUtility.HtmlEncode(urlSistema);
+
+                var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
+                {
+                    new EmailTemplateRow("Cuenta", usuario.Email),
+                    new EmailTemplateRow("Acceso al sistema", urlSistema)
+                });
+
+                var cuerpo = _emailTemplateService.ConstruirCorreo(new EmailTemplateModel
+                {
+                    Titulo = "Contraseña restablecida",
+                    Preheader = "Se actualizó el acceso de tu cuenta en CGA Metrology System.",
+                    Etiqueta = "Gestion de usuarios",
+                    Nivel = "advertencia",
+                    ContenidoHtml = $@"
+                        <p style=""margin:0 0 14px;"">Hola <strong>{nombre}</strong>,</p>
+                        <p style=""margin:0 0 14px;"">La administración del sistema restableció la contraseña asociada a tu cuenta.</p>
+                        {tabla}
+                        <p style=""margin:0;"">Por seguridad, ingresa con la contraseña definida por administración y cámbiala desde tu perfil cuando accedas al sistema.</p>",
+                    TextoBoton = "Ingresar al sistema",
+                    UrlBoton = urlSistema
+                });
+
+                await _emailService.EnviarCorreoAsync(
+                    usuario.Email,
+                    "Contraseña restablecida - CGA Metrology System",
+                    cuerpo);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "No se pudo enviar el correo de restablecimiento de contraseña al usuario {UsuarioId}.",
+                    usuario.Id);
+
+                return false;
+            }
         }
 
         // Método para mostrar el formulario de restablecimiento de contraseña de un usuario, cargando su información básica
@@ -420,12 +661,30 @@ namespace CGA.MetrologySystem.Controllers
                 return View(model);
             }
 
+            usuario.DebeCambiarContrasena = true;
+            var resultadoUpdate = await _userManager.UpdateAsync(usuario);
+
+            if (!resultadoUpdate.Succeeded)
+            {
+                foreach (var error in resultadoUpdate.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+
+                return View(model);
+            }
+
             await RegistrarAuditoriaAsync(
                 "Resetear contraseña",
                 usuario,
                 "Se restableció la contraseña del usuario.");
 
-            TempData["MensajeExito"] = "Contraseña restablecida correctamente.";
+            var correoEnviado = await EnviarCorreoResetPasswordAsync(usuario);
+
+            TempData["MensajeExito"] = correoEnviado
+                ? "Contraseña restablecida correctamente. Se envió el aviso al usuario."
+                : "Contraseña restablecida correctamente. No se pudo enviar el aviso por correo.";
+
             return RedirectToAction(nameof(Index));
         }
 

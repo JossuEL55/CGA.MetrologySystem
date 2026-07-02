@@ -1,5 +1,6 @@
-ï»¿using CGA.MetrologySystem.Application.Interfaces;
+using CGA.MetrologySystem.Application.Interfaces;
 using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using CGA.MetrologySystem.Services.Auditoria;
@@ -12,7 +13,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.TodosOperativos)]
     public class CalibracionesController : Controller
     {
         private readonly AppDbContext _context;
@@ -115,7 +116,7 @@ namespace CGA.MetrologySystem.Controllers
             return View(calibracion);
         }
 
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Create()
         {
             var model = new CalibracionViewModel
@@ -130,7 +131,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Create(CalibracionViewModel model)
         {
             var tipoCalibracion = await ObtenerTipoEventoCalibracionAsync();
@@ -208,13 +209,13 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                ModelState.AddModelError(string.Empty, "OcurriÃ³ un error al guardar la calibraciÃ³n.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al guardar la calibración.");
                 await CargarCombosAsync(model);
                 return View(model);
             }
         }
 
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -254,7 +255,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Edit(int id, CalibracionViewModel model)
         {
             var tipoCalibracion = await ObtenerTipoEventoCalibracionAsync();
@@ -348,7 +349,7 @@ namespace CGA.MetrologySystem.Controllers
                         UsuarioId = usuarioActual?.Id,
                         UsuarioNombre = usuarioActual?.NombreCompleto ?? User.Identity?.Name,
                         UsuarioCorreo = usuarioActual?.Email,
-                        RolUsuario = User.IsInRole("Administrador") ? "Administrador" : "Usuario",
+                        RolUsuario = EsAdministradorMetrologico() ? RolesSistema.ObtenerNombreVisible(RolesSistema.AdministradorMetrologico) : "Usuario",
                         Accion = "Reemplazo de certificado",
                         Entidad = "Calibracion",
                         EntidadId = calibracion.EventoCalibracionDatoId.ToString(),
@@ -374,14 +375,14 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                ModelState.AddModelError(string.Empty, "OcurriÃ³ un error al actualizar la calibraciÃ³n.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al actualizar la calibración.");
                 ViewBag.EventoCalibracionDatoId = id;
                 await CargarCombosAsync(model);
                 return View(model);
             }
         }
 
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -403,7 +404,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var calibracion = await _context.EventosCalibracionDato
@@ -433,7 +434,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                TempData["Error"] = "OcurriÃ³ un error al eliminar la calibraciÃ³n.";
+                TempData["Error"] = "Ocurrió un error al eliminar la calibración.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
         }
@@ -521,7 +522,7 @@ namespace CGA.MetrologySystem.Controllers
         private async Task<TipoEventoMetrologico?> ObtenerTipoEventoCalibracionAsync()
         {
             return await _context.TiposEventoMetrologico
-                .FirstOrDefaultAsync(t => t.Nombre == "CalibraciÃ³n");
+                .FirstOrDefaultAsync(t => t.Nombre == "Calibración");
         }
 
         private async Task ValidarFormularioCalibracionAsync(
@@ -531,7 +532,7 @@ namespace CGA.MetrologySystem.Controllers
         {
             if (tipoCalibracion == null)
             {
-                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'CalibraciÃ³n'.");
+                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'Calibración'.");
                 return;
             }
 
@@ -540,7 +541,7 @@ namespace CGA.MetrologySystem.Controllers
 
             if (!equipoExiste)
             {
-                ModelState.AddModelError("EquipoId", "Debe seleccionar un equipo vÃ¡lido.");
+                ModelState.AddModelError("EquipoId", "Debe seleccionar un equipo válido.");
             }
 
             if (certificadoObligatorio &&
@@ -574,7 +575,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrolÃ³gicas.");
+                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrológicas.");
             }
 
             if (!string.IsNullOrWhiteSpace(resultadoRegla.Advertencia))
@@ -617,6 +618,11 @@ namespace CGA.MetrologySystem.Controllers
 
             return archivo.ContentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase)
                    || extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool EsAdministradorMetrologico()
+        {
+            return User.IsInRole(RolesSistema.AdministradorMetrologico);
         }
     }
 }

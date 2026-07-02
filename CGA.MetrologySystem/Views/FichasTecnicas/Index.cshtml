@@ -1,15 +1,16 @@
-锘緻model CGA.MetrologySystem.Models.FichasTecnicas.FichasTecnicasIndexViewModel
+@model CGA.MetrologySystem.Models.FichasTecnicas.FichasTecnicasIndexViewModel
 
 @{
-    ViewData["Title"] = "Fichas T茅cnicas";
+    ViewData["Title"] = "Fichas T閏nicas";
+    var puedeGenerar = (!User.IsInRole(RolesSistema.AdministradorSistema) && User.IsInRole(RolesSistema.AdministradorMetrologico));
 }
 
 <div class="page-header">
     <div>
-        <h2 class="page-title">Fichas T茅cnicas</h2>
+        <h2 class="page-title">Fichas T閏nicas</h2>
 
         <p class="page-subtitle">
-            Consulta, generaci贸n y actualizaci贸n de fichas t茅cnicas consolidadas por equipo.
+            Consulta, generaci髇 y actualizaci髇 de fichas t閏nicas consolidadas por equipo.
         </p>
     </div>
 </div>
@@ -39,7 +40,7 @@
 
                 <input asp-for="Buscar"
                        class="form-control"
-                       placeholder="C贸digo, nombre, marca, modelo o serie..." />
+                       placeholder="C骴igo, nombre, marca, modelo o serie..." />
             </div>
 
             <div class="col-md-5">
@@ -75,8 +76,8 @@
                 <tr>
                     <th>Equipo</th>
                     <th>Tipo</th>
-                    <th>Ficha T茅cnica</th>
-                    <th>脷ltima Generaci贸n</th>
+                    <th>Ficha T閏nica</th>
+                    <th>趌tima Generaci髇</th>
                     <th>Eventos</th>
                     <th class="text-center">Acciones</th>
                 </tr>
@@ -153,26 +154,29 @@
                                         </a>
                                     }
 
-                                    <form asp-action="GenerarActualizar"
-                                          method="post">
+                                    @if (puedeGenerar)
+                                    {
+                                        <form asp-action="GenerarActualizar"
+                                              method="post">
 
-                                        @Html.AntiForgeryToken()
+                                            @Html.AntiForgeryToken()
 
-                                        <input type="hidden"
-                                               name="equipoId"
-                                               value="@item.EquipoId" />
+                                            <input type="hidden"
+                                                   name="equipoId"
+                                                   value="@item.EquipoId" />
 
-                                        <button type="submit"
-                                                class="btn btn-sm btn-primary">
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-primary">
 
-                                            <i class="bi bi-arrow-repeat"></i>
+                                                <i class="bi bi-arrow-repeat"></i>
 
-                                            @(item.TieneFichaTecnica
-                                                ? "Actualizar"
-                                                : "Generar")
-                                        </button>
+                                                @(item.TieneFichaTecnica
+                                                    ? "Actualizar"
+                                                    : "Generar")
+                                            </button>
 
-                                    </form>
+                                        </form>
+                                    }
 
                                 </div>
 

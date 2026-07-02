@@ -1,11 +1,12 @@
 ﻿using CGA.MetrologySystem.Models.ControlMetrologico;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Services.ControlMetrologico;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.TodosOperativos)]
     public class ControlMetrologicoController : Controller
     {
         private readonly ControlMetrologicoService _controlMetrologicoService;
