@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    //Controlador para manejar la autenticación de usuarios, incluyendo el inicio de sesión
     public class AuthController : Controller
     {
         private readonly SignInManager<UsuarioSistema> _signInManager;
@@ -26,7 +25,7 @@ namespace CGA.MetrologySystem.Controllers
         {
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                return RedirectToAction("Index", "Home");
+                return RedirigirUsuarioAutenticadoPorRol();
             }
 
             ViewData["ReturnUrl"] = returnUrl;
@@ -41,7 +40,9 @@ namespace CGA.MetrologySystem.Controllers
             ViewData["ReturnUrl"] = returnUrl;
 
             if (!ModelState.IsValid)
+            {
                 return View(model);
+            }
 
             model.Correo = model.Correo.Trim().ToLower();
 
@@ -52,6 +53,8 @@ namespace CGA.MetrologySystem.Controllers
                 ModelState.AddModelError(string.Empty, "Credenciales inválidas.");
                 return View(model);
             }
+
+            await NormalizarRolPrincipalAsync(usuario);
 
             var resultado = await _signInManager.PasswordSignInAsync(
                 usuario.UserName!,
@@ -65,9 +68,87 @@ namespace CGA.MetrologySystem.Controllers
                 return View(model);
             }
 
-            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+            usuario.UltimoAcceso = DateTime.UtcNow;
+            await _userManager.UpdateAsync(usuario);
+
+            return await RedirigirPorRolAsync(usuario);
+        }
+
+        private async Task<IActionResult> RedirigirPorRolAsync(UsuarioSistema usuario)
+        {
+            var roles = await _userManager.GetRolesAsync(usuario);
+            var rolPrincipal = ObtenerRolPrincipal(roles);
+
+            if (rolPrincipal == RolesSistema.AdministradorSistema)
             {
-                return Redirect(returnUrl);
+                return RedirectToAction("Index", "DashboardMetrologico");
+            }
+
+            if (rolPrincipal == RolesSistema.AdministradorMetrologico ||
+                rolPrincipal == RolesSistema.Tecnico)
+            {
+                return RedirectToAction("Index", "MaestroEquipos");
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
+
+        private async Task NormalizarRolPrincipalAsync(UsuarioSistema usuario)
+        {
+            var roles = await _userManager.GetRolesAsync(usuario);
+            var rolPrincipal = ObtenerRolPrincipal(roles);
+
+            if (string.IsNullOrWhiteSpace(rolPrincipal))
+            {
+                return;
+            }
+
+            var rolesARemover = roles
+                .Where(r => RolesSistema.RolesBase.Contains(r) && r != rolPrincipal)
+                .ToArray();
+
+            if (rolesARemover.Any())
+            {
+                await _userManager.RemoveFromRolesAsync(usuario, rolesARemover);
+            }
+
+            if (!roles.Contains(rolPrincipal))
+            {
+                await _userManager.AddToRoleAsync(usuario, rolPrincipal);
+            }
+        }
+
+        private static string? ObtenerRolPrincipal(IList<string> roles)
+        {
+            if (roles.Contains(RolesSistema.AdministradorSistema))
+            {
+                return RolesSistema.AdministradorSistema;
+            }
+
+            if (roles.Contains(RolesSistema.AdministradorMetrologico))
+            {
+                return RolesSistema.AdministradorMetrologico;
+            }
+
+            if (roles.Contains(RolesSistema.Tecnico))
+            {
+                return RolesSistema.Tecnico;
+            }
+
+            return null;
+        }
+
+        private IActionResult RedirigirUsuarioAutenticadoPorRol()
+        {
+            if (User.IsInRole(RolesSistema.AdministradorSistema))
+            {
+                return RedirectToAction("Index", "DashboardMetrologico");
+            }
+
+            if (User.IsInRole(RolesSistema.AdministradorMetrologico) ||
+                User.IsInRole(RolesSistema.Tecnico))
+            {
+                return RedirectToAction("Index", "MaestroEquipos");
             }
 
             return RedirectToAction("Index", "Home");

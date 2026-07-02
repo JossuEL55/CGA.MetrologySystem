@@ -1,14 +1,14 @@
-Ôªø@model CGA.MetrologySystem.Models.VerificacionViewModel
+@model CGA.MetrologySystem.Models.VerificacionViewModel
 
 @{
-    ViewData["Title"] = "Registrar verificaci√≥n";
+    ViewData["Title"] = "Registrar verificaciÛn";
 }
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-        <h2 class="page-title">Registrar verificaci√≥n</h2>
+        <h2 class="page-title">Registrar verificaciÛn</h2>
         <p class="page-subtitle">
-            Registra la verificaci√≥n t√©cnica del equipo, sus condiciones evaluadas y evidencias visuales asociadas.
+            Registra la verificaciÛn tÈcnica del equipo, sus condiciones evaluadas y evidencias visuales asociadas.
         </p>
     </div>
 
@@ -29,10 +29,10 @@
 
     <div class="plantilla-section-header mb-4">
         <div>
-            <span class="section-kicker">Evento t√©cnico</span>
-            <h5 class="mb-1">Informaci√≥n general de la verificaci√≥n</h5>
+            <span class="section-kicker">Evento tÈcnico</span>
+            <h5 class="mb-1">InformaciÛn general de la verificaciÛn</h5>
             <p class="page-subtitle">
-                Selecciona el equipo y registra la fecha de control. La plantilla se cargar√° autom√°ticamente seg√∫n el tipo de equipo.
+                Selecciona el equipo y registra la fecha de control. La plantilla se cargar· autom·ticamente seg˙n el tipo de equipo.
             </p>
         </div>
     </div>
@@ -49,7 +49,7 @@
                 </select>
                 <span asp-validation-for="EquipoId" class="text-danger"></span>
                 <small class="text-muted">
-                    Al seleccionar un equipo se cargar√° autom√°ticamente la plantilla correspondiente.
+                    Al seleccionar un equipo se cargar· autom·ticamente la plantilla correspondiente.
                 </small>
             </div>
 
@@ -74,13 +74,13 @@
             </div>
 
             <div class="col-md-3 mb-3">
-                <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha de verificaci√≥n</label>
+                <label asp-for="FechaEvento" class="form-label fw-semibold">Fecha de verificaciÛn</label>
                 <input asp-for="FechaEvento" class="form-control" type="date" />
                 <span asp-validation-for="FechaEvento" class="text-danger"></span>
             </div>
 
             <div class="col-md-3 mb-3">
-                <label asp-for="FechaProxima" class="form-label fw-semibold">Pr√≥xima fecha calculada</label>
+                <label asp-for="FechaProxima" class="form-label fw-semibold">PrÛxima fecha calculada</label>
                 <input asp-for="FechaProxima"
                        class="form-control readonly-highlight"
                        type="date"
@@ -93,16 +93,16 @@
         <div class="checklist-info-strip mb-4 mx-0">
             <div class="checklist-info-icon">i</div>
             <div>
-                <strong>Regla autom√°tica</strong>
+                <strong>Regla autom·tica</strong>
                 <p class="mb-0">
-                    Si la verificaci√≥n es no programada, selecciona el subtipo Extraordinario y justif√≠cala.
-                    El sistema tambi√©n lo solicitar√° si la fecha se desv√≠a del periodo esperado.
+                    Si la verificaciÛn es no programada, selecciona el subtipo Extraordinario y justifÌcala.
+                    El sistema tambiÈn lo solicitar· si la fecha se desvÌa del periodo esperado.
                 </p>
             </div>
         </div>
 
         <div class="row">
-            @if (User.IsInRole("Administrador"))
+            @if (User.IsInRole(RolesSistema.AdministradorMetrologico))
             {
                 <div class="col-md-4 mb-3">
                     <div class="form-check form-switch cga-switch mt-md-4 pt-md-2">
@@ -127,7 +127,7 @@
 
             <div class="col-md-4 mb-3">
                 <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
-                    Justificaci√≥n extraordinaria
+                    JustificaciÛn extraordinaria
                 </label>
                 <textarea asp-for="JustificacionExtraordinario"
                           class="form-control"
@@ -136,14 +136,14 @@
                 <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
             </div>
 
-            @if (User.IsInRole("Administrador"))
+            @if (User.IsInRole(RolesSistema.AdministradorMetrologico))
             {
                 <div class="col-md-12 mb-3">
                     <label asp-for="ObservacionCargaHistorica" class="form-label fw-semibold"></label>
                     <textarea asp-for="ObservacionCargaHistorica"
                               class="form-control"
                               rows="2"
-                              placeholder="Referencia u observaci√≥n del registro hist√≥rico."></textarea>
+                              placeholder="Referencia u observaciÛn del registro histÛrico."></textarea>
                     <span asp-validation-for="ObservacionCargaHistorica" class="text-danger"></span>
                 </div>
             }
@@ -165,29 +165,29 @@
         <div class="verification-builder-header">
             <div class="checklist-header-left">
                 <div class="checklist-header-icon">
-                    ‚úì
+                    ?
                 </div>
 
                 <div>
-                    <span class="section-kicker">Sistema de verificaci√≥n</span>
-                    <h5 class="mb-1">Checklist t√©cnico evaluado</h5>
+                    <span class="section-kicker">Sistema de verificaciÛn</span>
+                    <h5 class="mb-1">Checklist tÈcnico evaluado</h5>
                     <p class="page-subtitle">
-                        Marca cada condici√≥n como conforme o no conforme y registra observaciones cuando aplique.
+                        Marca cada condiciÛn como conforme o no conforme y registra observaciones cuando aplique.
                     </p>
                 </div>
             </div>
 
             <button type="button" id="addResultado" class="btn btn-primary checklist-add-button">
-                + Agregar condici√≥n
+                + Agregar condiciÛn
             </button>
         </div>
 
         <div class="checklist-info-strip">
             <div class="checklist-info-icon">i</div>
             <div>
-                <strong>Gu√≠a de evaluaci√≥n</strong>
+                <strong>GuÌa de evaluaciÛn</strong>
                 <p class="mb-0">
-                    Usa ‚ÄúCumple‚Äù cuando la condici√≥n est√© conforme. Si detectas un hallazgo, desmarca la condici√≥n y describe la novedad en observaciones.
+                    Usa ìCumpleî cuando la condiciÛn estÈ conforme. Si detectas un hallazgo, desmarca la condiciÛn y describe la novedad en observaciones.
                 </p>
             </div>
         </div>
@@ -197,11 +197,11 @@
                 <thead>
                     <tr>
                         <th class="checklist-head-order checklist-order-column">#</th>
-                        <th class="checklist-head-description">Descripci√≥n</th>
+                        <th class="checklist-head-description">DescripciÛn</th>
                         <th class="checklist-head-status checklist-status-column">Cumple</th>
                         <th class="checklist-head-notes">Observaciones</th>
-                        <th class="checklist-head-evidence">Evidencia del √≠tem</th>
-                        <th class="checklist-head-action text-end checklist-action-column">Acci√≥n</th>
+                        <th class="checklist-head-evidence">Evidencia del Ìtem</th>
+                        <th class="checklist-head-action text-end checklist-action-column">AcciÛn</th>
                     </tr>
                 </thead>
                 <tbody id="resultadosContainer">
@@ -216,7 +216,7 @@
                                 <input asp-for="Resultados[i].DescripcionItem"
                                        data-field="descripcion"
                                        class="form-control"
-                                       placeholder="Ej. Cable de alimentaci√≥n libre de da√±os visibles" />
+                                       placeholder="Ej. Cable de alimentaciÛn libre de daÒos visibles" />
                                 <span asp-validation-for="Resultados[i].DescripcionItem" class="text-danger"></span>
                             </td>
                             <td class="text-center">
@@ -231,7 +231,7 @@
                                            name="Resultados[@i].Cumple"
                                            data-field="cumple-hidden"
                                            value="false" />
-                                    <span>S√≠</span>
+                                    <span>SÌ</span>
                                 </label>
                             </td>
                             <td>
@@ -268,7 +268,7 @@
             <div class="empty-checklist-icon">+</div>
             <h6>No hay condiciones agregadas</h6>
             <p>
-                Agrega condiciones t√©cnicas o selecciona un equipo con una plantilla configurada.
+                Agrega condiciones tÈcnicas o selecciona un equipo con una plantilla configurada.
             </p>
         </div>
     </div>
@@ -279,7 +279,7 @@
                 <span class="section-kicker">Evidencias</span>
                 <h5 class="mb-1">Evidencias visuales</h5>
                 <p class="page-subtitle">
-                    Puedes tomar fotograf√≠as desde tablet/celular o subir im√°genes existentes del dispositivo.
+                    Puedes tomar fotografÌas desde tablet/celular o subir im·genes existentes del dispositivo.
                 </p>
             </div>
         </div>
@@ -287,10 +287,10 @@
         <div class="event-upload-box">
             <div>
                 <label asp-for="Evidencias" class="form-label fw-semibold mb-1">
-                    Im√°genes de evidencia
+                    Im·genes de evidencia
                 </label>
                 <p class="mb-0">
-                    Adjunta una o varias im√°genes que respalden la condici√≥n t√©cnica del equipo.
+                    Adjunta una o varias im·genes que respalden la condiciÛn tÈcnica del equipo.
                 </p>
             </div>
 
@@ -302,7 +302,7 @@
         </div>
 
         <small class="text-muted d-block mt-2">
-            Formatos permitidos: im√°genes. Puedes seleccionar m√∫ltiples evidencias.
+            Formatos permitidos: im·genes. Puedes seleccionar m˙ltiples evidencias.
         </small>
     </div>
 
@@ -312,7 +312,7 @@
         </a>
 
         <button type="submit" class="btn btn-primary">
-            Guardar verificaci√≥n
+            Guardar verificaciÛn
         </button>
     </div>
 </form>
@@ -434,7 +434,7 @@
                                            name="Resultados[${index}].Cumple"
                                            data-field="cumple-hidden"
                                            value="false" />
-                                    <span>S√≠</span>
+                                    <span>SÌ</span>
                                 </label>
                             </td>
                             <td>

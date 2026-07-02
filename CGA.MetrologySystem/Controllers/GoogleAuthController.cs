@@ -1,15 +1,18 @@
 ﻿using CGA.MetrologySystem.Application.DTOs;
 using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Flows;
 using Google.Apis.Drive.v3;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace CGA.MetrologySystem.Controllers
 {
+    [Authorize(Roles = RolesSistema.AdministracionUsuarios)]
     public class GoogleAuthController : Controller
     {
         private readonly GoogleOAuthSettings _oauthSettings;

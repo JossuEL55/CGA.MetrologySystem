@@ -1,5 +1,6 @@
-ï»¿using CGA.MetrologySystem.Application.Interfaces;
+using CGA.MetrologySystem.Application.Interfaces;
 using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using CGA.MetrologySystem.Services.Auditoria;
@@ -13,7 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.TodosOperativos)]
     public class MantenimientosController : Controller
     {
         private readonly AppDbContext _context;
@@ -155,6 +156,7 @@ namespace CGA.MetrologySystem.Controllers
                 $"Mantenimiento-{codigoEquipo}-{fecha}.pdf");
         }
 
+        [Authorize(Roles = RolesSistema.OperacionMetrologica)]
         public async Task<IActionResult> Create(int? equipoId = null)
         {
             var model = new MantenimientoViewModel
@@ -183,6 +185,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.OperacionMetrologica)]
         public async Task<IActionResult> Create(MantenimientoViewModel model)
         {
             NormalizarActividades(model);
@@ -275,12 +278,13 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                ModelState.AddModelError(string.Empty, "OcurriÃ³ un error al guardar el mantenimiento.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al guardar el mantenimiento.");
                 await CargarCombosAsync(model);
                 return View(model);
             }
         }
 
+        [Authorize(Roles = RolesSistema.OperacionMetrologica)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -354,6 +358,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.OperacionMetrologica)]
         public async Task<IActionResult> Edit(int id, MantenimientoViewModel model)
         {
             if (id != model.EventoMantenimientoDatoId)
@@ -462,13 +467,14 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                ModelState.AddModelError(string.Empty, "OcurriÃ³ un error al actualizar el mantenimiento.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error al actualizar el mantenimiento.");
                 await CargarCombosAsync(model);
                 await CargarEvidenciasExistentesEnModeloAsync(model);
                 return View(model);
             }
         }
 
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -504,6 +510,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var mantenimiento = await _context.EventosMantenimientoDato
@@ -550,7 +557,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                TempData["Error"] = "OcurriÃ³ un error al eliminar el mantenimiento.";
+                TempData["Error"] = "Ocurrió un error al eliminar el mantenimiento.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
         }
@@ -640,7 +647,7 @@ namespace CGA.MetrologySystem.Controllers
             return new List<SelectListItem>
             {
                 new("Operativos", "operativos", clasificacion == "operativos"),
-                new("HistÃ³ricos", "historicos", clasificacion == "historicos"),
+                new("Históricos", "historicos", clasificacion == "historicos"),
                 new("Extraordinarios", "extraordinarios", clasificacion == "extraordinarios")
             };
         }
@@ -787,7 +794,7 @@ namespace CGA.MetrologySystem.Controllers
                 EsCritico = true
             });
 
-            if (User.IsInRole("Tecnico") && !User.IsInRole("Administrador"))
+            if (User.IsInRole(RolesSistema.Tecnico) && !EsAdministrador())
             {
                 await _notificacionMetrologicaService.NotificarEdicionCriticaMantenimientoAsync(
                     mantenimiento.EventoMantenimientoDatoId,
@@ -845,14 +852,14 @@ namespace CGA.MetrologySystem.Controllers
 
         private string ObtenerRolUsuarioActual()
         {
-            if (User.IsInRole("Administrador"))
+            if (EsAdministrador())
             {
-                return "Administrador";
+                return RolesSistema.ObtenerNombreVisible(RolesSistema.AdministradorMetrologico);
             }
 
-            if (User.IsInRole("Tecnico"))
+            if (User.IsInRole(RolesSistema.Tecnico))
             {
-                return "Tecnico";
+                return RolesSistema.ObtenerNombreVisible(RolesSistema.Tecnico);
             }
 
             return "Usuario";
@@ -860,7 +867,7 @@ namespace CGA.MetrologySystem.Controllers
 
         private bool EsAdministrador()
         {
-            return User.IsInRole("Administrador");
+            return User.IsInRole(RolesSistema.AdministradorMetrologico);
         }
 
         private static bool SonFechasEquivalentes(DateTime? fechaAnterior, DateTime? fechaNueva)
@@ -928,14 +935,14 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    "Solo un administrador puede registrar o corregir mantenimientos histÃ³ricos.");
+                    "Solo un administrador puede registrar o corregir mantenimientos históricos.");
             }
 
             if (model.EsHistorico && model.FechaEvento.Date >= DateTime.Today)
             {
                 ModelState.AddModelError(
                     nameof(model.FechaEvento),
-                    "Un mantenimiento histÃ³rico debe tener una fecha anterior al dÃ­a actual.");
+                    "Un mantenimiento histórico debe tener una fecha anterior al día actual.");
             }
 
             if (!model.Actividades.Any())
@@ -962,7 +969,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    "Las evidencias por actividad deben ser imÃ¡genes.");
+                    "Las evidencias por actividad deben ser imágenes.");
             }
 
             var resultadoRegla = await _metrologyRulesService.EvaluarEventoAsync(
@@ -983,7 +990,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrolÃ³gicas.");
+                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrológicas.");
             }
 
             if (!string.IsNullOrWhiteSpace(resultadoRegla.Advertencia))
@@ -1014,7 +1021,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     nameof(model.FechaEvento),
-                    "No se puede marcar como histÃ³rico porque no existe un mantenimiento registrado posterior que sirva como referencia.");
+                    "No se puede marcar como histórico porque no existe un mantenimiento registrado posterior que sirva como referencia.");
                 return;
             }
 
@@ -1022,7 +1029,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     nameof(model.FechaEvento),
-                    $"Un mantenimiento histÃ³rico debe tener una fecha anterior al Ãºltimo mantenimiento registrado del equipo ({ultimaFechaRegistrada.Value:yyyy-MM-dd}).");
+                    $"Un mantenimiento histórico debe tener una fecha anterior al último mantenimiento registrado del equipo ({ultimaFechaRegistrada.Value:yyyy-MM-dd}).");
             }
         }
 

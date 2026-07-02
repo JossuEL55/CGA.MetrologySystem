@@ -1,7 +1,7 @@
-ï»¿@model CGA.MetrologySystem.Domain.Entities.EventoCalibracionDato
+@model CGA.MetrologySystem.Domain.Entities.EventoCalibracionDato
 
 @{
-    ViewData["Title"] = "Detalle de calibraciÃ³n";
+    ViewData["Title"] = "Detalle de calibración";
 
     var evento = Model.EventoMetrologico;
     var estado = evento.EstadoEquipoResultado ?? "Sin estado";
@@ -17,14 +17,14 @@
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
-        <h2 class="page-title">Detalle de calibraciÃ³n</h2>
+        <h2 class="page-title">Detalle de calibración</h2>
         <p class="page-subtitle">
-            InformaciÃ³n del evento metrolÃ³gico, certificado del laboratorio y trazabilidad del documento.
+            Información del evento metrológico, certificado del laboratorio y trazabilidad del documento.
         </p>
     </div>
 
     <div class="d-flex gap-2">
-        @if (User.IsInRole("Administrador"))
+        @if ((!User.IsInRole(RolesSistema.AdministradorSistema) && User.IsInRole(RolesSistema.AdministradorMetrologico)))
         {
             <a asp-action="Edit" asp-route-id="@Model.EventoCalibracionDatoId" class="btn btn-primary">
                 Editar
@@ -44,7 +44,7 @@
                 <div>
                     <h5 class="mb-1">@evento.Equipo?.Codigo - @evento.Equipo?.Nombre</h5>
                     <p class="text-muted mb-0">
-                        Certificado: @(string.IsNullOrWhiteSpace(Model.NumeroCertificado) ? "Sin nÃºmero" : Model.NumeroCertificado)
+                        Certificado: @(string.IsNullOrWhiteSpace(Model.NumeroCertificado) ? "Sin número" : Model.NumeroCertificado)
                     </p>
                 </div>
 
@@ -67,7 +67,7 @@
                 </div>
 
                 <div class="col-md-4 mb-3">
-                    <div class="text-muted small">Fecha de calibraciÃ³n</div>
+                    <div class="text-muted small">Fecha de calibración</div>
                     <div class="fw-semibold">
                         @(Model.FechaCalibracion.HasValue
                             ? Model.FechaCalibracion.Value.ToString("yyyy-MM-dd")
@@ -76,7 +76,7 @@
                 </div>
 
                 <div class="col-md-4 mb-3">
-                    <div class="text-muted small">PrÃ³xima fecha</div>
+                    <div class="text-muted small">Próxima fecha</div>
                     <div class="fw-semibold">
                         @(evento.FechaProxima.HasValue
                             ? evento.FechaProxima.Value.ToString("yyyy-MM-dd")
@@ -103,10 +103,10 @@
             @if (evento.EsExtraordinario)
             {
                 <div class="alert alert-warning">
-                    <div class="fw-semibold mb-1">JustificaciÃ³n extraordinaria</div>
+                    <div class="fw-semibold mb-1">Justificación extraordinaria</div>
                     <div>
                         @(string.IsNullOrWhiteSpace(evento.JustificacionExtraordinario)
-                            ? "No se registrÃ³ una justificaciÃ³n."
+                            ? "No se registró una justificación."
                             : evento.JustificacionExtraordinario)
                     </div>
                 </div>
@@ -136,7 +136,7 @@
 
     <div class="col-lg-4 mb-4">
         <div class="form-card">
-            <h5 class="mb-3">Certificado de calibraciÃ³n</h5>
+            <h5 class="mb-3">Certificado de calibración</h5>
 
             @if (!string.IsNullOrWhiteSpace(Model.RutaCertificado))
             {
@@ -161,7 +161,7 @@
             else
             {
                 <div class="alert alert-warning mb-0">
-                    Esta calibraciÃ³n no tiene certificado asociado.
+                    Esta calibración no tiene certificado asociado.
                 </div>
             }
         </div>

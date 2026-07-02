@@ -10,8 +10,16 @@
     <link rel="stylesheet" href="~/CGA.MetrologySystem.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="app-layout">
+    @{
+        var esAdministradorSistema = User.IsInRole(RolesSistema.AdministradorSistema);
+        var esAdministradorMetrologico = !esAdministradorSistema && User.IsInRole(RolesSistema.AdministradorMetrologico);
+        var esTecnico = !esAdministradorSistema && !esAdministradorMetrologico && User.IsInRole(RolesSistema.Tecnico);
+        var puedeSupervisarMetrologia = esAdministradorSistema || esAdministradorMetrologico;
+        var puedeConsultarMetrologia = esAdministradorSistema || esAdministradorMetrologico || esTecnico;
+        var puedeGestionarMetrologia = esAdministradorMetrologico;
+    }
 
+    <div class="app-layout">
         <aside class="sidebar">
             <div class="sidebar-brand">
                 <a asp-controller="Home" asp-action="Index" class="sidebar-brand-link">
@@ -27,78 +35,59 @@
                 <a class="sidebar-link" asp-controller="Home" asp-action="Index">Inicio</a>
                 <a class="sidebar-link" asp-controller="Perfil" asp-action="Index">Mi perfil</a>
 
-                <div class="sidebar-section-title">Metrología</div>
-
-                <a class="sidebar-link" asp-controller="Equipos" asp-action="Index">
-                    Equipos
-                </a>
-
-                <a class="sidebar-link"
-                   asp-controller="MaestroEquipos"
-                   asp-action="Index">
-                    Maestro de equipos
-                </a>
-
-                <a class="sidebar-link" asp-controller="Laboratorios" asp-action="Index">
-                    Laboratorios
-                </a>
-
-                <a class="sidebar-link" asp-controller="Calibraciones" asp-action="Index">
-                    Calibraciones
-                </a>
-
-                <a class="sidebar-link" asp-controller="Verificaciones" asp-action="Index">
-                    Verificaciones
-                </a>
-
-                <a class="sidebar-link" asp-controller="Mantenimientos" asp-action="Index">
-                    Mantenimientos
-                </a>
-
-                <a class="sidebar-link"
-                       asp-controller="ControlMetrologico"
-                       asp-action="Index">
-                    Control metrológico
-                </a>
-
-                <a class="sidebar-link"
-                   asp-controller="DashboardMetrologico"
-                   asp-action="Index">
-                    Dashboard metrológico
-                </a>
-
-                <a class="sidebar-link"
-                   asp-controller="TendenciasMetrologicas"
-                   asp-action="Index">
-                    Desviaciones históricas
-                </a>
-
-                <a class="sidebar-link"
-                   asp-controller="FichasTecnicas"
-                   asp-action="Index">
-                    Fichas técnicas
-                </a>
-
-                <a class="sidebar-link"
-                   asp-controller="HojasVida"
-                   asp-action="Index">
-                    Hojas de vida
-                </a>
-
-                @if (User.IsInRole("Administrador"))
+                @if (puedeConsultarMetrologia)
                 {
-                    <div class="sidebar-section-title">Administración</div>
+                    <div class="sidebar-section-title">Consulta metrol&oacute;gica</div>
 
-                    <a class="sidebar-link" asp-controller="Usuarios" asp-action="Index">
-                        Usuarios
+                    <a class="sidebar-link" asp-controller="MaestroEquipos" asp-action="Index">
+                        Maestro de equipos
                     </a>
 
-                    <a class="sidebar-link" asp-controller="Auditoria" asp-action="Index">
-                        Auditoría de usuarios
+                    <a class="sidebar-link" asp-controller="Equipos" asp-action="Index">
+                        Equipos
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="Calibraciones" asp-action="Index">
+                        Calibraciones
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="Verificaciones" asp-action="Index">
+                        Verificaciones
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="Mantenimientos" asp-action="Index">
+                        Mantenimientos
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="ControlMetrologico" asp-action="Index">
+                        Control metrol&oacute;gico
+                    </a>
+
+                    <div class="sidebar-section-title">Documentaci&oacute;n</div>
+
+                    <a class="sidebar-link" asp-controller="FichasTecnicas" asp-action="Index">
+                        Fichas t&eacute;cnicas
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="HojasVida" asp-action="Index">
+                        Hojas de vida
+                    </a>
+                }
+
+                @if (puedeSupervisarMetrologia)
+                {
+                    <div class="sidebar-section-title">Supervisi&oacute;n</div>
+
+                    <a class="sidebar-link" asp-controller="DashboardMetrologico" asp-action="Index">
+                        Dashboard metrol&oacute;gico
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="TendenciasMetrologicas" asp-action="Index">
+                        Desviaciones hist&oacute;ricas
                     </a>
 
                     <a class="sidebar-link" asp-controller="AuditoriaMetrologica" asp-action="Index">
-                        Bitácora metrológica
+                        Bit&aacute;cora metrol&oacute;gica
                     </a>
 
                     <a class="sidebar-link" asp-controller="Alertas" asp-action="Index">
@@ -108,19 +97,39 @@
                     <a class="sidebar-link" asp-controller="Notificaciones" asp-action="Index">
                         Notificaciones
                     </a>
+                }
 
-                    <div class="sidebar-section-title">Configuración</div>
+                @if (esAdministradorSistema)
+                {
+                    <div class="sidebar-section-title">Administraci&oacute;n del sistema</div>
 
-                    <a class="sidebar-link"
-                           asp-controller="PlantillasEvento"
-                           asp-action="Index">
+                    <a class="sidebar-link" asp-controller="Usuarios" asp-action="Index">
+                        Usuarios
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="Auditoria" asp-action="Index">
+                        Auditor&iacute;a de usuarios
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="Laboratorios" asp-action="Index">
+                        Laboratorios
+                    </a>
+                }
+
+                @if (puedeGestionarMetrologia)
+                {
+                    <div class="sidebar-section-title">Configuraci&oacute;n metrol&oacute;gica</div>
+
+                    <a class="sidebar-link" asp-controller="Laboratorios" asp-action="Index">
+                        Laboratorios
+                    </a>
+
+                    <a class="sidebar-link" asp-controller="PlantillasEvento" asp-action="Index">
                         Plantillas de evento
                     </a>
 
-                    <a class="sidebar-link"
-                           asp-controller="ConfiguracionesControlEquipo"
-                           asp-action="Index">
-                        Configuración control equipo
+                    <a class="sidebar-link" asp-controller="ConfiguracionesControlEquipo" asp-action="Index">
+                        Configuraci&oacute;n control equipo
                     </a>
                 }
             </nav>

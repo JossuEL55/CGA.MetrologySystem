@@ -1,15 +1,15 @@
-﻿@model CGA.MetrologySystem.Models.Perfil.PerfilViewModel
+@model CGA.MetrologySystem.Models.Perfil.PerfilViewModel
 
 @{
     ViewData["Title"] = "Mi perfil";
 }
 
-<div class="page-header">
-    <h2 class="page-title">Mi perfil</h2>
-    <p class="page-subtitle">
-        Consulta y actualiza tu información personal dentro del sistema.
-    </p>
-</div>
+@functions {
+    private static string ObtenerInicial(string nombre)
+    {
+        return string.IsNullOrWhiteSpace(nombre) ? "U" : nombre.Trim()[0].ToString().ToUpperInvariant();
+    }
+}
 
 @if (TempData["MensajeExito"] != null)
 {
@@ -21,40 +21,95 @@
     <div class="alert alert-danger">@TempData["MensajeError"]</div>
 }
 
-<div class="form-card">
-    <form asp-action="Index" method="post">
-        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+<section class="security-hero mb-4">
+    <div class="position-relative">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div>
+                <div class="security-eyebrow">Cuenta personal</div>
+                <h2 class="page-title mb-2">Mi perfil</h2>
+                <p class="security-subtitle mb-0">
+                    Consulta tu informaci&oacute;n de acceso y mant&eacute;n actualizados tus datos visibles dentro del sistema.
+                </p>
+            </div>
+            <a asp-action="CambiarContrasena" class="btn btn-warning fw-bold">Cambiar contrase&ntilde;a</a>
+        </div>
+    </div>
+</section>
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label asp-for="Correo" class="form-label fw-semibold"></label>
-                <input asp-for="Correo" class="form-control" readonly />
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="security-panel h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="user-avatar user-avatar-lg">@ObtenerInicial(Model.NombreCompleto)</div>
+                <div>
+                    <h4 class="mb-1">@Model.NombreCompleto</h4>
+                    <p class="text-muted mb-0">@Model.Correo</p>
+                </div>
             </div>
 
-            <div class="col-md-6 mb-3">
-                <label asp-for="NombreCompleto" class="form-label fw-semibold"></label>
-                <input asp-for="NombreCompleto" class="form-control" />
-                <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+            <hr />
+
+            <div class="d-flex flex-column gap-3">
+                <div>
+                    <div class="detail-label">Rol asignado</div>
+                    <span class="role-badge role-badge-metrology mt-2">@Model.Rol</span>
+                </div>
+
+                <div>
+                    <div class="detail-label">Estado de cuenta</div>
+                    @if (Model.Activo)
+                    {
+                        <span class="status-badge status-active mt-2">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="status-badge status-inactive mt-2">Inactivo</span>
+                    }
+                </div>
             </div>
         </div>
+    </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label asp-for="Rol" class="form-label fw-semibold"></label>
-                <input asp-for="Rol" class="form-control" readonly />
-            </div>
+    <div class="col-lg-8">
+        <div class="security-panel">
+            <form asp-action="Index" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Estado</label>
-                <input class="form-control" value="@(Model.Activo ? "Activo" : "Inactivo")" readonly />
-            </div>
+                <div class="mb-4">
+                    <h5 class="security-panel-title mb-1">Datos visibles</h5>
+                    <p class="text-muted mb-0">El correo y rol son informativos; solo puedes actualizar tu nombre.</p>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="Correo" class="form-label"></label>
+                        <input asp-for="Correo" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="NombreCompleto" class="form-label"></label>
+                        <input asp-for="NombreCompleto" class="form-control" autocomplete="name" />
+                        <span asp-validation-for="NombreCompleto" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Rol" class="form-label"></label>
+                        <input asp-for="Rol" class="form-control" readonly />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Estado</label>
+                        <input class="form-control" value="@(Model.Activo ? "Activo" : "Inactivo")" readonly />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 flex-wrap">
+                    <a asp-action="CambiarContrasena" class="btn btn-outline-secondary">Cambiar contrase&ntilde;a</a>
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+            </form>
         </div>
-
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <a asp-action="CambiarContrasena" class="btn btn-outline-secondary">Cambiar contraseña</a>
-            <button type="submit" class="btn btn-primary">Guardar cambios</button>
-        </div>
-    </form>
+    </div>
 </div>
 
 @section Scripts {

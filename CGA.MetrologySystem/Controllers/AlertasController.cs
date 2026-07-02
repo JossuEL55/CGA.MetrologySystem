@@ -1,3 +1,4 @@
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models.Alertas;
 using CGA.MetrologySystem.Services.Alertas;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = RolesSistema.SupervisionMetrologica)]
     public class AlertasController : Controller
     {
         private readonly AppDbContext _context;

@@ -13,23 +13,25 @@ namespace CGA.MetrologySystem.Services.Alertas
 {
     public class AlertaMetrologicaService : IAlertaMetrologicaService
     {
-        private const string RolAdministrador = "Administrador";
         private const string TipoAlertaVencido = "Vencido";
         private static readonly int[] DiasPreventivosCalibracionVerificacion = { 30, 15, 7, 4, 1 };
 
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly IEmailTemplateService _emailTemplateService;
         private readonly UserManager<UsuarioSistema> _userManager;
         private readonly AlertasSettings _alertasSettings;
 
         public AlertaMetrologicaService(
             AppDbContext context,
             IEmailService emailService,
+            IEmailTemplateService emailTemplateService,
             UserManager<UsuarioSistema> userManager,
             IOptions<AlertasSettings> alertasOptions)
         {
             _context = context;
             _emailService = emailService;
+            _emailTemplateService = emailTemplateService;
             _userManager = userManager;
             _alertasSettings = alertasOptions.Value;
         }
@@ -408,7 +410,16 @@ namespace CGA.MetrologySystem.Services.Alertas
 
         private async Task<List<string>> ObtenerCorreosAdministradoresAsync()
         {
-            var usuarios = await _userManager.GetUsersInRoleAsync(RolAdministrador);
+            var usuarios = new List<UsuarioSistema>();
+
+            foreach (var rol in new[]
+            {
+                RolesSistema.AdministradorSistema,
+                RolesSistema.AdministradorMetrologico
+            })
+            {
+                usuarios.AddRange(await _userManager.GetUsersInRoleAsync(rol));
+            }
 
             return usuarios
                 .Where(u => u.Activo)
@@ -481,7 +492,7 @@ namespace CGA.MetrologySystem.Services.Alertas
                 .ToList();
         }
 
-        private static string ConstruirCuerpoPreventivo(
+        private string ConstruirCuerpoPreventivo(
             Equipo equipo,
             ReglaAlertaPreventiva regla,
             DateTime fechaReferencia,
@@ -489,23 +500,30 @@ namespace CGA.MetrologySystem.Services.Alertas
         {
             var codigo = WebUtility.HtmlEncode(equipo.Codigo);
             var nombre = WebUtility.HtmlEncode(equipo.Nombre);
-            var tipoEquipo = WebUtility.HtmlEncode(equipo.TipoEquipo?.Nombre ?? "Sin tipo");
-            var responsable = WebUtility.HtmlEncode(equipo.ResponsableInterno?.NombreCompleto ?? "Sin responsable asignado");
+            var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
+            {
+                new EmailTemplateRow("Equipo", $"{codigo} - {nombre}"),
+                new EmailTemplateRow("Tipo de equipo", equipo.TipoEquipo?.Nombre ?? "Sin tipo"),
+                new EmailTemplateRow("Control", regla.TipoEvento),
+                new EmailTemplateRow("Fecha programada", fechaReferencia.ToString("yyyy-MM-dd")),
+                new EmailTemplateRow("Días restantes", diasRestantes.ToString()),
+                new EmailTemplateRow("Responsable interno", equipo.ResponsableInterno?.NombreCompleto ?? "Sin responsable asignado")
+            });
 
-            return $@"
-                <h2>Alerta preventiva de {regla.TipoEvento}</h2>
-                <p>El equipo <strong>{codigo} - {nombre}</strong> tiene una fecha critica proxima.</p>
-                <table cellpadding=""6"" cellspacing=""0"" border=""1"">
-                    <tr><td><strong>Tipo de equipo</strong></td><td>{tipoEquipo}</td></tr>
-                    <tr><td><strong>Control</strong></td><td>{regla.TipoEvento}</td></tr>
-                    <tr><td><strong>Fecha programada</strong></td><td>{fechaReferencia:yyyy-MM-dd}</td></tr>
-                    <tr><td><strong>Dias restantes</strong></td><td>{diasRestantes}</td></tr>
-                    <tr><td><strong>Responsable interno</strong></td><td>{responsable}</td></tr>
-                </table>
-                <p>Por favor planificar la gestion correspondiente para mantener la trazabilidad metrologica del equipo.</p>";
+            return _emailTemplateService.ConstruirCorreo(new EmailTemplateModel
+            {
+                Titulo = $"Alerta preventiva de {regla.TipoEvento}",
+                Preheader = $"El equipo {equipo.Codigo} tiene una fecha crítica próxima.",
+                Etiqueta = "Control metrológico",
+                Nivel = "advertencia",
+                ContenidoHtml = $@"
+                    <p style=""margin:0 0 14px;"">El equipo <strong>{codigo} - {nombre}</strong> tiene una fecha crítica próxima.</p>
+                    {tabla}
+                    <p style=""margin:0;"">Por favor planificar la gestión correspondiente para mantener la trazabilidad metrológica del equipo.</p>"
+            });
         }
 
-        private static string ConstruirCuerpoVencido(
+        private string ConstruirCuerpoVencido(
             Equipo equipo,
             ReglaAlertaVencida regla,
             DateTime fechaReferencia,
@@ -513,20 +531,27 @@ namespace CGA.MetrologySystem.Services.Alertas
         {
             var codigo = WebUtility.HtmlEncode(equipo.Codigo);
             var nombre = WebUtility.HtmlEncode(equipo.Nombre);
-            var tipoEquipo = WebUtility.HtmlEncode(equipo.TipoEquipo?.Nombre ?? "Sin tipo");
-            var responsable = WebUtility.HtmlEncode(equipo.ResponsableInterno?.NombreCompleto ?? "Sin responsable asignado");
+            var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
+            {
+                new EmailTemplateRow("Equipo", $"{codigo} - {nombre}"),
+                new EmailTemplateRow("Tipo de equipo", equipo.TipoEquipo?.Nombre ?? "Sin tipo"),
+                new EmailTemplateRow("Control", regla.TipoEvento),
+                new EmailTemplateRow("Fecha programada", fechaReferencia.ToString("yyyy-MM-dd")),
+                new EmailTemplateRow("Días vencidos", diasVencidos.ToString()),
+                new EmailTemplateRow("Responsable interno", equipo.ResponsableInterno?.NombreCompleto ?? "Sin responsable asignado")
+            });
 
-            return $@"
-                <h2>Alerta critica de {regla.TipoEvento} vencida</h2>
-                <p>El equipo <strong>{codigo} - {nombre}</strong> tiene un control metrologico vencido.</p>
-                <table cellpadding=""6"" cellspacing=""0"" border=""1"">
-                    <tr><td><strong>Tipo de equipo</strong></td><td>{tipoEquipo}</td></tr>
-                    <tr><td><strong>Control</strong></td><td>{regla.TipoEvento}</td></tr>
-                    <tr><td><strong>Fecha programada</strong></td><td>{fechaReferencia:yyyy-MM-dd}</td></tr>
-                    <tr><td><strong>Dias vencidos</strong></td><td>{diasVencidos}</td></tr>
-                    <tr><td><strong>Responsable interno</strong></td><td>{responsable}</td></tr>
-                </table>
-                <p>Se requiere gestionar este control para reducir el riesgo operativo y mantener la trazabilidad del sistema.</p>";
+            return _emailTemplateService.ConstruirCorreo(new EmailTemplateModel
+            {
+                Titulo = $"Alerta crítica de {regla.TipoEvento} vencida",
+                Preheader = $"El equipo {equipo.Codigo} tiene un control metrológico vencido.",
+                Etiqueta = "Control metrológico",
+                Nivel = "critico",
+                ContenidoHtml = $@"
+                    <p style=""margin:0 0 14px;"">El equipo <strong>{codigo} - {nombre}</strong> tiene un control metrológico vencido.</p>
+                    {tabla}
+                    <p style=""margin:0;"">Se requiere gestionar este control para reducir el riesgo operativo y mantener la trazabilidad del sistema.</p>"
+            });
         }
 
         private static bool EsCorreoValido(string? correo)

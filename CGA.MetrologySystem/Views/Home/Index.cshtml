@@ -1,113 +1,241 @@
 ﻿@{
     ViewData["Title"] = "Inicio";
+
+    var esAdministradorSistema = User.IsInRole(RolesSistema.AdministradorSistema);
+    var esAdministradorMetrologico = !esAdministradorSistema && User.IsInRole(RolesSistema.AdministradorMetrologico);
+    var esTecnico = !esAdministradorSistema && !esAdministradorMetrologico && User.IsInRole(RolesSistema.Tecnico);
+
+    var tituloRol = esAdministradorSistema
+        ? "Administracion del sistema"
+        : esAdministradorMetrologico
+            ? "Gestion metrologica"
+            : esTecnico
+                ? "Operacion tecnica"
+                : "Acceso general";
+
+    var descripcionRol = esAdministradorSistema
+        ? "Panel de entrada para supervisar el estado metrologico, consultar informacion critica y administrar accesos."
+        : esAdministradorMetrologico
+            ? "Panel de entrada para gestionar equipos, controles, eventos y configuracion metrologica."
+            : esTecnico
+                ? "Panel de entrada para consultar equipos y registrar verificaciones o mantenimientos permitidos."
+                : "Panel de entrada a los modulos disponibles del sistema.";
 }
 
-<div class="page-header">
-    <h2 class="page-title">Bienvenido al sistema CGA</h2>
-    <p class="page-subtitle">
-        Accede a los módulos principales del sistema desde este panel de inicio.
-    </p>
+<section class="home-hero mb-4">
+    <div>
+        <span class="home-eyebrow">CGA Metrology System</span>
+        <h1>Inicio</h1>
+        <p>@descripcionRol</p>
+    </div>
+
+    <div class="home-role-card">
+        <span>Vista activa</span>
+        <strong>@tituloRol</strong>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <section class="home-panel">
+            <div class="home-panel-header">
+                <div>
+                    <span class="section-kicker">Accesos rapidos</span>
+                    <h5>Modulos principales</h5>
+                </div>
+            </div>
+
+            <div class="home-action-grid">
+                @if (esAdministradorSistema)
+                {
+                    <a asp-controller="DashboardMetrologico" asp-action="Index" class="home-action-card">
+                        <span>Dashboard metrologico</span>
+                        <small>Indicadores, vencimientos y estado general.</small>
+                    </a>
+
+                    <a asp-controller="Alertas" asp-action="Index" class="home-action-card">
+                        <span>Alertas</span>
+                        <small>Seguimiento de correos y vencimientos criticos.</small>
+                    </a>
+
+                    <a asp-controller="Notificaciones" asp-action="Index" class="home-action-card">
+                        <span>Notificaciones</span>
+                        <small>Eventos extraordinarios y cambios sensibles.</small>
+                    </a>
+
+                    <a asp-controller="Usuarios" asp-action="Index" class="home-action-card">
+                        <span>Usuarios</span>
+                        <small>Gestion de cuentas, roles y estado de acceso.</small>
+                    </a>
+
+                    <a asp-controller="Laboratorios" asp-action="Index" class="home-action-card">
+                        <span>Laboratorios</span>
+                        <small>Consulta de laboratorios registrados y datos de acreditacion.</small>
+                    </a>
+
+                    <a asp-controller="Auditoria" asp-action="Index" class="home-action-card">
+                        <span>Auditoria de usuarios</span>
+                        <small>Trazabilidad administrativa del sistema.</small>
+                    </a>
+
+                    <a asp-controller="MaestroEquipos" asp-action="Index" class="home-action-card">
+                        <span>Maestro de equipos</span>
+                        <small>Consulta general de equipos y controles.</small>
+                    </a>
+                }
+                else if (esAdministradorMetrologico)
+                {
+                    <a asp-controller="MaestroEquipos" asp-action="Index" class="home-action-card">
+                        <span>Maestro de equipos</span>
+                        <small>Vista central para revisar y operar controles.</small>
+                    </a>
+
+                    <a asp-controller="Equipos" asp-action="Create" class="home-action-card">
+                        <span>Registrar equipo</span>
+                        <small>Alta de equipos y datos tecnicos principales.</small>
+                    </a>
+
+                    <a asp-controller="Calibraciones" asp-action="Create" class="home-action-card">
+                        <span>Registrar calibracion</span>
+                        <small>Carga de certificado y control normativo.</small>
+                    </a>
+
+                    <a asp-controller="Verificaciones" asp-action="Create" class="home-action-card">
+                        <span>Registrar verificacion</span>
+                        <small>Evaluacion tecnica y evidencias del equipo.</small>
+                    </a>
+
+                    <a asp-controller="Mantenimientos" asp-action="Create" class="home-action-card">
+                        <span>Registrar mantenimiento</span>
+                        <small>Actividades ejecutadas y resultado operativo.</small>
+                    </a>
+
+                    <a asp-controller="ConfiguracionesControlEquipo" asp-action="Index" class="home-action-card">
+                        <span>Configuracion control</span>
+                        <small>Periodicidad y controles requeridos por equipo.</small>
+                    </a>
+                }
+                else if (esTecnico)
+                {
+                    <a asp-controller="MaestroEquipos" asp-action="Index" class="home-action-card">
+                        <span>Maestro de equipos</span>
+                        <small>Consulta rapida del estado de los equipos.</small>
+                    </a>
+
+                    <a asp-controller="Verificaciones" asp-action="Create" class="home-action-card">
+                        <span>Registrar verificacion</span>
+                        <small>Registro tecnico permitido segun control.</small>
+                    </a>
+
+                    <a asp-controller="Mantenimientos" asp-action="Create" class="home-action-card">
+                        <span>Registrar mantenimiento</span>
+                        <small>Registro de actividades operativas ejecutadas.</small>
+                    </a>
+
+                    <a asp-controller="Equipos" asp-action="Index" class="home-action-card">
+                        <span>Consultar equipos</span>
+                        <small>Informacion tecnica y estado del equipo.</small>
+                    </a>
+
+                    <a asp-controller="FichasTecnicas" asp-action="Index" class="home-action-card">
+                        <span>Fichas tecnicas</span>
+                        <small>Consulta documental de datos tecnicos.</small>
+                    </a>
+
+                    <a asp-controller="HojasVida" asp-action="Index" class="home-action-card">
+                        <span>Hojas de vida</span>
+                        <small>Historial metrologico del equipo.</small>
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Perfil" asp-action="Index" class="home-action-card">
+                        <span>Mi perfil</span>
+                        <small>Consulta y actualizacion de cuenta.</small>
+                    </a>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-4">
+        <section class="home-panel h-100">
+            <div class="home-panel-header">
+                <div>
+                    <span class="section-kicker">Alcance del rol</span>
+                    <h5>Responsabilidades</h5>
+                </div>
+            </div>
+
+            @if (esAdministradorSistema)
+            {
+                <div class="home-scope-list">
+                    <div>Supervisar dashboard, alertas y notificaciones.</div>
+                    <div>Consultar equipos, eventos, documentos y bitacora.</div>
+                    <div>Administrar usuarios, roles, estados y auditoria.</div>
+                    <div>No operar registros metrologicos ni configuracion tecnica.</div>
+                </div>
+            }
+            else if (esAdministradorMetrologico)
+            {
+                <div class="home-scope-list">
+                    <div>Gestionar equipos y configuraciones metrologicas.</div>
+                    <div>Registrar calibraciones, verificaciones y mantenimientos.</div>
+                    <div>Consultar dashboard, alertas, notificaciones y bitacora.</div>
+                    <div>No administrar usuarios del sistema.</div>
+                </div>
+            }
+            else if (esTecnico)
+            {
+                <div class="home-scope-list">
+                    <div>Consultar equipos y documentacion tecnica.</div>
+                    <div>Registrar verificaciones y mantenimientos permitidos.</div>
+                    <div>Consultar calibraciones sin modificarlas.</div>
+                    <div>No administrar usuarios, reglas ni configuraciones.</div>
+                </div>
+            }
+            else
+            {
+                <div class="home-scope-list">
+                    <div>Acceso limitado a funciones disponibles.</div>
+                    <div>Revisa tu perfil o solicita asignacion de rol.</div>
+                </div>
+            }
+        </section>
+    </div>
 </div>
 
-<div class="row">
-
-    <div class="col-md-4 mb-4">
-        <div class="dashboard-card p-4">
-            <h5 class="card-title">Equipos</h5>
-            <p class="card-text">Gestiona los equipos registrados en el sistema.</p>
-            <a asp-controller="Equipos" asp-action="Index" class="btn btn-primary">
-                Ir a Equipos
-            </a>
+<section class="home-panel mt-4">
+    <div class="home-panel-header">
+        <div>
+            <span class="section-kicker">Ruta recomendada</span>
+            <h5>Flujo de trabajo</h5>
         </div>
     </div>
 
-    <div class="col-md-4 mb-4">
-        <div class="dashboard-card p-4">
-            <h5 class="card-title">Laboratorios</h5>
-            <p class="card-text">Administra la información de laboratorios registrados.</p>
-            <a asp-controller="Laboratorios" asp-action="Index" class="btn btn-primary">
-                Ir a Laboratorios
-            </a>
-        </div>
+    <div class="home-flow-grid">
+        @if (esAdministradorSistema)
+        {
+            <div>1. Revisar dashboard y alertas criticas.</div>
+            <div>2. Consultar eventos o equipos con desviaciones.</div>
+            <div>3. Revisar usuarios, accesos y auditoria si aplica.</div>
+        }
+        else if (esAdministradorMetrologico)
+        {
+            <div>1. Revisar maestro de equipos y configuraciones pendientes.</div>
+            <div>2. Registrar o actualizar controles metrologicos.</div>
+            <div>3. Verificar alertas, bitacora y documentacion generada.</div>
+        }
+        else if (esTecnico)
+        {
+            <div>1. Ubicar el equipo desde el maestro o listado.</div>
+            <div>2. Registrar verificacion o mantenimiento si corresponde.</div>
+            <div>3. Revisar PDF, evidencias y hoja de vida del equipo.</div>
+        }
+        else
+        {
+            <div>1. Revisa la informacion de tu cuenta.</div>
+            <div>2. Solicita permisos si necesitas acceder a modulos adicionales.</div>
+        }
     </div>
-
-    <div class="col-md-4 mb-4">
-        <div class="dashboard-card p-4">
-            <h5 class="card-title">Calibraciones</h5>
-            <p class="card-text">Registra y consulta calibraciones de equipos con sus certificados.</p>
-            <a asp-controller="Calibraciones" asp-action="Index" class="btn btn-primary">
-                Ir a Calibraciones
-            </a>
-        </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-        <div class="dashboard-card p-4">
-            <h5 class="card-title">Mi Perfil</h5>
-            <p class="card-text">Gestiona tu información personal.</p>
-            <a asp-controller="Perfil" asp-action="Index" class="btn btn-primary">
-                Ir a Perfil
-            </a>
-        </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-        <div class="dashboard-card p-4">
-            <h5 class="card-title">Verificaciones</h5>
-            <p class="card-text">Registra y consulta verificaciones internas de los equipos.</p>
-            <a asp-controller="Verificaciones" asp-action="Index" class="btn btn-primary">
-                Ir a Verificaciones
-            </a>
-        </div>
-    </div>
-
-    <div class="col-md-4 mb-4">
-        <div class="dashboard-card p-4">
-            <h5 class="card-title">Mantenimientos</h5>
-            <p class="card-text">Administra mantenimientos preventivos o correctivos de equipos.</p>
-            <a asp-controller="Mantenimientos" asp-action="Index" class="btn btn-primary">
-                Ir a Mantenimientos
-            </a>
-        </div>
-    </div>
-
-    @if (User.IsInRole("Administrador"))
-    {
-        <div class="col-md-4 mb-4">
-            <div class="dashboard-card p-4">
-                <h5 class="card-title">Usuarios</h5>
-                <p class="card-text">Gestiona los usuarios del sistema.</p>
-                <a asp-controller="Usuarios" asp-action="Index" class="btn btn-primary">
-                    Ir a Usuarios
-                </a>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="dashboard-card p-4">
-                <h5 class="card-title">Auditoría</h5>
-                <p class="card-text">Consulta las acciones realizadas en el sistema.</p>
-                <a asp-controller="Auditoria" asp-action="Index" class="btn btn-primary">
-                    Ver Auditoría
-                </a>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="dashboard-card p-4">
-                <h5 class="card-title">Configuración de control</h5>
-
-                <p class="card-text">
-                    Define periodicidades, reglas de control y comportamiento del motor metrológico.
-                </p>
-
-                <a asp-controller="ConfiguracionesControlEquipo"
-                       asp-action="Index"
-                       class="btn btn-primary">
-                    Ir a Configuración
-                </a>
-            </div>
-        </div>
-    }
-
-</div>
+</section>

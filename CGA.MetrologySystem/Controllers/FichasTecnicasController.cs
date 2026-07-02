@@ -1,4 +1,5 @@
-﻿using CGA.MetrologySystem.Infrastructure.Persistence;
+﻿using CGA.MetrologySystem.Infrastructure.Identity;
+using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models.FichasTecnicas;
 using CGA.MetrologySystem.Services.FichasTecnicas;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.TodosOperativos)]
     public class FichasTecnicasController : Controller
     {
         private readonly AppDbContext _context;
@@ -37,6 +38,7 @@ namespace CGA.MetrologySystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> GenerarActualizar(int equipoId)
         {
             try

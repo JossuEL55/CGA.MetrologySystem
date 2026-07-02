@@ -1,20 +1,28 @@
-ï»¿@model IEnumerable<CGA.MetrologySystem.Domain.Entities.EventoMantenimientoDato>
+@model IEnumerable<CGA.MetrologySystem.Domain.Entities.EventoMantenimientoDato>
 
 @{
     ViewData["Title"] = "Mantenimientos";
+    var esAdministradorSistema = User.IsInRole(RolesSistema.AdministradorSistema);
+    var esAdministradorMetrologico = !esAdministradorSistema && User.IsInRole(RolesSistema.AdministradorMetrologico);
+    var esTecnico = !esAdministradorSistema && !esAdministradorMetrologico && User.IsInRole(RolesSistema.Tecnico);
+    var puedeRegistrar = esAdministradorMetrologico || esTecnico;
+    var puedeEliminar = esAdministradorMetrologico;
 }
 
 <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3">
     <div>
         <h2 class="page-title">Mantenimientos</h2>
         <p class="page-subtitle">
-            Consulta el historial de mantenimientos registrados, su estado operativo y la documentaciÃ³n generada.
+            Consulta el historial de mantenimientos registrados, su estado operativo y la documentación generada.
         </p>
     </div>
 
-    <a asp-action="Create" class="btn btn-primary">
-        + Registrar mantenimiento
-    </a>
+    @if (puedeRegistrar)
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            + Registrar mantenimiento
+        </a>
+    }
 </div>
 
 @if (TempData["Error"] != null)
@@ -28,12 +36,12 @@
     <div class="row g-3 align-items-end">
         <div class="col-xl-3 col-lg-4 col-md-6">
             <label class="form-label">Buscar</label>
-            <input name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="CÃ³digo, equipo o responsable" />
+            <input name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Código, equipo o responsable" />
         </div>
         <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Tipo</label><select name="tipoMantenimientoId" class="form-select" asp-items="ViewBag.TiposMantenimiento"><option value="">Todos</option></select></div>
         <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Subtipo</label><select name="subtipoEventoId" class="form-select" asp-items="ViewBag.SubtiposEvento"><option value="">Todos</option></select></div>
         <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Estado</label><select name="estado" class="form-select" asp-items="ViewBag.Estados"><option value="">Todos</option></select></div>
-        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">ClasificaciÃ³n</label><select name="clasificacion" class="form-select" asp-items="ViewBag.Clasificaciones"><option value="">Todas</option></select></div>
+        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Clasificación</label><select name="clasificacion" class="form-select" asp-items="ViewBag.Clasificaciones"><option value="">Todas</option></select></div>
         <div class="col-xl-1 col-md-3"><label class="form-label">Desde</label><input name="desde" value="@(((DateTime?)ViewBag.Desde)?.ToString("yyyy-MM-dd"))" type="date" class="form-control" /></div>
         <div class="col-xl-1 col-md-3"><label class="form-label">Hasta</label><input name="hasta" value="@(((DateTime?)ViewBag.Hasta)?.ToString("yyyy-MM-dd"))" type="date" class="form-control" /></div>
         <div class="col-lg-3 col-md-4 event-filter-actions"><button type="submit" class="btn btn-primary">Filtrar</button><a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a></div>
@@ -43,10 +51,10 @@
 <div class="event-index-card">
     <div class="event-index-header">
         <div>
-            <span class="section-kicker">Control tÃ©cnico</span>
+            <span class="section-kicker">Control técnico</span>
             <h5 class="mb-1">Historial de mantenimientos</h5>
             <p class="page-subtitle">
-                Cada registro conserva trazabilidad del evento, actividades tÃ©cnicas, PDF interno y control documental.
+                Cada registro conserva trazabilidad del evento, actividades técnicas, PDF interno y control documental.
             </p>
         </div>
 
@@ -59,13 +67,16 @@
     {
         <div class="event-empty-state">
             <div class="event-empty-icon">M</div>
-            <h5>AÃºn no hay mantenimientos registrados</h5>
+            <h5>Aún no hay mantenimientos registrados</h5>
             <p>
-                Cuando se registre un mantenimiento, aparecerÃ¡ aquÃ­ junto con su equipo, fecha, responsable y PDF generado.
+                Cuando se registre un mantenimiento, aparecerá aquí junto con su equipo, fecha, responsable y PDF generado.
             </p>
-            <a asp-action="Create" class="btn btn-primary">
-                Registrar primer mantenimiento
-            </a>
+            @if (puedeRegistrar)
+            {
+                <a asp-action="Create" class="btn btn-primary">
+                    Registrar primer mantenimiento
+                </a>
+            }
         </div>
     }
     else
@@ -112,7 +123,7 @@
                                     </div>
 
                                     <div>
-                                        <span>PrÃ³xima</span>
+                                        <span>Próxima</span>
                                         <strong>
                                             @(evento.FechaProxima.HasValue
                                                 ? evento.FechaProxima.Value.ToString("yyyy-MM-dd")
@@ -148,7 +159,7 @@
                                     @if (evento.EsHistorico)
                                     {
                                         <span class="event-badge event-badge-info">
-                                            HistÃ³rico
+                                            Histórico
                                         </span>
                                     }
 
@@ -181,14 +192,18 @@
                                     </a>
 
                                     @if (evento.Activo &&
-                                        (!evento.EsHistorico || User.IsInRole("Administrador")))
+                                        (esAdministradorMetrologico ||
+                                            (!evento.EsHistorico && esTecnico)))
                                     {
                                         <a asp-action="Edit"
                                            asp-route-id="@item.EventoMantenimientoDatoId"
                                            class="btn btn-outline-primary btn-sm">
                                             Editar
                                         </a>
+                                    }
 
+                                    @if (evento.Activo && puedeEliminar)
+                                    {
                                         <a asp-action="Delete"
                                            asp-route-id="@item.EventoMantenimientoDatoId"
                                            class="btn btn-outline-danger btn-sm">

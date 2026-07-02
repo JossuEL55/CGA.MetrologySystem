@@ -1,18 +1,27 @@
-﻿@model CGA.MetrologySystem.Models.Perfil.CambiarContrasenaViewModel
+@model CGA.MetrologySystem.Models.Perfil.CambiarContrasenaViewModel
 
 @{
     ViewData["Title"] = "Cambiar contraseña";
+    var requiereCambio = ViewBag.RequiereCambioContrasena == true;
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
-    <div>
-        <h2 class="page-title">Cambiar contraseña</h2>
-        <p class="page-subtitle">
-            Actualiza tu contraseña de acceso al sistema.
-        </p>
+<section class="security-hero mb-4">
+    <div class="position-relative">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div>
+                <div class="security-eyebrow">Cuenta personal</div>
+                <h2 class="page-title mb-2">Cambiar contrase&ntilde;a</h2>
+                <p class="security-subtitle mb-0">
+                    Define una contrase&ntilde;a personal para mantener protegido tu acceso al sistema.
+                </p>
+            </div>
+            @if (!requiereCambio)
+            {
+                <a asp-action="Index" class="btn btn-light fw-bold">Volver</a>
+            }
+        </div>
     </div>
-    <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
-</div>
+</section>
 
 @if (TempData["MensajeExito"] != null)
 {
@@ -24,35 +33,74 @@
     <div class="alert alert-danger">@TempData["MensajeError"]</div>
 }
 
-<div class="form-card">
-    <form asp-action="CambiarContrasena" method="post">
-        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+@if (requiereCambio)
+{
+    <div class="alert alert-warning">
+        Tu contrase&ntilde;a fue asignada o restablecida por administraci&oacute;n. Debes crear una nueva contrase&ntilde;a personal para continuar.
+    </div>
+}
 
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label asp-for="ContrasenaActual" class="form-label fw-semibold"></label>
-                <input asp-for="ContrasenaActual" type="password" class="form-control" />
-                <span asp-validation-for="ContrasenaActual" class="text-danger"></span>
-            </div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="security-panel">
+            <form asp-action="CambiarContrasena" method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-            <div class="col-md-4 mb-3">
-                <label asp-for="NuevaContrasena" class="form-label fw-semibold"></label>
-                <input asp-for="NuevaContrasena" type="password" class="form-control" />
-                <span asp-validation-for="NuevaContrasena" class="text-danger"></span>
-            </div>
+                <div class="mb-4">
+                    <h5 class="security-panel-title mb-1">Credenciales</h5>
+                    <p class="text-muted mb-0">Ingresa tu contrase&ntilde;a actual y confirma la nueva clave de acceso.</p>
+                </div>
 
-            <div class="col-md-4 mb-3">
-                <label asp-for="ConfirmarNuevaContrasena" class="form-label fw-semibold"></label>
-                <input asp-for="ConfirmarNuevaContrasena" type="password" class="form-control" />
-                <span asp-validation-for="ConfirmarNuevaContrasena" class="text-danger"></span>
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label asp-for="ContrasenaActual" class="form-label"></label>
+                        <input asp-for="ContrasenaActual" type="password" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="ContrasenaActual" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="NuevaContrasena" class="form-label"></label>
+                        <input asp-for="NuevaContrasena" type="password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="NuevaContrasena" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="ConfirmarNuevaContrasena" class="form-label"></label>
+                        <input asp-for="ConfirmarNuevaContrasena" type="password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmarNuevaContrasena" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4 flex-wrap">
+                    @if (!requiereCambio)
+                    {
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    }
+                    <button type="submit" class="btn btn-primary">Guardar nueva contrase&ntilde;a</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="security-panel h-100">
+            <h5 class="security-panel-title mb-3">Requisitos de seguridad</h5>
+            <div class="d-flex flex-column gap-3">
+                <div class="role-info-item">
+                    <div class="fw-bold">M&iacute;nimo 8 caracteres</div>
+                    <p class="text-muted mb-0 small">Usa una clave suficientemente larga para reducir accesos no autorizados.</p>
+                </div>
+                <div class="role-info-item">
+                    <div class="fw-bold">May&uacute;scula, min&uacute;scula y n&uacute;mero</div>
+                    <p class="text-muted mb-0 small">La validaci&oacute;n evita contrase&ntilde;as demasiado simples.</p>
+                </div>
+                <div class="role-info-item">
+                    <div class="fw-bold">Uso personal</div>
+                    <p class="text-muted mb-0 small">La nueva contrase&ntilde;a queda bajo control del usuario autenticado.</p>
+                </div>
             </div>
         </div>
-
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Guardar nueva contraseña</button>
-        </div>
-    </form>
+    </div>
 </div>
 
 @section Scripts {

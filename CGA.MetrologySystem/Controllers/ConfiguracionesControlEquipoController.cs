@@ -1,4 +1,5 @@
 ﻿using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace CGA.MetrologySystem.Controllers
 {
     //ACceso solo a administradores
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = RolesSistema.GestionMetrologica)]
     public class ConfiguracionesControlEquipoController : Controller
     {
         private readonly AppDbContext _context;

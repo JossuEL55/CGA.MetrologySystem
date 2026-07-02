@@ -1,5 +1,6 @@
 ﻿using CGA.MetrologySystem.Application.Interfaces;
 using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.TodosOperativos)]
     public class EquiposController : Controller
     {
         private readonly AppDbContext _context;
@@ -36,6 +37,7 @@ namespace CGA.MetrologySystem.Controllers
         }
 
         // GET: Equipos/Create
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Create()
         {
             var model = new EquipoViewModel();
@@ -46,6 +48,7 @@ namespace CGA.MetrologySystem.Controllers
         // POST: Equipos/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Create(EquipoViewModel model)
         {
             ValidarFotoEquipo(model);
@@ -114,6 +117,7 @@ namespace CGA.MetrologySystem.Controllers
         }
 
         // GET: Equipos/Edit/5
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -155,6 +159,7 @@ namespace CGA.MetrologySystem.Controllers
         // POST: Equipos/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Edit(int id, EquipoViewModel model)
         {
             if (id != model.EquipoId)
@@ -203,6 +208,7 @@ namespace CGA.MetrologySystem.Controllers
         }
 
         // GET: Equipos/Delete/5
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -224,12 +230,18 @@ namespace CGA.MetrologySystem.Controllers
         // POST: Equipos/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var equipo = await _context.Equipos.FindAsync(id);
 
             if (equipo == null)
                 return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(equipo.FotoGoogleDriveFileId))
+            {
+                await _googleDriveService.DeleteFileAsync(equipo.FotoGoogleDriveFileId);
+            }
 
             _context.Equipos.Remove(equipo);
             await _context.SaveChangesAsync();

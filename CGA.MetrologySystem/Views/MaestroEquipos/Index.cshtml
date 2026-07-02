@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Maestro de Equipos";
+    var esAdministradorSistema = User.IsInRole(RolesSistema.AdministradorSistema);
+    var esAdministradorMetrologico = !esAdministradorSistema && User.IsInRole(RolesSistema.AdministradorMetrologico);
+    var puedeGestionarMetrologia = esAdministradorMetrologico;
+    var puedeSupervisarMetrologia = esAdministradorSistema || esAdministradorMetrologico;
 }
 
 <div class="maestro-eq-hero mb-4">
@@ -19,17 +23,23 @@
     </div>
 
     <div class="maestro-eq-actions">
-        <a asp-controller="Equipos" asp-action="Create" class="btn btn-warning">
-            <i class="bi bi-plus-circle"></i> Registrar equipo
-        </a>
+        @if (puedeGestionarMetrologia)
+        {
+            <a asp-controller="Equipos" asp-action="Create" class="btn btn-warning">
+                <i class="bi bi-plus-circle"></i> Registrar equipo
+            </a>
+        }
 
         <a asp-controller="ControlMetrologico" asp-action="Index" class="btn btn-light">
             <i class="bi bi-grid-3x3-gap"></i> Ver semaforización
         </a>
 
-        <a asp-controller="DashboardMetrologico" asp-action="Index" class="btn btn-light">
-            <i class="bi bi-bar-chart-line-fill"></i> Ver dashboard
-        </a>
+        @if (puedeSupervisarMetrologia)
+        {
+            <a asp-controller="DashboardMetrologico" asp-action="Index" class="btn btn-light">
+                <i class="bi bi-bar-chart-line-fill"></i> Ver dashboard
+            </a>
+        }
 
         <a asp-controller="ControlMetrologico" asp-action="Score" class="btn btn-light">
             <i class="bi bi-speedometer2"></i> Ver score

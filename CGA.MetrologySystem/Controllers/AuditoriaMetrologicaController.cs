@@ -1,3 +1,4 @@
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models.Auditoria;
 using Microsoft.AspNetCore.Authorization;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = RolesSistema.SupervisionMetrologica)]
     public class AuditoriaMetrologicaController : Controller
     {
         private readonly AppDbContext _context;

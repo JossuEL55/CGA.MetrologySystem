@@ -1,17 +1,21 @@
-ï»¿@model IEnumerable<CGA.MetrologySystem.Domain.Entities.Equipo>
+@model IEnumerable<CGA.MetrologySystem.Domain.Entities.Equipo>
 
 @{
     ViewData["Title"] = "Equipos";
+    var puedeGestionar = !User.IsInRole(RolesSistema.AdministradorSistema) && User.IsInRole(RolesSistema.AdministradorMetrologico);
 }
 
 <div class="page-header d-flex justify-content-between align-items-center">
     <div>
         <h2 class="page-title">Equipos</h2>
         <p class="page-subtitle">
-            Gestiona los equipos registrados y su informaciÃ³n tÃ©cnica principal.
+            Gestiona los equipos registrados y su información técnica principal.
         </p>
     </div>
-    <a asp-action="Create" class="btn btn-primary">Nuevo equipo</a>
+    @if (puedeGestionar)
+    {
+        <a asp-action="Create" class="btn btn-primary">Nuevo equipo</a>
+    }
 </div>
 
 <div class="table-card">
@@ -20,11 +24,11 @@
             <thead class="table-light">
                 <tr>
                     <th class="text-center">Foto</th>
-                    <th>CÃ³digo</th>
+                    <th>Código</th>
                     <th>Equipo</th>
                     <th>Tipo</th>
                     <th>Proveedor</th>
-                    <th>UbicaciÃ³n</th>
+                    <th>Ubicación</th>
                     <th>Responsable</th>
                     <th>Marca / Modelo</th>
                     <th>Estado</th>
@@ -91,15 +95,18 @@
 
                             <td class="text-end">
                                 <div class="d-flex justify-content-end gap-2 flex-wrap">
-                                    <a asp-action="Edit" asp-route-id="@equipo.EquipoId" class="btn btn-sm btn-outline-primary">
-                                        Editar
-                                    </a>
                                     <a asp-action="Details" asp-route-id="@equipo.EquipoId" class="btn btn-sm btn-outline-secondary">
                                         Detalles
                                     </a>
-                                    <a asp-action="Delete" asp-route-id="@equipo.EquipoId" class="btn btn-sm btn-outline-danger">
-                                        Eliminar
-                                    </a>
+                                    @if (puedeGestionar)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@equipo.EquipoId" class="btn btn-sm btn-outline-primary">
+                                            Editar
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@equipo.EquipoId" class="btn btn-sm btn-outline-danger">
+                                            Eliminar
+                                        </a>
+                                    }
                                 </div>
                             </td>
                         </tr>
