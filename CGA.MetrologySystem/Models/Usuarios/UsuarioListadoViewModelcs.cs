@@ -15,5 +15,11 @@ namespace CGA.MetrologySystem.Models.Usuarios
 
         [Display(Name = "Rol")]
         public string Rol { get; set; } = string.Empty;
+
+        public string RolCodigo { get; set; } = string.Empty;
+
+        public string FechaCreacionTexto { get; set; } = "No registrado";
+
+        public string UltimoAccesoTexto { get; set; } = "No registrado";
     }
 }

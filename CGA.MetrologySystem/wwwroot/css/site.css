@@ -75,6 +75,202 @@ a {
 }
 
 /* =========================
+   USER ADMIN
+========================= */
+
+.security-hero {
+    background: linear-gradient(135deg, #24473D 0%, #2F6F73 100%);
+    border-radius: 16px;
+    color: #FFFFFF;
+    padding: 1.8rem;
+    position: relative;
+    overflow: hidden;
+}
+
+    .security-hero h2,
+    .security-hero .page-title {
+        color: #FFFFFF;
+    }
+
+    .security-hero::after {
+        content: "";
+        position: absolute;
+        right: -70px;
+        top: -90px;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.10);
+    }
+
+.security-eyebrow {
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.security-subtitle {
+    color: rgba(255, 255, 255, 0.84);
+    max-width: 760px;
+}
+
+.metric-card {
+    border: 1px solid #E5E7EB;
+    border-radius: 14px;
+    background: #FFFFFF;
+    padding: 1rem;
+    min-height: 112px;
+}
+
+.metric-card-label {
+    color: #64748B;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.metric-card-value {
+    color: #111827;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.user-filter-card {
+    border: 1px solid #E5E7EB;
+    border-radius: 14px;
+    background: #FFFFFF;
+    padding: 1.25rem;
+}
+
+.user-table-card {
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    background: #FFFFFF;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.user-table-card .table thead th {
+    background: #EEF3F1;
+    color: #274E45;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #DDE7E3;
+}
+
+.user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #E6F1EE;
+    color: #214D43;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    flex: 0 0 auto;
+}
+
+.user-avatar-lg {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    font-size: 1.75rem;
+}
+
+.role-badge,
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.78rem;
+    padding: 0.45rem 0.75rem;
+    white-space: nowrap;
+}
+
+.role-badge-system {
+    background: #E8F0FF;
+    color: #1E40AF;
+}
+
+.role-badge-metrology {
+    background: #E6F1EE;
+    color: #214D43;
+}
+
+.role-badge-tech {
+    background: #FFF4D6;
+    color: #875A00;
+}
+
+.status-active {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.status-inactive {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.user-action-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.security-panel {
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    background: #FFFFFF;
+    padding: 1.4rem;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.security-panel-title {
+    color: #274E45;
+    font-weight: 800;
+}
+
+.role-info-item {
+    border: 1px solid #E5E7EB;
+    border-left: 4px solid #2F5D50;
+    border-radius: 12px;
+    padding: 1rem;
+    background: #FAFBFC;
+}
+
+.detail-tile {
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 1rem;
+    background: #FAFBFC;
+    height: 100%;
+}
+
+.detail-label {
+    color: #64748B;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.detail-value {
+    color: #111827;
+    font-weight: 700;
+    word-break: break-word;
+}
+
+/* =========================
    BUTTONS
 ========================= */
 
@@ -3007,5 +3203,181 @@ a {
 
     .image-viewer-shell {
         height: calc(100vh - 82px);
+    }
+}
+
+/* =========================
+   ROLE HOME
+========================= */
+.home-hero {
+    align-items: flex-start;
+    background: linear-gradient(135deg, #24473d 0%, #2f6f73 100%);
+    border-radius: 16px;
+    color: #ffffff;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: 1.8rem;
+    position: relative;
+}
+
+.home-hero::after {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    content: "";
+    height: 220px;
+    position: absolute;
+    right: -55px;
+    top: -70px;
+    width: 220px;
+}
+
+.home-hero h1 {
+    color: #ffffff;
+    font-weight: 800;
+    margin: 0.35rem 0;
+}
+
+.home-hero p {
+    color: rgba(255, 255, 255, 0.86);
+    margin: 0;
+    max-width: 760px;
+}
+
+.home-eyebrow {
+    color: rgba(255, 255, 255, 0.72);
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.home-role-card {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 14px;
+    min-width: 220px;
+    padding: 1rem 1.2rem;
+    position: relative;
+    z-index: 1;
+}
+
+.home-role-card span {
+    color: rgba(255, 255, 255, 0.76);
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.home-role-card strong {
+    color: #ffffff;
+    display: block;
+    font-size: 1.05rem;
+    margin-top: 0.25rem;
+}
+
+.home-panel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    padding: 1.35rem;
+}
+
+.home-panel-header {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.home-panel-header h5 {
+    color: #274e45;
+    font-weight: 800;
+    margin: 0;
+}
+
+.home-action-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.home-action-card {
+    background: #fafbfc;
+    border: 1px solid #dde7e3;
+    border-radius: 14px;
+    color: #111827;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-height: 116px;
+    padding: 1rem;
+    text-decoration: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.home-action-card:hover {
+    border-color: #2f5d50;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    color: #111827;
+    transform: translateY(-2px);
+}
+
+.home-action-card span {
+    color: #24473d;
+    font-weight: 800;
+}
+
+.home-action-card small {
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.home-scope-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.home-scope-list div {
+    background: #f8fafc;
+    border-left: 4px solid #2f5d50;
+    border-radius: 10px;
+    color: #334155;
+    font-weight: 600;
+    padding: 0.85rem 0.95rem;
+}
+
+.home-flow-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.home-flow-grid div {
+    background: #eef3f1;
+    border: 1px solid #dde7e3;
+    border-radius: 12px;
+    color: #24473d;
+    font-weight: 700;
+    padding: 1rem;
+}
+
+@media (max-width: 767.98px) {
+    .home-hero,
+    .home-panel {
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .home-role-card {
+        min-width: 100%;
     }
 }

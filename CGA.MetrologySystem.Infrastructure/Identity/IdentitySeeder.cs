@@ -6,14 +6,14 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
 {
     public static class IdentitySeeder
     {
+        private const string AdministradorLegacy = "Administrador";
+
         public static async Task SeedRolesAndAdminAsync(IServiceProvider serviceProvider)
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
             var userManager = serviceProvider.GetRequiredService<UserManager<UsuarioSistema>>();
 
-            string[] roles = { "Administrador", "Tecnico" };
-
-            foreach (var role in roles)
+            foreach (var role in RolesSistema.RolesBase)
             {
                 var existe = await roleManager.RoleExistsAsync(role);
                 if (!existe)
@@ -22,19 +22,28 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
                 }
             }  
 
+            await RemoverRolAdministradorLegacyAsync(roleManager, userManager);
+
             await CrearOActualizarUsuarioAsync(
                 userManager,
                 email: "gerencia@cga.com.ec",
                 nombreCompleto: "Administrador General",
                 password: "Admin1234",
-                rol: "Administrador");
+                rol: RolesSistema.AdministradorSistema);
+
+            await CrearOActualizarUsuarioAsync(
+                userManager,
+                email: "admin.metrologico@cga.com.ec",
+                nombreCompleto: "Administrador Metrologico",
+                password: "Metrologico1234",
+                rol: RolesSistema.AdministradorMetrologico);
 
             await CrearOActualizarUsuarioAsync(
                 userManager,
                 email: "tecnico@cga.com.ec",
                 nombreCompleto: "Técnico CGA",
                 password: "Tecnico1234",
-                rol: "Tecnico");
+                rol: RolesSistema.Tecnico);
         }
 
         private static async Task CrearOActualizarUsuarioAsync(
@@ -54,7 +63,8 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
                     Email = email,
                     NombreCompleto = nombreCompleto,
                     EmailConfirmed = true,
-                    Activo = true
+                    Activo = true,
+                    FechaCreacion = DateTime.UtcNow
                 };
 
                 var resultado = await userManager.CreateAsync(usuario, password);
@@ -87,6 +97,12 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
                     huboCambios = true;
                 }
 
+                if (usuario.FechaCreacion == default)
+                {
+                    usuario.FechaCreacion = DateTime.UtcNow;
+                    huboCambios = true;
+                }
+
                 if (huboCambios)
                 {
                     var updateResult = await userManager.UpdateAsync(usuario);
@@ -98,14 +114,94 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
                 }
             }
 
-            if (!await userManager.IsInRoleAsync(usuario, rol))
+            await SincronizarRolUnicoAsync(userManager, usuario, rol);
+        }
+
+        private static async Task SincronizarRolUnicoAsync(
+            UserManager<UsuarioSistema> userManager,
+            UsuarioSistema usuario,
+            string rolPermitido)
+        {
+            var rolesActuales = await userManager.GetRolesAsync(usuario);
+            var rolesARemover = rolesActuales
+                .Where(r => RolesSistema.RolesBase.Contains(r) && r != rolPermitido)
+                .ToArray();
+
+            if (rolesARemover.Any())
             {
-                var roleResult = await userManager.AddToRoleAsync(usuario, rol);
+                var removeResult = await userManager.RemoveFromRolesAsync(usuario, rolesARemover);
+                if (!removeResult.Succeeded)
+                {
+                    var errores = string.Join(" | ", removeResult.Errors.Select(e => e.Description));
+                    throw new Exception($"No se pudo limpiar roles del usuario {usuario.Email}: {errores}");
+                }
+            }
+
+            if (!await userManager.IsInRoleAsync(usuario, rolPermitido))
+            {
+                var roleResult = await userManager.AddToRoleAsync(usuario, rolPermitido);
                 if (!roleResult.Succeeded)
                 {
                     var errores = string.Join(" | ", roleResult.Errors.Select(e => e.Description));
-                    throw new Exception($"No se pudo asignar el rol {rol} al usuario {email}: {errores}");
+                    throw new Exception($"No se pudo asignar el rol {rolPermitido} al usuario {usuario.Email}: {errores}");
                 }
+            }
+        }
+
+        private static async Task RemoverRolAdministradorLegacyAsync(
+            RoleManager<IdentityRole> roleManager,
+            UserManager<UsuarioSistema> userManager)
+        {
+            var rolLegacy = await roleManager.FindByNameAsync(AdministradorLegacy);
+
+            if (rolLegacy == null)
+            {
+                return;
+            }
+
+            var usuariosLegacy = await userManager.GetUsersInRoleAsync(AdministradorLegacy);
+
+            foreach (var usuario in usuariosLegacy)
+            {
+                await AsegurarRolAsync(userManager, usuario, RolesSistema.AdministradorSistema);
+                await AsegurarRolAsync(userManager, usuario, RolesSistema.AdministradorMetrologico);
+
+                var removeResult = await userManager.RemoveFromRoleAsync(usuario, AdministradorLegacy);
+                if (!removeResult.Succeeded)
+                {
+                    var errores = string.Join(" | ", removeResult.Errors.Select(e => e.Description));
+                    throw new Exception($"No se pudo remover el rol legacy del usuario {usuario.Email}: {errores}");
+                }
+            }
+
+            var usuariosRestantes = await userManager.GetUsersInRoleAsync(AdministradorLegacy);
+            if (!usuariosRestantes.Any())
+            {
+                var deleteResult = await roleManager.DeleteAsync(rolLegacy);
+                if (!deleteResult.Succeeded)
+                {
+                    var errores = string.Join(" | ", deleteResult.Errors.Select(e => e.Description));
+                    throw new Exception($"No se pudo eliminar el rol legacy {AdministradorLegacy}: {errores}");
+                }
+            }
+        }
+
+        private static async Task AsegurarRolAsync(
+            UserManager<UsuarioSistema> userManager,
+            UsuarioSistema usuario,
+            string rol)
+        {
+            if (await userManager.IsInRoleAsync(usuario, rol))
+            {
+                return;
+            }
+
+            var resultado = await userManager.AddToRoleAsync(usuario, rol);
+
+            if (!resultado.Succeeded)
+            {
+                var errores = string.Join(" | ", resultado.Errors.Select(e => e.Description));
+                throw new Exception($"No se pudo asignar el rol {rol} al usuario {usuario.Email}: {errores}");
             }
         }
     }

@@ -1,4 +1,5 @@
 using CGA.MetrologySystem.Application.Interfaces;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models.Documentos;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CGA.MetrologySystem.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = RolesSistema.TodosOperativos)]
     public class DocumentosController : Controller
     {
         private const string FichaTecnica = "ficha-tecnica";

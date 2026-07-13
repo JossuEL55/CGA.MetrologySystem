@@ -13,10 +13,9 @@ namespace CGA.MetrologySystem.Services.Notificaciones
 {
     public class NotificacionMetrologicaService : INotificacionMetrologicaService
     {
-        private const string RolAdministrador = "Administrador";
-
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly IEmailTemplateService _emailTemplateService;
         private readonly UserManager<UsuarioSistema> _userManager;
         private readonly NotificacionesSettings _settings;
         private readonly ILogger<NotificacionMetrologicaService> _logger;
@@ -24,12 +23,14 @@ namespace CGA.MetrologySystem.Services.Notificaciones
         public NotificacionMetrologicaService(
             AppDbContext context,
             IEmailService emailService,
+            IEmailTemplateService emailTemplateService,
             UserManager<UsuarioSistema> userManager,
             IOptions<NotificacionesSettings> settings,
             ILogger<NotificacionMetrologicaService> logger)
         {
             _context = context;
             _emailService = emailService;
+            _emailTemplateService = emailTemplateService;
             _userManager = userManager;
             _settings = settings.Value;
             _logger = logger;
@@ -395,7 +396,16 @@ namespace CGA.MetrologySystem.Services.Notificaciones
 
         private async Task<List<string>> ObtenerCorreosAdministradoresAsync()
         {
-            var administradores = await _userManager.GetUsersInRoleAsync(RolAdministrador);
+            var administradores = new List<UsuarioSistema>();
+
+            foreach (var rol in new[]
+            {
+                RolesSistema.AdministradorSistema,
+                RolesSistema.AdministradorMetrologico
+            })
+            {
+                administradores.AddRange(await _userManager.GetUsersInRoleAsync(rol));
+            }
 
             return administradores
                 .Where(u => u.Activo)
@@ -419,7 +429,7 @@ namespace CGA.MetrologySystem.Services.Notificaciones
             };
         }
 
-        private static string ConstruirCuerpoEventoExtraordinario(
+        private string ConstruirCuerpoEventoExtraordinario(
             Domain.Entities.EventoMetrologico evento)
         {
             var codigoEquipo = WebUtility.HtmlEncode(evento.Equipo.Codigo);
@@ -429,24 +439,35 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                 evento.ResponsableInterno?.NombreCompleto ?? "Sin responsable interno");
             var justificacion = WebUtility.HtmlEncode(
                 string.IsNullOrWhiteSpace(evento.JustificacionExtraordinario)
-                    ? "No se registro justificacion."
+                    ? "No se registró justificación."
                     : evento.JustificacionExtraordinario);
 
-            return $@"
-                <h2>Evento metrologico extraordinario</h2>
-                <p>Se registro un evento extraordinario que requiere seguimiento administrativo.</p>
-                <table cellpadding=""6"" cellspacing=""0"" border=""1"">
-                    <tr><td><strong>Equipo</strong></td><td>{codigoEquipo} - {nombreEquipo}</td></tr>
-                    <tr><td><strong>Tipo de evento</strong></td><td>{tipoEvento}</td></tr>
-                    <tr><td><strong>Fecha del evento</strong></td><td>{evento.FechaEvento:yyyy-MM-dd}</td></tr>
-                    <tr><td><strong>Proxima fecha</strong></td><td>{FormatearFecha(evento.FechaProxima)}</td></tr>
-                    <tr><td><strong>Responsable interno</strong></td><td>{responsable}</td></tr>
-                    <tr><td><strong>Justificacion</strong></td><td>{justificacion}</td></tr>
-                </table>
-                <p>Revise la trazabilidad del evento y sus evidencias asociadas en CGA Metrology System.</p>";
+            var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
+            {
+                new EmailTemplateRow("Equipo", $"{evento.Equipo.Codigo} - {evento.Equipo.Nombre}"),
+                new EmailTemplateRow("Tipo de evento", evento.TipoEventoMetrologico.Nombre),
+                new EmailTemplateRow("Fecha del evento", evento.FechaEvento.ToString("yyyy-MM-dd")),
+                new EmailTemplateRow("Próxima fecha", FormatearFecha(evento.FechaProxima)),
+                new EmailTemplateRow("Responsable interno", evento.ResponsableInterno?.NombreCompleto ?? "Sin responsable interno"),
+                new EmailTemplateRow("Justificacion", string.IsNullOrWhiteSpace(evento.JustificacionExtraordinario)
+                    ? "No se registró justificación."
+                    : evento.JustificacionExtraordinario)
+            });
+
+            return _emailTemplateService.ConstruirCorreo(new EmailTemplateModel
+            {
+                Titulo = "Evento metrológico extraordinario",
+                Preheader = $"Se registró un evento extraordinario para el equipo {evento.Equipo.Codigo}.",
+                Etiqueta = "Notificación metrológica",
+                Nivel = "advertencia",
+                ContenidoHtml = $@"
+                    <p style=""margin:0 0 14px;"">Se registró un evento extraordinario que requiere seguimiento administrativo.</p>
+                    {tabla}
+                    <p style=""margin:0;"">Revise la trazabilidad del evento y sus evidencias asociadas en CGA Metrology System.</p>"
+            });
         }
 
-        private static string ConstruirCuerpoReemplazoCertificado(
+        private string ConstruirCuerpoReemplazoCertificado(
             EventoCalibracionDato calibracion,
             string? nombreCertificadoAnterior,
             string? nombreCertificadoNuevo,
@@ -472,21 +493,38 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                     ? "Usuario no identificado"
                     : usuarioResponsable);
 
-            return $@"
-                <h2>Cambio documental critico</h2>
-                <p>Se reemplazo el certificado PDF de una calibracion registrada.</p>
-                <table cellpadding=""6"" cellspacing=""0"" border=""1"">
-                    <tr><td><strong>Equipo</strong></td><td>{codigoEquipo} - {nombreEquipo}</td></tr>
-                    <tr><td><strong>Fecha de calibracion</strong></td><td>{FormatearFecha(calibracion.FechaCalibracion)}</td></tr>
-                    <tr><td><strong>Numero de certificado</strong></td><td>{numeroCertificado}</td></tr>
-                    <tr><td><strong>Archivo anterior</strong></td><td>{archivoAnterior}</td></tr>
-                    <tr><td><strong>Archivo nuevo</strong></td><td>{archivoNuevo}</td></tr>
-                    <tr><td><strong>Usuario</strong></td><td>{usuario}</td></tr>
-                </table>
-                <p>Revise el historial del evento y la evidencia documental actual en CGA Metrology System.</p>";
+            var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
+            {
+                new EmailTemplateRow("Equipo", $"{evento.Equipo.Codigo} - {evento.Equipo.Nombre}"),
+                new EmailTemplateRow("Fecha de calibración", FormatearFecha(calibracion.FechaCalibracion)),
+                new EmailTemplateRow("Número de certificado", string.IsNullOrWhiteSpace(calibracion.NumeroCertificado)
+                    ? "No definido"
+                    : calibracion.NumeroCertificado),
+                new EmailTemplateRow("Archivo anterior", string.IsNullOrWhiteSpace(nombreCertificadoAnterior)
+                    ? "No registrado"
+                    : nombreCertificadoAnterior),
+                new EmailTemplateRow("Archivo nuevo", string.IsNullOrWhiteSpace(nombreCertificadoNuevo)
+                    ? "No registrado"
+                    : nombreCertificadoNuevo),
+                new EmailTemplateRow("Usuario", string.IsNullOrWhiteSpace(usuarioResponsable)
+                    ? "Usuario no identificado"
+                    : usuarioResponsable)
+            });
+
+            return _emailTemplateService.ConstruirCorreo(new EmailTemplateModel
+            {
+                Titulo = "Cambio documental crítico",
+                Preheader = $"Se reemplazó el certificado de calibración del equipo {evento.Equipo.Codigo}.",
+                Etiqueta = "Notificacion documental",
+                Nivel = "critico",
+                ContenidoHtml = $@"
+                    <p style=""margin:0 0 14px;"">Se reemplazó el certificado PDF de una calibración registrada.</p>
+                    {tabla}
+                    <p style=""margin:0;"">Revise el historial del evento y la evidencia documental actual en CGA Metrology System.</p>"
+            });
         }
 
-        private static string ConstruirCuerpoEdicionCriticaVerificacion(
+        private string ConstruirCuerpoEdicionCriticaVerificacion(
             EventoMetrologico evento,
             string? usuarioResponsable,
             IReadOnlyCollection<string> cambiosCriticos)
@@ -495,27 +533,35 @@ namespace CGA.MetrologySystem.Services.Notificaciones
             var nombreEquipo = WebUtility.HtmlEncode(evento.Equipo.Nombre);
             var usuario = WebUtility.HtmlEncode(
                 string.IsNullOrWhiteSpace(usuarioResponsable)
-                    ? "Tecnico no identificado"
+                    ? "Técnico no identificado"
                     : usuarioResponsable);
-            var cambios = string.Join(
-                string.Empty,
-                cambiosCriticos.Select(c => $"<li>{WebUtility.HtmlEncode(c)}</li>"));
+            var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
+            {
+                new EmailTemplateRow("Equipo", $"{evento.Equipo.Codigo} - {evento.Equipo.Nombre}"),
+                new EmailTemplateRow("Fecha del evento", evento.FechaEvento.ToString("yyyy-MM-dd")),
+                new EmailTemplateRow("Próxima fecha", FormatearFecha(evento.FechaProxima)),
+                new EmailTemplateRow("Usuario", string.IsNullOrWhiteSpace(usuarioResponsable)
+                    ? "Técnico no identificado"
+                    : usuarioResponsable)
+            });
+            var cambios = _emailTemplateService.ConstruirLista(cambiosCriticos);
 
-            return $@"
-                <h2>Edicion critica de verificacion</h2>
-                <p>Un tecnico modifico datos sensibles de una verificacion registrada.</p>
-                <table cellpadding=""6"" cellspacing=""0"" border=""1"">
-                    <tr><td><strong>Equipo</strong></td><td>{codigoEquipo} - {nombreEquipo}</td></tr>
-                    <tr><td><strong>Fecha del evento</strong></td><td>{evento.FechaEvento:yyyy-MM-dd}</td></tr>
-                    <tr><td><strong>Proxima fecha</strong></td><td>{FormatearFecha(evento.FechaProxima)}</td></tr>
-                    <tr><td><strong>Usuario</strong></td><td>{usuario}</td></tr>
-                </table>
-                <p><strong>Cambios criticos detectados:</strong></p>
-                <ul>{cambios}</ul>
-                <p>Revise la bitacora metrologica y el historial de la verificacion en CGA Metrology System.</p>";
+            return _emailTemplateService.ConstruirCorreo(new EmailTemplateModel
+            {
+                Titulo = "Edición crítica de verificación",
+                Preheader = $"Se modificaron datos sensibles de una verificación del equipo {evento.Equipo.Codigo}.",
+                Etiqueta = "Cambio crítico",
+                Nivel = "critico",
+                ContenidoHtml = $@"
+                    <p style=""margin:0 0 14px;"">Un técnico modificó datos sensibles de una verificación registrada.</p>
+                    {tabla}
+                    <p style=""margin:0 0 8px;""><strong>Cambios críticos detectados:</strong></p>
+                    {cambios}
+                    <p style=""margin:0;"">Revise la bitácora metrológica y el historial de la verificación en CGA Metrology System.</p>"
+            });
         }
 
-        private static string ConstruirCuerpoEdicionCriticaMantenimiento(
+        private string ConstruirCuerpoEdicionCriticaMantenimiento(
             EventoMetrologico evento,
             string? usuarioResponsable,
             IReadOnlyCollection<string> cambiosCriticos)
@@ -524,24 +570,32 @@ namespace CGA.MetrologySystem.Services.Notificaciones
             var nombreEquipo = WebUtility.HtmlEncode(evento.Equipo.Nombre);
             var usuario = WebUtility.HtmlEncode(
                 string.IsNullOrWhiteSpace(usuarioResponsable)
-                    ? "Tecnico no identificado"
+                    ? "Técnico no identificado"
                     : usuarioResponsable);
-            var cambios = string.Join(
-                string.Empty,
-                cambiosCriticos.Select(c => $"<li>{WebUtility.HtmlEncode(c)}</li>"));
+            var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
+            {
+                new EmailTemplateRow("Equipo", $"{evento.Equipo.Codigo} - {evento.Equipo.Nombre}"),
+                new EmailTemplateRow("Fecha del evento", evento.FechaEvento.ToString("yyyy-MM-dd")),
+                new EmailTemplateRow("Próxima fecha", FormatearFecha(evento.FechaProxima)),
+                new EmailTemplateRow("Usuario", string.IsNullOrWhiteSpace(usuarioResponsable)
+                    ? "Técnico no identificado"
+                    : usuarioResponsable)
+            });
+            var cambios = _emailTemplateService.ConstruirLista(cambiosCriticos);
 
-            return $@"
-                <h2>Edicion critica de mantenimiento</h2>
-                <p>Un tecnico modifico datos sensibles de un mantenimiento registrado.</p>
-                <table cellpadding=""6"" cellspacing=""0"" border=""1"">
-                    <tr><td><strong>Equipo</strong></td><td>{codigoEquipo} - {nombreEquipo}</td></tr>
-                    <tr><td><strong>Fecha del evento</strong></td><td>{evento.FechaEvento:yyyy-MM-dd}</td></tr>
-                    <tr><td><strong>Proxima fecha</strong></td><td>{FormatearFecha(evento.FechaProxima)}</td></tr>
-                    <tr><td><strong>Usuario</strong></td><td>{usuario}</td></tr>
-                </table>
-                <p><strong>Cambios criticos detectados:</strong></p>
-                <ul>{cambios}</ul>
-                <p>Revise la bitacora metrologica y el historial del mantenimiento en CGA Metrology System.</p>";
+            return _emailTemplateService.ConstruirCorreo(new EmailTemplateModel
+            {
+                Titulo = "Edición crítica de mantenimiento",
+                Preheader = $"Se modificaron datos sensibles de un mantenimiento del equipo {evento.Equipo.Codigo}.",
+                Etiqueta = "Cambio crítico",
+                Nivel = "critico",
+                ContenidoHtml = $@"
+                    <p style=""margin:0 0 14px;"">Un técnico modificó datos sensibles de un mantenimiento registrado.</p>
+                    {tabla}
+                    <p style=""margin:0 0 8px;""><strong>Cambios críticos detectados:</strong></p>
+                    {cambios}
+                    <p style=""margin:0;"">Revise la bitácora metrológica y el historial del mantenimiento en CGA Metrology System.</p>"
+            });
         }
 
         private static string FormatearFecha(DateTime? fecha)

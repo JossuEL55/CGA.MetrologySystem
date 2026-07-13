@@ -1,4 +1,5 @@
 using CGA.MetrologySystem.Models;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -19,13 +20,13 @@ namespace CGA.MetrologySystem.Controllers
             return View();
         }
 
-        [Authorize(Roles = "Administrador")]
+        [Authorize(Roles = RolesSistema.AdministracionUsuarios)]
         public IActionResult SoloAdmin()
         {
             return Content("Acceso permitido solo para administradores");
         }
 
-        [Authorize(Roles = "Administrador,Tecnico")]
+        [Authorize(Roles = RolesSistema.TodosOperativos)]
         public IActionResult ZonaOperativa()
         {
             return Content("Acceso permitido para administradores y técnicos");

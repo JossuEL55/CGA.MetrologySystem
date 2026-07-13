@@ -24,8 +24,12 @@ using QuestPDF.Infrastructure;
 
 QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
-var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+var port = Environment.GetEnvironmentVariable("PORT");
+
+if (!string.IsNullOrEmpty(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 builder.Services.AddControllersWithViews();
 
@@ -57,7 +61,10 @@ builder.Services.Configure<AlertasSettings>(
 builder.Configuration.GetSection("AlertasSettings"));
 builder.Services.Configure<NotificacionesSettings>(
 builder.Configuration.GetSection("NotificacionesSettings"));
+builder.Services.Configure<EmailBrandingSettings>(
+builder.Configuration.GetSection("EmailBrandingSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<IAlertaMetrologicaService, AlertaMetrologicaService>();
 builder.Services.AddScoped<INotificacionMetrologicaService, NotificacionMetrologicaService>();
 builder.Services.AddScoped<IAuditoriaMetrologicaService, AuditoriaMetrologicaService>();
@@ -132,9 +139,40 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication();
+
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        var path = context.Request.Path;
+        var puedeContinuar =
+            path.StartsWithSegments("/Perfil/CambiarContrasena") ||
+            path.StartsWithSegments("/Auth") ||
+            path.StartsWithSegments("/Identity") ||
+            path.StartsWithSegments("/css") ||
+            path.StartsWithSegments("/js") ||
+            path.StartsWithSegments("/lib") ||
+            path.StartsWithSegments("/images");
+
+        if (!puedeContinuar)
+        {
+            var userManager = context.RequestServices.GetRequiredService<UserManager<UsuarioSistema>>();
+            var usuario = await userManager.GetUserAsync(context.User);
+
+            if (usuario?.DebeCambiarContrasena == true)
+            {
+                context.Response.Redirect("/Perfil/CambiarContrasena");
+                return;
+            }
+        }
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 
-app.MapControllerRoute(
+app.MapControllerRoute( 
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 

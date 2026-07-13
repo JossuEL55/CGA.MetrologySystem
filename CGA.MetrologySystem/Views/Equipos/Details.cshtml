@@ -1,14 +1,15 @@
-锘緻model CGA.MetrologySystem.Domain.Entities.Equipo
+@model CGA.MetrologySystem.Domain.Entities.Equipo
 
 @{
     ViewData["Title"] = "Detalles del equipo";
+    var puedeGestionar = !User.IsInRole(RolesSistema.AdministradorSistema) && User.IsInRole(RolesSistema.AdministradorMetrologico);
 }
 
 <div class="page-header d-flex justify-content-between align-items-center">
     <div>
         <h2 class="page-title">Detalles del equipo</h2>
         <p class="page-subtitle">
-            Consulta la informaci贸n t茅cnica registrada para este equipo.
+            Consulta la informaci髇 t閏nica registrada para este equipo.
         </p>
     </div>
     <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
@@ -16,7 +17,7 @@
 
 <div class="form-card">
 
-    <h5 class="mb-3">Informaci贸n general</h5>
+    <h5 class="mb-3">Informaci髇 general</h5>
 
     <div class="equipo-photo-detail mb-4">
         @if (!string.IsNullOrWhiteSpace(Model.FotoGoogleDriveFileId))
@@ -36,7 +37,7 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <label class="form-label">C贸digo</label>
+            <label class="form-label">C骴igo</label>
             <div class="form-control readonly-highlight">@Model.Codigo</div>
         </div>
 
@@ -62,7 +63,7 @@
         </div>
 
         <div class="col-md-4">
-            <label class="form-label">Ubicaci贸n</label>
+            <label class="form-label">Ubicaci髇</label>
             <div class="form-control readonly-highlight">
                 @(Model.Ubicacion?.Nombre ?? "No registrada")
             </div>
@@ -94,7 +95,7 @@
 
     <hr />
 
-    <h5 class="mt-4 mb-3">Datos t茅cnicos</h5>
+    <h5 class="mt-4 mb-3">Datos t閏nicos</h5>
 
     <div class="row mb-3">
         <div class="col-md-3">
@@ -119,7 +120,7 @@
         </div>
 
         <div class="col-md-3">
-            <label class="form-label">Identificaci贸n</label>
+            <label class="form-label">Identificaci髇</label>
             <div class="form-control readonly-highlight">
                 @(Model.Identificacion ?? "No registrada")
             </div>
@@ -128,7 +129,7 @@
 
     <div class="row mb-3">
         <div class="col-md-6">
-            <label class="form-label">Fecha de adquisici贸n</label>
+            <label class="form-label">Fecha de adquisici髇</label>
             <div class="form-control readonly-highlight">
                 @(Model.FechaAdquisicion?.ToString("yyyy-MM-dd") ?? "No registrada")
             </div>
@@ -150,7 +151,7 @@
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Cat谩logo de manejo u operaci贸n</label>
+        <label class="form-label">Cat醠ogo de manejo u operaci髇</label>
         <div class="form-control readonly-highlight">
             @(Model.CatalogoManejoOperacion ?? "No registrado")
         </div>
@@ -164,16 +165,19 @@
     </div>
 
     <div class="mb-4">
-        <label class="form-label">Condiciones de operaci贸n</label>
+        <label class="form-label">Condiciones de operaci髇</label>
         <div class="form-control readonly-highlight">
             @(Model.CondicionesOperacion ?? "No registrado")
         </div>
     </div>
 
     <div class="d-flex justify-content-end gap-2">
-        <a asp-action="Edit" asp-route-id="@Model.EquipoId" class="btn btn-primary">
-            Editar
-        </a>
+        @if (puedeGestionar)
+        {
+            <a asp-action="Edit" asp-route-id="@Model.EquipoId" class="btn btn-primary">
+                Editar
+            </a>
+        }
         <a asp-action="Index" class="btn btn-outline-secondary">
             Volver
         </a>

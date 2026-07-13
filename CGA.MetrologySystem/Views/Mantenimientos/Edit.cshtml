@@ -1,4 +1,4 @@
-Ôªø@model CGA.MetrologySystem.Models.MantenimientoViewModel
+@model CGA.MetrologySystem.Models.MantenimientoViewModel
 
 @{
     ViewData["Title"] = "Editar mantenimiento";
@@ -8,7 +8,7 @@
     <div>
         <h2 class="page-title">Editar mantenimiento</h2>
         <p class="page-subtitle">
-            Actualiza la informaci√≥n t√©cnica del mantenimiento. Al guardar, el PDF ser√° regenerado y reemplazado autom√°ticamente.
+            Actualiza la informaciÛn tÈcnica del mantenimiento. Al guardar, el PDF ser· regenerado y reemplazado autom·ticamente.
         </p>
     </div>
 
@@ -35,9 +35,9 @@
     <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
 
     <div class="mb-4">
-        <h5 class="mb-1">Informaci√≥n del mantenimiento</h5>
+        <h5 class="mb-1">InformaciÛn del mantenimiento</h5>
         <p class="text-muted mb-0">
-            Modifica los datos principales del evento. El motor de reglas recalcular√° la pr√≥xima fecha al guardar.
+            Modifica los datos principales del evento. El motor de reglas recalcular· la prÛxima fecha al guardar.
         </p>
     </div>
 
@@ -85,7 +85,7 @@
         </div>
 
         <div class="col-md-4 mb-3">
-            <label asp-for="FechaProxima" class="form-label fw-semibold">Pr√≥xima fecha calculada</label>
+            <label asp-for="FechaProxima" class="form-label fw-semibold">PrÛxima fecha calculada</label>
             <input asp-for="FechaProxima"
                    class="form-control bg-light"
                    type="date"
@@ -107,11 +107,11 @@
     </div>
 
     <div class="alert alert-light border mb-4">
-        <strong>Nota:</strong> Si cambias la fecha del mantenimiento, el sistema volver√° a evaluar si el evento es ordinario o extraordinario.
+        <strong>Nota:</strong> Si cambias la fecha del mantenimiento, el sistema volver· a evaluar si el evento es ordinario o extraordinario.
     </div>
 
     <div class="row">
-        @if (User.IsInRole("Administrador"))
+        @if (User.IsInRole(RolesSistema.AdministradorMetrologico))
         {
             <div class="col-md-4 mb-3">
                 <div class="form-check form-switch cga-switch mt-md-4 pt-md-2">
@@ -121,9 +121,9 @@
             </div>
         }
 
-        <div class="@(User.IsInRole("Administrador") ? "col-md-8" : "col-md-12") mb-3">
+        <div class="@(User.IsInRole(RolesSistema.AdministradorMetrologico) ? "col-md-8" : "col-md-12") mb-3">
             <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
-                Justificaci√≥n extraordinaria
+                JustificaciÛn extraordinaria
             </label>
             <textarea asp-for="JustificacionExtraordinario"
                       class="form-control"
@@ -132,14 +132,14 @@
             <span asp-validation-for="JustificacionExtraordinario" class="text-danger"></span>
         </div>
 
-        @if (User.IsInRole("Administrador"))
+        @if (User.IsInRole(RolesSistema.AdministradorMetrologico))
         {
             <div class="col-md-12 mb-3">
                 <label asp-for="ObservacionCargaHistorica" class="form-label fw-semibold"></label>
                 <textarea asp-for="ObservacionCargaHistorica"
                           class="form-control"
                           rows="2"
-                          placeholder="Referencia u observaci√≥n del registro hist√≥rico."></textarea>
+                          placeholder="Referencia u observaciÛn del registro histÛrico."></textarea>
                 <span asp-validation-for="ObservacionCargaHistorica" class="text-danger"></span>
             </div>
         }
@@ -158,9 +158,9 @@
 
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
         <div>
-            <h5 class="mb-1">Actividades t√©cnicas realizadas</h5>
+            <h5 class="mb-1">Actividades tÈcnicas realizadas</h5>
             <p class="text-muted mb-0">
-                Puedes corregir, agregar o quitar actividades. El PDF se actualizar√° con estos datos.
+                Puedes corregir, agregar o quitar actividades. El PDF se actualizar· con estos datos.
             </p>
         </div>
 
@@ -176,8 +176,8 @@
                     <th class="checklist-head-order checklist-order-column">#</th>
                     <th class="checklist-head-description">Actividad realizada</th>
                     <th class="checklist-head-notes">Observaciones</th>
-                    <th class="checklist-head-evidence">Evidencia del √≠tem</th>
-                    <th class="checklist-head-action text-end checklist-action-column">Acci√≥n</th>
+                    <th class="checklist-head-evidence">Evidencia del Ìtem</th>
+                    <th class="checklist-head-action text-end checklist-action-column">AcciÛn</th>
                 </tr>
             </thead>
             <tbody>
@@ -254,7 +254,7 @@
     <div class="mb-4">
         <h5 class="mb-1">Evidencias visuales</h5>
         <p class="text-muted">
-            Las evidencias existentes se conservan. Puedes agregar nuevas fotograf√≠as o im√°genes.
+            Las evidencias existentes se conservan. Puedes agregar nuevas fotografÌas o im·genes.
         </p>
 
         @if (Model.EvidenciasExistentes != null && Model.EvidenciasExistentes.Any())
@@ -283,7 +283,7 @@
         else
         {
             <div class="alert alert-light border">
-                Este mantenimiento a√∫n no tiene evidencias visuales registradas.
+                Este mantenimiento a˙n no tiene evidencias visuales registradas.
             </div>
         }
 
@@ -294,7 +294,7 @@
                multiple />
 
         <small class="text-muted">
-            Puedes tomar fotos desde el dispositivo o cargar im√°genes existentes.
+            Puedes tomar fotos desde el dispositivo o cargar im·genes existentes.
         </small>
     </div>
 

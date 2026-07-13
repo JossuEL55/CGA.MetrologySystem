@@ -1,4 +1,5 @@
 ﻿using CGA.MetrologySystem.Domain.Entities;
+using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +9,8 @@ using Microsoft.EntityFrameworkCore;
 namespace CGA.MetrologySystem.Controllers
 {
 
-    [Authorize]
+    // GET: Laboratorios
+    [Authorize(Roles = RolesSistema.SupervisionMetrologica)]
     public class LaboratoriosController : Controller
     {
         private readonly AppDbContext _context;
@@ -29,6 +31,7 @@ namespace CGA.MetrologySystem.Controllers
         }
 
         // GET: Laboratorios/Create
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public IActionResult Create()
         {
             var model = new LaboratorioViewModel();
@@ -38,6 +41,7 @@ namespace CGA.MetrologySystem.Controllers
         // POST: Laboratorios/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Create(LaboratorioViewModel model)
         {
             if (!ModelState.IsValid)
@@ -81,6 +85,7 @@ namespace CGA.MetrologySystem.Controllers
         }
 
         // GET: Laboratorios/Edit/5
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -114,6 +119,7 @@ namespace CGA.MetrologySystem.Controllers
         // POST: Laboratorios/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Edit(int id, LaboratorioViewModel model)
         {
             if (id != model.LaboratorioId)
@@ -147,6 +153,7 @@ namespace CGA.MetrologySystem.Controllers
         }
 
         // GET: Laboratorios/Delete/5
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -164,6 +171,7 @@ namespace CGA.MetrologySystem.Controllers
         // POST: Laboratorios/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var laboratorio = await _context.Set<Laboratorio>().FindAsync(id);

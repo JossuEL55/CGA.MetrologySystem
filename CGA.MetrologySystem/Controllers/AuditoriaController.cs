@@ -1,4 +1,5 @@
-﻿using CGA.MetrologySystem.Infrastructure.Persistence;
+﻿using CGA.MetrologySystem.Infrastructure.Identity;
+using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models.Auditoria;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace CGA.MetrologySystem.Controllers
     //controlador para gestionar la auditoría de acciones realizadas por los administradores en el sistema,
     //permitiendo visualizar un historial de actividades con detalles como fecha, acción realizada, }
     //usuario afectado y correo del administrador responsable
-    [Authorize(Roles = "Administrador")]
+    [Authorize(Roles = RolesSistema.AdministracionUsuarios)]
     public class AuditoriaController : Controller
     {
         private readonly AppDbContext _context;
