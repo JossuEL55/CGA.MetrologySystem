@@ -13,14 +13,14 @@
     <div>
         <h2 class="page-title">Verificaciones</h2>
         <p class="page-subtitle">
-            Consulta el historial de verificaciones técnicas, resultados evaluados y documentación generada automáticamente.
+            Consulta el historial de verificaciones tÃ©cnicas, resultados evaluados y documentaciÃ³n generada automÃ¡ticamente.
         </p>
     </div>
 
     @if (puedeRegistrar)
     {
         <a asp-action="Create" class="btn btn-primary">
-            + Registrar verificación
+            + Registrar verificaciÃ³n
         </a>
     }
 </div>
@@ -36,11 +36,11 @@
     <div class="row g-3 align-items-end">
         <div class="col-xl-4 col-lg-4 col-md-6">
             <label class="form-label">Buscar</label>
-            <input name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Código, equipo o responsable" />
+            <input name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="CÃ³digo, equipo o responsable" />
         </div>
         <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Estado</label><select name="estado" class="form-select" asp-items="ViewBag.Estados"><option value="">Todos</option></select></div>
         <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Subtipo</label><select name="subtipoEventoId" class="form-select" asp-items="ViewBag.SubtiposEvento"><option value="">Todos</option></select></div>
-        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">Clasificación</label><select name="clasificacion" class="form-select" asp-items="ViewBag.Clasificaciones"><option value="">Todas</option></select></div>
+        <div class="col-xl-2 col-lg-3 col-md-3"><label class="form-label">ClasificaciÃ³n</label><select name="clasificacion" class="form-select" asp-items="ViewBag.Clasificaciones"><option value="">Todas</option></select></div>
         <div class="col-xl-1 col-md-3"><label class="form-label">Desde</label><input name="desde" value="@(((DateTime?)ViewBag.Desde)?.ToString("yyyy-MM-dd"))" type="date" class="form-control" /></div>
         <div class="col-xl-1 col-md-3"><label class="form-label">Hasta</label><input name="hasta" value="@(((DateTime?)ViewBag.Hasta)?.ToString("yyyy-MM-dd"))" type="date" class="form-control" /></div>
         <div class="col-lg-3 col-md-4 event-filter-actions"><button type="submit" class="btn btn-primary">Filtrar</button><a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a></div>
@@ -50,10 +50,10 @@
 <div class="event-index-card">
     <div class="event-index-header">
         <div>
-            <span class="section-kicker">Control técnico</span>
+            <span class="section-kicker">Control tÃ©cnico</span>
             <h5 class="mb-1">Historial de verificaciones</h5>
             <p class="page-subtitle">
-                Revisa verificaciones realizadas, próximas fechas, estado operativo y PDF generado.
+                Revisa verificaciones realizadas, prÃ³ximas fechas, estado operativo y PDF generado.
             </p>
         </div>
 
@@ -66,14 +66,14 @@
     {
         <div class="event-empty-state">
             <div class="event-empty-icon">V</div>
-            <h5>Aún no hay verificaciones registradas</h5>
+            <h5>AÃºn no hay verificaciones registradas</h5>
             <p>
-                Cuando registres una verificación aparecerá aquí junto con su PDF, resultados y próximas fechas calculadas.
+                Cuando registres una verificaciÃ³n aparecerÃ¡ aquÃ­ junto con su PDF, resultados y prÃ³ximas fechas calculadas.
             </p>
             @if (puedeRegistrar)
             {
                 <a asp-action="Create" class="btn btn-primary">
-                    Registrar primera verificación
+                    Registrar primera verificaciÃ³n
                 </a>
             }
         </div>
@@ -116,12 +116,12 @@
                             <td>
                                 <div class="event-date-stack">
                                     <div>
-                                        <span>Verificación</span>
+                                        <span>VerificaciÃ³n</span>
                                         <strong>@evento.FechaEvento.ToString("yyyy-MM-dd")</strong>
                                     </div>
 
                                     <div>
-                                        <span>Próxima</span>
+                                        <span>PrÃ³xima</span>
                                         <strong>
                                             @(evento.FechaProxima.HasValue
                                                 ? evento.FechaProxima.Value.ToString("yyyy-MM-dd")
@@ -151,7 +151,7 @@
                                     @if (evento.EsHistorico)
                                     {
                                         <span class="event-badge event-badge-info">
-                                            Histórica
+                                            HistÃ³rica
                                         </span>
                                     }
 

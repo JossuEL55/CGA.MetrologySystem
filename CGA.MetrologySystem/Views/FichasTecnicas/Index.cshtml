@@ -1,16 +1,16 @@
 @model CGA.MetrologySystem.Models.FichasTecnicas.FichasTecnicasIndexViewModel
 
 @{
-    ViewData["Title"] = "Fichas T閏nicas";
+    ViewData["Title"] = "Fichas T茅cnicas";
     var puedeGenerar = (!User.IsInRole(RolesSistema.AdministradorSistema) && User.IsInRole(RolesSistema.AdministradorMetrologico));
 }
 
 <div class="page-header">
     <div>
-        <h2 class="page-title">Fichas T閏nicas</h2>
+        <h2 class="page-title">Fichas T茅cnicas</h2>
 
         <p class="page-subtitle">
-            Consulta, generaci髇 y actualizaci髇 de fichas t閏nicas consolidadas por equipo.
+            Consulta, generaci贸n y actualizaci贸n de fichas t茅cnicas consolidadas por equipo.
         </p>
     </div>
 </div>
@@ -40,7 +40,7 @@
 
                 <input asp-for="Buscar"
                        class="form-control"
-                       placeholder="C骴igo, nombre, marca, modelo o serie..." />
+                       placeholder="C贸digo, nombre, marca, modelo o serie..." />
             </div>
 
             <div class="col-md-5">
@@ -76,8 +76,8 @@
                 <tr>
                     <th>Equipo</th>
                     <th>Tipo</th>
-                    <th>Ficha T閏nica</th>
-                    <th>趌tima Generaci髇</th>
+                    <th>Ficha T茅cnica</th>
+                    <th>脷ltima Generaci贸n</th>
                     <th>Eventos</th>
                     <th class="text-center">Acciones</th>
                 </tr>

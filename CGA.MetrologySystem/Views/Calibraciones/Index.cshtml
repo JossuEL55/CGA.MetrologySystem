@@ -8,14 +8,14 @@
     <div>
         <h2 class="page-title">Calibraciones</h2>
         <p class="page-subtitle">
-            Consulta el historial de calibraciones, certificados cargados y próximas fechas de control.
+            Consulta el historial de calibraciones, certificados cargados y prÃ³ximas fechas de control.
         </p>
     </div>
 
 @if ((!User.IsInRole(RolesSistema.AdministradorSistema) && User.IsInRole(RolesSistema.AdministradorMetrologico)))
     {
         <a asp-action="Create" class="btn btn-primary">
-            + Registrar calibración
+            + Registrar calibraciÃ³n
         </a>
     }
 </div>
@@ -45,8 +45,8 @@
 <div class="event-index-card">
     <div class="event-index-header">
         <div>
-            <span class="section-kicker">Historial metrológico</span>
-            <h5 class="mb-1">Registros de calibración</h5>
+            <span class="section-kicker">Historial metrolÃ³gico</span>
+            <h5 class="mb-1">Registros de calibraciÃ³n</h5>
             <p class="page-subtitle">
                 Visualiza certificados, laboratorios, responsables y estado operativo de cada equipo.
             </p>
@@ -61,14 +61,14 @@
     {
         <div class="event-empty-state">
             <div class="event-empty-icon">C</div>
-            <h5>Aún no hay calibraciones registradas</h5>
+            <h5>AÃºn no hay calibraciones registradas</h5>
             <p>
-                Cuando registres una calibración, aparecerá aquí con su certificado, laboratorio y próxima fecha calculada.
+                Cuando registres una calibraciÃ³n, aparecerÃ¡ aquÃ­ con su certificado, laboratorio y prÃ³xima fecha calculada.
             </p>
             @if ((!User.IsInRole(RolesSistema.AdministradorSistema) && User.IsInRole(RolesSistema.AdministradorMetrologico)))
             {
                 <a asp-action="Create" class="btn btn-primary">
-                    Registrar primera calibración
+                    Registrar primera calibraciÃ³n
                 </a>
             }
         </div>
@@ -113,11 +113,11 @@
                             <td>
                                 <div class="event-main-text">
                                     @(string.IsNullOrWhiteSpace(item.NumeroCertificado)
-                                        ? "Sin número"
+                                        ? "Sin nÃºmero"
                                         : item.NumeroCertificado)
                                 </div>
                                 <div class="event-secondary-text">
-                                    Calibración:
+                                    CalibraciÃ³n:
                                     @(item.FechaCalibracion.HasValue
                                         ? item.FechaCalibracion.Value.ToString("yyyy-MM-dd")
                                         : "No definida")
@@ -132,7 +132,7 @@
                                     </div>
 
                                     <div>
-                                        <span>Próxima</span>
+                                        <span>PrÃ³xima</span>
                                         <strong>
                                             @(evento.FechaProxima.HasValue
                                                 ? evento.FechaProxima.Value.ToString("yyyy-MM-dd")
