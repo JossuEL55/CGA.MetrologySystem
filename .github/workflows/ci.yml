@@ -11,14 +11,14 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Descargar código
+      - name: Checkout del código
         uses: actions/checkout@v4
 
-      - name: Instalar .NET 10
+      - name: Instalar SDK .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
@@ -27,10 +27,23 @@ jobs:
         run: dotnet --version
 
       - name: Restaurar dependencias
-        run: dotnet restore ./CGA.MetrologySystem/CGA.MetrologySystem.csproj
+        run: dotnet restore ./CGA.MetrologySystem.slnx
 
-      - name: Compilar solución
-        run: dotnet build ./CGA.MetrologySystem/CGA.MetrologySystem.csproj --no-restore --configuration Release
+      - name: Compilar solución en Release
+        run: dotnet build ./CGA.MetrologySystem.slnx --no-restore --configuration Release
 
-      - name: Ejecutar pruebas
-        run: dotnet test ./CGA.MetrologySystem/CGA.MetrologySystem.csproj --no-build --configuration Release
+      - name: Ejecutar pruebas automatizadas
+        run: >
+          dotnet test ./CGA.MetrologySystem.Tests/CGA.MetrologySystem.Tests.csproj
+          --no-build
+          --configuration Release
+          --logger "trx;LogFileName=cga-metrology-tests.trx"
+          --results-directory ./TestResults
+
+      - name: Publicar reporte de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cga-metrology-test-results
+          path: ./TestResults/*.trx
+          if-no-files-found: warn

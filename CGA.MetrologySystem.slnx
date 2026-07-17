@@ -2,5 +2,6 @@
   <Project Path="CGA.MetrologySystem.Application/CGA.MetrologySystem.Application.csproj" Id="dc741a48-a453-4cc5-9a48-9e24f8208faa" />
   <Project Path="CGA.MetrologySystem.Domain/CGA.MetrologySystem.Domain.csproj" Id="0b946163-3ec0-47c2-826a-b308c05e3916" />
   <Project Path="CGA.MetrologySystem.Infrastructure/CGA.MetrologySystem.Infrastructure.csproj" Id="787b6ca2-6dfc-4665-84e4-3a8f7e84a5a8" />
+  <Project Path="CGA.MetrologySystem.Tests/CGA.MetrologySystem.Tests.csproj" />
   <Project Path="CGA.MetrologySystem/CGA.MetrologySystem.csproj" />
 </Solution>
