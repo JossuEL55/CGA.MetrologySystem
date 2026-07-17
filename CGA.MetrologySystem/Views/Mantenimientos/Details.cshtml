@@ -26,7 +26,7 @@
     <div>
         <h2 class="page-title">Detalle de mantenimiento</h2>
         <p class="page-subtitle">
-            Registro técnico del mantenimiento, actividades ejecutadas, PDF generado y evidencias asociadas.
+            Registro tÃ©cnico del mantenimiento, actividades ejecutadas, PDF generado y evidencias asociadas.
         </p>
     </div>
 
@@ -81,7 +81,7 @@
                     @if (evento.EsHistorico)
                     {
                         <span class="badge bg-info text-dark fs-6 ms-1">
-                            Histórico
+                            HistÃ³rico
                         </span>
                     }
 
@@ -95,7 +95,7 @@
                 </div>
 
                 <div class="col-md-4 mb-3">
-                    <div class="text-muted small">Próxima fecha</div>
+                    <div class="text-muted small">PrÃ³xima fecha</div>
                     <div class="fw-semibold">
                         @(evento.FechaProxima.HasValue
                             ? evento.FechaProxima.Value.ToString("yyyy-MM-dd")
@@ -137,10 +137,10 @@
             @if (evento.EsExtraordinario)
             {
                 <div class="alert alert-warning">
-                    <div class="fw-semibold mb-1">Justificación extraordinaria</div>
+                    <div class="fw-semibold mb-1">JustificaciÃ³n extraordinaria</div>
                     <div>
                         @(string.IsNullOrWhiteSpace(evento.JustificacionExtraordinario)
-                            ? "No se registró una justificación."
+                            ? "No se registrÃ³ una justificaciÃ³n."
                             : evento.JustificacionExtraordinario)
                     </div>
                 </div>
@@ -149,7 +149,7 @@
             @if (evento.EsHistorico && !string.IsNullOrWhiteSpace(evento.ObservacionCargaHistorica))
             {
                 <div class="alert alert-info">
-                    <div class="fw-semibold mb-1">Observación histórica</div>
+                    <div class="fw-semibold mb-1">ObservaciÃ³n histÃ³rica</div>
                     <div>@evento.ObservacionCargaHistorica</div>
                 </div>
             }
@@ -167,7 +167,7 @@
                                 <th class="checklist-head-order checklist-order-column">#</th>
                                 <th class="checklist-head-description">Actividad</th>
                                 <th class="checklist-head-notes">Observaciones</th>
-                                <th class="checklist-head-evidence">Evidencia del ítem</th>
+                                <th class="checklist-head-evidence">Evidencia del Ã­tem</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -229,7 +229,7 @@
             @if (!string.IsNullOrWhiteSpace(Model.RutaPdf))
             {
                 <p class="text-muted">
-                    El PDF interno de mantenimiento fue generado automáticamente y almacenado en el repositorio documental.
+                    El PDF interno de mantenimiento fue generado automÃ¡ticamente y almacenado en el repositorio documental.
                 </p>
 
                 <div class="d-grid gap-2">
@@ -255,7 +255,7 @@
             else
             {
                 <div class="alert alert-warning mb-0">
-                    Este mantenimiento aún no tiene PDF asociado.
+                    Este mantenimiento aÃºn no tiene PDF asociado.
                 </div>
             }
         </div>

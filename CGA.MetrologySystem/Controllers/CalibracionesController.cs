@@ -209,7 +209,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                ModelState.AddModelError(string.Empty, "OcurriÛ un error al guardar la calibraciÛn.");
+                ModelState.AddModelError(string.Empty, "Ocurri√≥ un error al guardar la calibraci√≥n.");
                 await CargarCombosAsync(model);
                 return View(model);
             }
@@ -375,7 +375,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                ModelState.AddModelError(string.Empty, "OcurriÛ un error al actualizar la calibraciÛn.");
+                ModelState.AddModelError(string.Empty, "Ocurri√≥ un error al actualizar la calibraci√≥n.");
                 ViewBag.EventoCalibracionDatoId = id;
                 await CargarCombosAsync(model);
                 return View(model);
@@ -434,7 +434,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 await transaction.RollbackAsync();
 
-                TempData["Error"] = "OcurriÛ un error al eliminar la calibraciÛn.";
+                TempData["Error"] = "Ocurri√≥ un error al eliminar la calibraci√≥n.";
                 return RedirectToAction(nameof(Delete), new { id });
             }
         }
@@ -522,7 +522,7 @@ namespace CGA.MetrologySystem.Controllers
         private async Task<TipoEventoMetrologico?> ObtenerTipoEventoCalibracionAsync()
         {
             return await _context.TiposEventoMetrologico
-                .FirstOrDefaultAsync(t => t.Nombre == "CalibraciÛn");
+                .FirstOrDefaultAsync(t => t.Nombre.ToLower().Contains("calibr"));
         }
 
         private async Task ValidarFormularioCalibracionAsync(
@@ -532,7 +532,7 @@ namespace CGA.MetrologySystem.Controllers
         {
             if (tipoCalibracion == null)
             {
-                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'CalibraciÛn'.");
+                ModelState.AddModelError(string.Empty, "No existe configurado el tipo de evento 'Calibraci√≥n'.");
                 return;
             }
 
@@ -541,7 +541,7 @@ namespace CGA.MetrologySystem.Controllers
 
             if (!equipoExiste)
             {
-                ModelState.AddModelError("EquipoId", "Debe seleccionar un equipo v·lido.");
+                ModelState.AddModelError("EquipoId", "Debe seleccionar un equipo v√°lido.");
             }
 
             if (certificadoObligatorio &&
@@ -575,7 +575,7 @@ namespace CGA.MetrologySystem.Controllers
             {
                 ModelState.AddModelError(
                     string.Empty,
-                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrolÛgicas.");
+                    resultadoRegla.Mensaje ?? "El evento no cumple las reglas metrol√≥gicas.");
             }
 
             if (!string.IsNullOrWhiteSpace(resultadoRegla.Advertencia))

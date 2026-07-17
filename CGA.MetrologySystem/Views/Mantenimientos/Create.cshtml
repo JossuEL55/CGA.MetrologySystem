@@ -8,7 +8,7 @@
     <div>
         <h2 class="page-title">Registrar mantenimiento</h2>
         <p class="page-subtitle">
-            Documenta el mantenimiento realizado, sus actividades tÈcnicas y evidencias visuales asociadas.
+            Documenta el mantenimiento realizado, sus actividades t√©cnicas y evidencias visuales asociadas.
         </p>
     </div>
 
@@ -29,10 +29,10 @@
 
     <div class="plantilla-section-header mb-4">
         <div>
-            <span class="section-kicker">Evento tÈcnico</span>
-            <h5 class="mb-1">InformaciÛn general del mantenimiento</h5>
+            <span class="section-kicker">Evento t√©cnico</span>
+            <h5 class="mb-1">Informaci√≥n general del mantenimiento</h5>
             <p class="page-subtitle">
-                Selecciona el equipo, tipo de mantenimiento y fecha de ejecuciÛn. La plantilla se cargar· autom·ticamente seg˙n el equipo.
+                Selecciona el equipo, tipo de mantenimiento y fecha de ejecuci√≥n. La plantilla se cargar√° autom√°ticamente seg√∫n el equipo.
             </p>
         </div>
     </div>
@@ -46,7 +46,7 @@
                 </select>
                 <span asp-validation-for="EquipoId" class="text-danger"></span>
                 <small class="text-muted">
-                    Al seleccionar un equipo se cargar· su plantilla de mantenimiento.
+                    Al seleccionar un equipo se cargar√° su plantilla de mantenimiento.
                 </small>
             </div>
 
@@ -81,7 +81,7 @@
             </div>
 
             <div class="col-md-4 mb-3">
-                <label asp-for="FechaProxima" class="form-label fw-semibold">PrÛxima fecha calculada</label>
+                <label asp-for="FechaProxima" class="form-label fw-semibold">Pr√≥xima fecha calculada</label>
                 <input asp-for="FechaProxima"
                        class="form-control readonly-highlight"
                        type="date"
@@ -108,10 +108,10 @@
         <div class="checklist-info-strip mb-4 mx-0">
             <div class="checklist-info-icon">i</div>
             <div>
-                <strong>Regla autom·tica</strong>
+                <strong>Regla autom√°tica</strong>
                 <p class="mb-0">
-                    Si el mantenimiento es no programado, selecciona el subtipo Extraordinario y justifÌcalo.
-                    El sistema tambiÈn lo solicitar· si la fecha se desvÌa del periodo esperado.
+                    Si el mantenimiento es no programado, selecciona el subtipo Extraordinario y justif√≠calo.
+                    El sistema tambi√©n lo solicitar√° si la fecha se desv√≠a del periodo esperado.
                 </p>
             </div>
         </div>
@@ -129,7 +129,7 @@
 
             <div class="@(User.IsInRole(RolesSistema.AdministradorMetrologico) ? "col-md-8" : "col-md-12") mb-3">
                 <label asp-for="JustificacionExtraordinario" class="form-label fw-semibold">
-                    JustificaciÛn extraordinaria
+                    Justificaci√≥n extraordinaria
                 </label>
                 <textarea asp-for="JustificacionExtraordinario"
                           class="form-control"
@@ -145,7 +145,7 @@
                     <textarea asp-for="ObservacionCargaHistorica"
                               class="form-control"
                               rows="2"
-                              placeholder="Referencia u observaciÛn del registro histÛrico."></textarea>
+                              placeholder="Referencia u observaci√≥n del registro hist√≥rico."></textarea>
                     <span asp-validation-for="ObservacionCargaHistorica" class="text-danger"></span>
                 </div>
             }
@@ -156,7 +156,7 @@
             <textarea asp-for="ComentariosAdicionales"
                       class="form-control"
                       rows="3"
-                      placeholder="Ejemplo: El equipo se encuentra en Ûptimas condiciones, se realiza limpieza general y verificaciÛn funcional."></textarea>
+                      placeholder="Ejemplo: El equipo se encuentra en √≥ptimas condiciones, se realiza limpieza general y verificaci√≥n funcional."></textarea>
             <span asp-validation-for="ComentariosAdicionales" class="text-danger"></span>
         </div>
     </div>
@@ -170,9 +170,9 @@
 
                 <div>
                     <span class="section-kicker">Sistema de mantenimiento</span>
-                    <h5 class="mb-1">Actividades tÈcnicas realizadas</h5>
+                    <h5 class="mb-1">Actividades t√©cnicas realizadas</h5>
                     <p class="page-subtitle">
-                        Registra cada actividad ejecutada y documenta observaciones tÈcnicas cuando corresponda.
+                        Registra cada actividad ejecutada y documenta observaciones t√©cnicas cuando corresponda.
                     </p>
                 </div>
             </div>
@@ -185,9 +185,9 @@
         <div class="checklist-info-strip">
             <div class="checklist-info-icon">i</div>
             <div>
-                <strong>GuÌa de registro</strong>
+                <strong>Gu√≠a de registro</strong>
                 <p class="mb-0">
-                    Redacta las actividades como acciones ejecutadas. Ejemplo: ìLimpieza general del equipoî o ìComprobaciÛn del campo magnÈticoî.
+                    Redacta las actividades como acciones ejecutadas. Ejemplo: ‚ÄúLimpieza general del equipo‚Äù o ‚ÄúComprobaci√≥n del campo magn√©tico‚Äù.
                 </p>
             </div>
         </div>
@@ -199,8 +199,8 @@
                         <th class="checklist-head-order checklist-order-column">#</th>
                         <th class="checklist-head-description">Actividad realizada</th>
                         <th class="checklist-head-notes">Observaciones</th>
-                        <th class="checklist-head-evidence">Evidencia del Ìtem</th>
-                        <th class="checklist-head-action text-end checklist-action-column">AcciÛn</th>
+                        <th class="checklist-head-evidence">Evidencia del √≠tem</th>
+                        <th class="checklist-head-action text-end checklist-action-column">Acci√≥n</th>
                     </tr>
                 </thead>
                 <tbody id="actividadesContainer">
@@ -252,7 +252,7 @@
             <div class="empty-checklist-icon">+</div>
             <h6>No hay actividades agregadas</h6>
             <p>
-                Agrega actividades tÈcnicas o selecciona un equipo con una plantilla configurada.
+                Agrega actividades t√©cnicas o selecciona un equipo con una plantilla configurada.
             </p>
         </div>
     </div>
@@ -263,7 +263,7 @@
                 <span class="section-kicker">Evidencias</span>
                 <h5 class="mb-1">Evidencias visuales</h5>
                 <p class="page-subtitle">
-                    Puedes tomar fotos desde una tablet o celular, o subir im·genes existentes del dispositivo.
+                    Puedes tomar fotos desde una tablet o celular, o subir im√°genes existentes del dispositivo.
                 </p>
             </div>
         </div>
@@ -271,10 +271,10 @@
         <div class="event-upload-box">
             <div>
                 <label asp-for="Evidencias" class="form-label fw-semibold mb-1">
-                    Im·genes de evidencia
+                    Im√°genes de evidencia
                 </label>
                 <p class="mb-0">
-                    Adjunta una o varias im·genes que respalden las actividades realizadas.
+                    Adjunta una o varias im√°genes que respalden las actividades realizadas.
                 </p>
             </div>
 
@@ -286,7 +286,7 @@
         </div>
 
         <small class="text-muted d-block mt-2">
-            Formatos permitidos: im·genes. Puedes seleccionar m·s de una evidencia.
+            Formatos permitidos: im√°genes. Puedes seleccionar m√°s de una evidencia.
         </small>
     </div>
 
