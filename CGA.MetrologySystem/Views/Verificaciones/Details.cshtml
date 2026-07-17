@@ -1,7 +1,7 @@
 @model CGA.MetrologySystem.Domain.Entities.EventoVerificacionDato
 
 @{
-    ViewData["Title"] = "Detalle de verificación";
+    ViewData["Title"] = "Detalle de verificaciÃ³n";
 
     var evento = Model.EventoMetrologico;
 
@@ -27,10 +27,10 @@
 
     <div>
 
-        <h2 class="page-title">Detalle de verificación</h2>
+        <h2 class="page-title">Detalle de verificaciÃ³n</h2>
 
         <p class="page-subtitle">
-            Información técnica del evento, resultados evaluados y evidencias visuales registradas.
+            InformaciÃ³n tÃ©cnica del evento, resultados evaluados y evidencias visuales registradas.
         </p>
 
     </div>
@@ -84,7 +84,7 @@
                     </h5>
 
                     <p class="text-muted mb-0">
-                        Verificación técnica registrada
+                        VerificaciÃ³n tÃ©cnica registrada
                     </p>
 
                 </div>
@@ -105,7 +105,7 @@
                     @if (evento.EsHistorico)
                     {
                         <span class="badge bg-info text-dark fs-6 ms-1">
-                            Histórica
+                            HistÃ³rica
                         </span>
                     }
 
@@ -118,7 +118,7 @@
                 <div class="col-md-4 mb-3">
 
                     <div class="text-muted small">
-                        Fecha de verificación
+                        Fecha de verificaciÃ³n
                     </div>
 
                     <div class="fw-semibold">
@@ -130,7 +130,7 @@
                 <div class="col-md-4 mb-3">
 
                     <div class="text-muted small">
-                        Próxima fecha
+                        PrÃ³xima fecha
                     </div>
 
                     <div class="fw-semibold">
@@ -201,13 +201,13 @@
                 <div class="alert alert-warning">
 
                     <div class="fw-semibold mb-1">
-                        Justificación extraordinaria
+                        JustificaciÃ³n extraordinaria
                     </div>
 
                     <div>
 
                         @(string.IsNullOrWhiteSpace(evento.JustificacionExtraordinario)
-                            ? "No se registró una justificación."
+                            ? "No se registrÃ³ una justificaciÃ³n."
                             : evento.JustificacionExtraordinario)
 
                     </div>
@@ -219,7 +219,7 @@
             {
                 <div class="alert alert-info">
                     <div class="fw-semibold mb-1">
-                        Observación histórica
+                        ObservaciÃ³n histÃ³rica
                     </div>
 
                     <div>
@@ -231,7 +231,7 @@
             <hr class="my-4" />
 
             <h5 class="mb-3">
-                Resultados de verificación
+                Resultados de verificaciÃ³n
             </h5>
 
             @if (evento.ResultadosVerificacion != null && evento.ResultadosVerificacion.Any())
@@ -243,10 +243,10 @@
                         <thead>
                             <tr>
                                 <th class="checklist-head-order checklist-order-column">#</th>
-                                <th class="checklist-head-description">Condición evaluada</th>
+                                <th class="checklist-head-description">CondiciÃ³n evaluada</th>
                                 <th class="checklist-head-status checklist-status-column">Resultado</th>
                                 <th class="checklist-head-notes">Observaciones</th>
-                                <th class="checklist-head-evidence">Evidencia del ítem</th>
+                                <th class="checklist-head-evidence">Evidencia del Ã­tem</th>
                             </tr>
                         </thead>
 
@@ -349,7 +349,7 @@
             @if (!string.IsNullOrWhiteSpace(Model.RutaPdf))
             {
                 <p class="text-muted">
-                    El PDF interno fue generado automáticamente y almacenado en el repositorio documental.
+                    El PDF interno fue generado automÃ¡ticamente y almacenado en el repositorio documental.
                 </p>
 
                 <div class="d-grid gap-2">
@@ -371,7 +371,7 @@
             else
             {
                 <div class="alert alert-warning mb-0">
-                    Esta verificación aún no tiene PDF asociado.
+                    Esta verificaciÃ³n aÃºn no tiene PDF asociado.
                 </div>
             }
 
