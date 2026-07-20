@@ -59,14 +59,16 @@ builder.Services.Configure<SmtpSettings>(
 builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.Configure<AlertasSettings>(
 builder.Configuration.GetSection("AlertasSettings"));
-builder.Services.Configure<NotificacionesSettings>(
-builder.Configuration.GetSection("NotificacionesSettings"));
+builder.Services.Configure<DestinatariosNotificacionesSettings>(
+    builder.Configuration.GetSection("DestinatariosNotificacionesSettings"));
 builder.Services.Configure<EmailBrandingSettings>(
 builder.Configuration.GetSection("EmailBrandingSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddScoped<IAlertaMetrologicaService, AlertaMetrologicaService>();
 builder.Services.AddScoped<INotificacionMetrologicaService, NotificacionMetrologicaService>();
+builder.Services.AddScoped<IDestinatariosNotificacionService, DestinatariosNotificacionService>();
+builder.Services.AddScoped<INotificacionSeguridadService, NotificacionSeguridadService>();
 builder.Services.AddScoped<IAuditoriaMetrologicaService, AuditoriaMetrologicaService>();
 builder.Services.AddScoped<DashboardMetrologicoService>();
 builder.Services.AddScoped<TendenciasMetrologicasService>();

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Services.Email;
+using CGA.MetrologySystem.Services.Notificaciones;
 using System.Net;
 
 namespace CGA.MetrologySystem.Controllers
@@ -20,6 +21,7 @@ namespace CGA.MetrologySystem.Controllers
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _emailTemplateService;
+        private readonly INotificacionSeguridadService _notificacionSeguridadService;
         private readonly ILogger<UsuariosController> _logger;
 
         //Constructor 
@@ -29,6 +31,7 @@ namespace CGA.MetrologySystem.Controllers
                AppDbContext context,
                IEmailService emailService,
                IEmailTemplateService emailTemplateService,
+               INotificacionSeguridadService notificacionSeguridadService,
                ILogger<UsuariosController> logger)
         {
             _userManager = userManager;
@@ -36,6 +39,7 @@ namespace CGA.MetrologySystem.Controllers
             _context = context;
             _emailService = emailService;
             _emailTemplateService = emailTemplateService;
+            _notificacionSeguridadService = notificacionSeguridadService;
             _logger = logger;
         }
 
@@ -506,7 +510,7 @@ namespace CGA.MetrologySystem.Controllers
 
                 var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
                 {
-                    new EmailTemplateRow("Correo de acceso", usuario.Email),
+                    new EmailTemplateRow("Correo de acceso", usuario.Email ?? string.Empty),
                     new EmailTemplateRow("Rol asignado", RolesSistema.ObtenerNombreVisible(rol)),
                     new EmailTemplateRow("Acceso al sistema", urlSistema)
                 });
@@ -527,7 +531,7 @@ namespace CGA.MetrologySystem.Controllers
                 });
 
                 await _emailService.EnviarCorreoAsync(
-                    usuario.Email,
+                    usuario.Email!,
                     "Cuenta creada - CGA Metrology System",
                     cuerpo);
 
@@ -556,8 +560,6 @@ namespace CGA.MetrologySystem.Controllers
                 var urlSistema = Url.Action("Login", "Auth", null, Request.Scheme)
                     ?? $"{Request.Scheme}://{Request.Host}";
                 var nombre = WebUtility.HtmlEncode(usuario.NombreCompleto);
-                var correo = WebUtility.HtmlEncode(usuario.Email);
-                var url = WebUtility.HtmlEncode(urlSistema);
 
                 var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
                 {
@@ -581,7 +583,7 @@ namespace CGA.MetrologySystem.Controllers
                 });
 
                 await _emailService.EnviarCorreoAsync(
-                    usuario.Email,
+                    usuario.Email!,
                     "Contraseña restablecida - CGA Metrology System",
                     cuerpo);
 
@@ -679,11 +681,16 @@ namespace CGA.MetrologySystem.Controllers
                 usuario,
                 "Se restableció la contraseña del usuario.");
 
-            var correoEnviado = await EnviarCorreoResetPasswordAsync(usuario);
+            var administradorActual = await _userManager.GetUserAsync(User);
+            var correoUsuarioEnviado = await EnviarCorreoResetPasswordAsync(usuario);
+            var alertaSeguridadEnviada = await _notificacionSeguridadService
+                .NotificarRestablecimientoContrasenaAsync(
+                    usuario,
+                    administradorActual);
 
-            TempData["MensajeExito"] = correoEnviado
-                ? "Contraseña restablecida correctamente. Se envió el aviso al usuario."
-                : "Contraseña restablecida correctamente. No se pudo enviar el aviso por correo.";
+            TempData["MensajeExito"] = correoUsuarioEnviado && alertaSeguridadEnviada
+                ? "Contraseña restablecida correctamente. Se enviaron los avisos al usuario y al Administrador del Sistema."
+                : "Contraseña restablecida correctamente. Uno o más avisos por correo no pudieron enviarse.";
 
             return RedirectToAction(nameof(Index));
         }

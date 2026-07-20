@@ -2,10 +2,9 @@ using System.Net;
 using System.Net.Mail;
 using CGA.MetrologySystem.Configuration;
 using CGA.MetrologySystem.Domain.Entities;
-using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Services.Email;
-using Microsoft.AspNetCore.Identity;
+using CGA.MetrologySystem.Services.Notificaciones;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -19,20 +18,20 @@ namespace CGA.MetrologySystem.Services.Alertas
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _emailTemplateService;
-        private readonly UserManager<UsuarioSistema> _userManager;
+        private readonly IDestinatariosNotificacionService _destinatariosService;
         private readonly AlertasSettings _alertasSettings;
 
         public AlertaMetrologicaService(
             AppDbContext context,
             IEmailService emailService,
             IEmailTemplateService emailTemplateService,
-            UserManager<UsuarioSistema> userManager,
+            IDestinatariosNotificacionService destinatariosService,
             IOptions<AlertasSettings> alertasOptions)
         {
             _context = context;
             _emailService = emailService;
             _emailTemplateService = emailTemplateService;
-            _userManager = userManager;
+            _destinatariosService = destinatariosService;
             _alertasSettings = alertasOptions.Value;
         }
 
@@ -41,7 +40,7 @@ namespace CGA.MetrologySystem.Services.Alertas
             var resultado = new ResultadoProcesamientoAlertas();
             var reglas = CrearReglasPreventivas();
 
-            var administradores = await ObtenerCorreosAdministradoresAsync();
+            var administradores = await _destinatariosService.ObtenerTodosAdministradoresAsync();
 
             foreach (var regla in reglas)
             {
@@ -162,7 +161,6 @@ namespace CGA.MetrologySystem.Services.Alertas
                 }
 
                 var destinatarios = ObtenerDestinatariosPreventivos(configuracion.Equipo, administradores);
-                destinatarios = AplicarModoPrueba(destinatarios);
                 var asunto = $"Alerta de {regla.TipoEvento}: {configuracion.Equipo.Codigo} vence en {regla.DiasAntes} dias";
                 var cuerpo = ConstruirCuerpoPreventivo(
                     configuracion.Equipo,
@@ -255,7 +253,6 @@ namespace CGA.MetrologySystem.Services.Alertas
 
                 var diasVencidos = Math.Abs(diasRestantes);
                 var destinatarios = ObtenerDestinatariosCriticos(configuracion.Equipo, administradores);
-                destinatarios = AplicarModoPrueba(destinatarios);
                 var asunto = $"Alerta critica: {regla.TipoEvento} vencida para {configuracion.Equipo.Codigo}";
                 var cuerpo = ConstruirCuerpoVencido(
                     configuracion.Equipo,
@@ -408,57 +405,21 @@ namespace CGA.MetrologySystem.Services.Alertas
             }
         }
 
-        private async Task<List<string>> ObtenerCorreosAdministradoresAsync()
-        {
-            var usuarios = new List<UsuarioSistema>();
-
-            foreach (var rol in new[]
-            {
-                RolesSistema.AdministradorSistema,
-                RolesSistema.AdministradorMetrologico
-            })
-            {
-                usuarios.AddRange(await _userManager.GetUsersInRoleAsync(rol));
-            }
-
-            return usuarios
-                .Where(u => u.Activo)
-                .Select(u => u.Email)
-                .Where(EsCorreoValido)
-                .Select(c => c!.Trim().ToLower())
-                .Distinct()
-                .ToList();
-        }
-
-        private List<string> AplicarModoPrueba(List<string> destinatariosOriginales)
-        {
-            if (!_alertasSettings.ModoPrueba ||
-                !EsCorreoValido(_alertasSettings.DestinatarioPrueba))
-            {
-                return destinatariosOriginales;
-            }
-
-            return new List<string>
-            {
-                _alertasSettings.DestinatarioPrueba.Trim().ToLower()
-            };
-        }
-
         private bool DebeReenviarDuplicadosPorPrueba()
         {
-            return _alertasSettings.ModoPrueba &&
-                _alertasSettings.ReenviarDuplicadosEnModoPrueba &&
-                EsCorreoValido(_alertasSettings.DestinatarioPrueba);
+            return _destinatariosService.EsModoPreproduccion &&
+                _alertasSettings.ReenviarDuplicadosEnModoPrueba;
         }
 
-        private static List<string> ObtenerDestinatariosPreventivos(
+        private List<string> ObtenerDestinatariosPreventivos(
             Equipo equipo,
             List<string> administradores)
         {
             var destinatarios = new List<string>();
             var correoResponsable = equipo.ResponsableInterno?.Correo;
 
-            if (EsCorreoValido(correoResponsable))
+            if (_destinatariosService.PermiteCorreosRegistrados &&
+                EsCorreoValido(correoResponsable))
             {
                 destinatarios.Add(correoResponsable!.Trim().ToLower());
             }
@@ -473,14 +434,15 @@ namespace CGA.MetrologySystem.Services.Alertas
                 .ToList();
         }
 
-        private static List<string> ObtenerDestinatariosCriticos(
+        private List<string> ObtenerDestinatariosCriticos(
             Equipo equipo,
             List<string> administradores)
         {
             var destinatarios = new List<string>();
             var correoResponsable = equipo.ResponsableInterno?.Correo;
 
-            if (EsCorreoValido(correoResponsable))
+            if (_destinatariosService.PermiteCorreosRegistrados &&
+                EsCorreoValido(correoResponsable))
             {
                 destinatarios.Add(correoResponsable!.Trim().ToLower());
             }

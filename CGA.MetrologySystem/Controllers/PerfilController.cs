@@ -1,5 +1,6 @@
 ﻿using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Models.Perfil;
+using CGA.MetrologySystem.Services.Notificaciones;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,13 +13,16 @@ namespace CGA.MetrologySystem.Controllers
     {
         private readonly UserManager<UsuarioSistema> _userManager;
         private readonly SignInManager<UsuarioSistema> _signInManager;
+        private readonly INotificacionSeguridadService _notificacionSeguridadService;
 
         public PerfilController(
             UserManager<UsuarioSistema> userManager,
-            SignInManager<UsuarioSistema> signInManager)
+            SignInManager<UsuarioSistema> signInManager,
+            INotificacionSeguridadService notificacionSeguridadService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _notificacionSeguridadService = notificacionSeguridadService;
         }
 
         // GET: /Perfil
@@ -140,6 +144,7 @@ namespace CGA.MetrologySystem.Controllers
             }
 
             await _signInManager.RefreshSignInAsync(usuario);
+            await _notificacionSeguridadService.NotificarCambioContrasenaAsync(usuario);
 
             TempData["MensajeExito"] = "Contraseña cambiada correctamente.";
             return RedirectToAction(nameof(Index));
