@@ -19,6 +19,8 @@ namespace CGA.MetrologySystem.Controllers
         private const string EvidenciaEvento = "evidencia-evento";
         private const string EvidenciaMantenimientoItem = "evidencia-mantenimiento-item";
         private const string EvidenciaVerificacionItem = "evidencia-verificacion-item";
+        private static readonly HashSet<char> CaracteresInvalidosNombreArchivo = new(
+            Path.GetInvalidFileNameChars().Concat("<>:\"/\\|?*"));
 
         private readonly AppDbContext _context;
         private readonly IGoogleDriveService _googleDriveService;
@@ -405,10 +407,11 @@ namespace CGA.MetrologySystem.Controllers
 
         private static string SanitizarNombreArchivo(string fileName)
         {
-            foreach (var invalidChar in Path.GetInvalidFileNameChars())
-            {
-                fileName = fileName.Replace(invalidChar, '-');
-            }
+            fileName = new string(fileName
+                .Select(c => char.IsControl(c) || CaracteresInvalidosNombreArchivo.Contains(c)
+                    ? '-'
+                    : c)
+                .ToArray());
 
             return string.IsNullOrWhiteSpace(fileName)
                 ? "documento.pdf"

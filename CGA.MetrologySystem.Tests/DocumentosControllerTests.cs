@@ -101,7 +101,9 @@ public class DocumentosControllerTests
         Assert.Equal(new byte[] { 10, 20, 30 }, file.FileContents);
         Assert.Equal("drive-calibracion", Assert.Single(drive.DownloadedFileIds));
         Assert.Equal("private, max-age=300", controller.Response.Headers.CacheControl);
-        Assert.DoesNotContain("?", controller.Response.Headers.ContentDisposition.ToString());
+        Assert.Contains(
+            "certificado-final-.pdf",
+            controller.Response.Headers.ContentDisposition.ToString());
     }
 
     [Fact]
