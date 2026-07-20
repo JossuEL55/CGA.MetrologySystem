@@ -15,6 +15,30 @@
     <a asp-action="Index" class="btn btn-outline-secondary">Volver</a>
 </div>
 
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @successMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+@if (TempData["InfoMessage"] is string infoMessage)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @infoMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+@if (TempData["Error"] is string errorMessage)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @errorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
 <div class="form-card">
 
     <h5 class="mb-3">Información general</h5>
@@ -35,9 +59,34 @@
         }
     </div>
 
+    <div class="mb-4">
+        <label class="form-label">Sincronización documental</label>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if (string.IsNullOrWhiteSpace(Model.GoogleDriveFolderId))
+            {
+                <span class="badge bg-warning text-dark">Pendiente de sincronización documental</span>
+
+                @if (puedeGestionar)
+                {
+                    <form asp-action="SincronizarDrive" asp-route-id="@Model.EquipoId" method="post" class="d-inline" onsubmit="this.querySelector('button').disabled = true;">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="volverADetalle" value="true" />
+                        <button type="submit" class="btn btn-sm btn-outline-warning">
+                            Sincronizar con Drive
+                        </button>
+                    </form>
+                }
+            }
+            else
+            {
+                <span class="badge bg-success">Sincronizado con Drive</span>
+            }
+        </div>
+    </div>
+
     <div class="row mb-3">
         <div class="col-md-6">
-            <label class="form-label">Código</label>
+            <label class="form-label">Codigo</label>
             <div class="form-control readonly-highlight">@Model.Codigo</div>
         </div>
 
@@ -63,7 +112,7 @@
         </div>
 
         <div class="col-md-4">
-            <label class="form-label">Ubicación</label>
+            <label class="form-label">Ubicacion</label>
             <div class="form-control readonly-highlight">
                 @(Model.Ubicacion?.Nombre ?? "No registrada")
             </div>
@@ -120,7 +169,7 @@
         </div>
 
         <div class="col-md-3">
-            <label class="form-label">Identificación</label>
+            <label class="form-label">Identificacion</label>
             <div class="form-control readonly-highlight">
                 @(Model.Identificacion ?? "No registrada")
             </div>

@@ -18,19 +18,52 @@
     }
 </div>
 
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @successMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+@if (TempData["WarningMessage"] is string warningMessage)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @warningMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+@if (TempData["InfoMessage"] is string infoMessage)
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @infoMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+@if (TempData["Error"] is string errorMessage)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @errorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
 <div class="table-card">
     <div class="table-responsive">
         <table class="table align-middle table-hover mb-0">
             <thead class="table-light">
                 <tr>
                     <th class="text-center">Foto</th>
-                    <th>Código</th>
+                    <th>Codigo</th>
                     <th>Equipo</th>
                     <th>Tipo</th>
                     <th>Proveedor</th>
-                    <th>Ubicación</th>
+                    <th>Ubicacion</th>
                     <th>Responsable</th>
                     <th>Marca / Modelo</th>
+                    <th>Documentos</th>
                     <th>Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
@@ -83,6 +116,17 @@
                             </td>
 
                             <td>
+                                @if (string.IsNullOrWhiteSpace(equipo.GoogleDriveFolderId))
+                                {
+                                    <span class="badge bg-warning text-dark">Pendiente de sincronización documental</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Sincronizado con Drive</span>
+                                }
+                            </td>
+
+                            <td>
                                 @if (equipo.Activo)
                                 {
                                     <span class="badge bg-success">Activo</span>
@@ -106,6 +150,16 @@
                                         <a asp-action="Delete" asp-route-id="@equipo.EquipoId" class="btn btn-sm btn-outline-danger">
                                             Eliminar
                                         </a>
+
+                                        @if (string.IsNullOrWhiteSpace(equipo.GoogleDriveFolderId))
+                                        {
+                                            <form asp-action="SincronizarDrive" asp-route-id="@equipo.EquipoId" method="post" class="d-inline" onsubmit="this.querySelector('button').disabled = true;">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                    Sincronizar con Drive
+                                                </button>
+                                            </form>
+                                        }
                                     }
                                 </div>
                             </td>
@@ -115,7 +169,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="10" class="text-center text-muted py-4">
+                        <td colspan="11" class="text-center text-muted py-4">
                             No existen equipos registrados.
                         </td>
                     </tr>

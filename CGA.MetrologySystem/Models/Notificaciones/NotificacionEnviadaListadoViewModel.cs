@@ -12,5 +12,6 @@ namespace CGA.MetrologySystem.Models.Notificaciones
         public string Destinatarios { get; set; } = string.Empty;
         public string Mensaje { get; set; } = string.Empty;
         public bool FueExitosa { get; set; }
+        public bool PuedeReintentar { get; set; }
     }
 }
