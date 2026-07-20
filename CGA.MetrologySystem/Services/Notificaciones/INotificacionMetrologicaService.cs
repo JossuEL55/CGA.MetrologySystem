@@ -4,6 +4,8 @@ namespace CGA.MetrologySystem.Services.Notificaciones
     {
         Task NotificarEventoExtraordinarioAsync(int eventoMetrologicoId);
 
+        Task<ResultadoReintentoNotificacion> ReintentarNotificacionFallidaAsync(int notificacionEnviadaId);
+
         Task NotificarReemplazoCertificadoCalibracionAsync(
             int eventoCalibracionDatoId,
             string? nombreCertificadoAnterior,
@@ -19,5 +21,11 @@ namespace CGA.MetrologySystem.Services.Notificaciones
             int eventoMantenimientoDatoId,
             string? usuarioResponsable,
             IReadOnlyCollection<string> cambiosCriticos);
+    }
+
+    public class ResultadoReintentoNotificacion
+    {
+        public bool FueExitosa { get; set; }
+        public string Mensaje { get; set; } = string.Empty;
     }
 }

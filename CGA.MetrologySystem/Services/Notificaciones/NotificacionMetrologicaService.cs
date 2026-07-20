@@ -14,6 +14,7 @@ namespace CGA.MetrologySystem.Services.Notificaciones
         private readonly IEmailTemplateService _emailTemplateService;
         private readonly IDestinatariosNotificacionService _destinatariosService;
         private readonly ILogger<NotificacionMetrologicaService> _logger;
+        private static readonly SemaphoreSlim _reintentoSemaphore = new(1, 1);
 
         public NotificacionMetrologicaService(
             AppDbContext context,
@@ -350,6 +351,131 @@ namespace CGA.MetrologySystem.Services.Notificaciones
             }
         }
 
+        public async Task<ResultadoReintentoNotificacion> ReintentarNotificacionFallidaAsync(int notificacionEnviadaId)
+        {
+            await _reintentoSemaphore.WaitAsync();
+
+            try
+            {
+                var notificacion = await _context.NotificacionesEnviadas
+                    .Include(n => n.EventoMetrologico)
+                        .ThenInclude(e => e.Equipo)
+                    .Include(n => n.EventoMetrologico)
+                        .ThenInclude(e => e.TipoEventoMetrologico)
+                    .Include(n => n.EventoMetrologico)
+                        .ThenInclude(e => e.ResponsableInterno)
+                    .FirstOrDefaultAsync(n => n.NotificacionEnviadaId == notificacionEnviadaId);
+
+                if (notificacion == null)
+                {
+                    return new ResultadoReintentoNotificacion
+                    {
+                        FueExitosa = false,
+                        Mensaje = "La notificacion seleccionada no existe."
+                    };
+                }
+
+                if (notificacion.FueExitosa)
+                {
+                    return new ResultadoReintentoNotificacion
+                    {
+                        FueExitosa = false,
+                        Mensaje = "La notificacion ya fue enviada correctamente y no requiere reintento."
+                    };
+                }
+
+                if (!string.Equals(notificacion.TipoNotificacion, "Evento extraordinario", StringComparison.OrdinalIgnoreCase))
+                {
+                    return new ResultadoReintentoNotificacion
+                    {
+                        FueExitosa = false,
+                        Mensaje = "Solo se puede reintentar de forma segura notificaciones de eventos extraordinarios."
+                    };
+                }
+
+                var evento = notificacion.EventoMetrologico;
+                var intentoAnterior = CrearResumenIntentoAnterior(notificacion);
+                var destinatarios = await _destinatariosService.ObtenerTodosAdministradoresAsync();
+
+                if (!evento.Activo || !evento.EsExtraordinario)
+                {
+                    notificacion.FechaEnvio = DateTime.UtcNow;
+                    notificacion.Destinatarios = string.Join(", ", destinatarios);
+                    notificacion.Mensaje = LimitarMensaje(
+                        $"No se pudo reintentar: el evento ya no esta activo o no es extraordinario. {intentoAnterior}");
+                    await _context.SaveChangesAsync();
+
+                    return new ResultadoReintentoNotificacion
+                    {
+                        FueExitosa = false,
+                        Mensaje = "No se pudo reintentar la notificacion porque el evento ya no esta activo o no es extraordinario."
+                    };
+                }
+
+                if (!destinatarios.Any())
+                {
+                    notificacion.FechaEnvio = DateTime.UtcNow;
+                    notificacion.Destinatarios = string.Empty;
+                    notificacion.Mensaje = LimitarMensaje(
+                        $"Reintento fallido: no se encontraron destinatarios validos. {intentoAnterior}");
+                    await _context.SaveChangesAsync();
+
+                    return new ResultadoReintentoNotificacion
+                    {
+                        FueExitosa = false,
+                        Mensaje = "No se pudo reintentar la notificacion porque no existen destinatarios validos."
+                    };
+                }
+
+                try
+                {
+                    var tipoEvento = evento.TipoEventoMetrologico.Nombre;
+                    var asunto = $"Notificacion: evento extraordinario de {tipoEvento} para {evento.Equipo.Codigo}";
+                    var cuerpo = ConstruirCuerpoEventoExtraordinario(evento);
+
+                    await _emailService.EnviarCorreoAsync(destinatarios, asunto, cuerpo);
+
+                    notificacion.FueExitosa = true;
+                    notificacion.FechaEnvio = DateTime.UtcNow;
+                    notificacion.Destinatarios = string.Join(", ", destinatarios);
+                    notificacion.TipoEvento = tipoEvento;
+                    notificacion.FechaReferencia = DateTime.SpecifyKind(evento.FechaEvento.Date, DateTimeKind.Utc);
+                    notificacion.Mensaje = LimitarMensaje(
+                        $"Correo de evento extraordinario reenviado correctamente. {intentoAnterior}");
+                    await _context.SaveChangesAsync();
+
+                    return new ResultadoReintentoNotificacion
+                    {
+                        FueExitosa = true,
+                        Mensaje = "La notificacion fallida fue reenviada correctamente."
+                    };
+                }
+                catch (Exception ex)
+                {
+                    notificacion.FueExitosa = false;
+                    notificacion.FechaEnvio = DateTime.UtcNow;
+                    notificacion.Destinatarios = string.Join(", ", destinatarios);
+                    notificacion.Mensaje = LimitarMensaje($"Reintento fallido: {ex.Message}. {intentoAnterior}");
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogError(
+                        ex,
+                        "Fallo el reintento de la notificacion {NotificacionEnviadaId}.",
+                        notificacionEnviadaId);
+
+                    return new ResultadoReintentoNotificacion
+                    {
+                        FueExitosa = false,
+                        Mensaje = "El reintento de la notificacion fallo. Revise el mensaje registrado en la bitacora."
+                    };
+                }
+
+            }
+            finally
+            {
+                _reintentoSemaphore.Release();
+            }
+        }
         private async Task RegistrarNotificacionAsync(
             EventoMetrologico evento,
             List<string> destinatarios,
@@ -565,6 +691,15 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                 MailAddress.TryCreate(correo.Trim(), out _);
         }
 
+        private static string CrearResumenIntentoAnterior(NotificacionEnviada notificacion)
+        {
+            var fechaAnterior = notificacion.FechaEnvio.ToString("yyyy-MM-dd HH:mm");
+            var mensajeAnterior = string.IsNullOrWhiteSpace(notificacion.Mensaje)
+                ? "Sin mensaje previo."
+                : notificacion.Mensaje;
+
+            return $"Intento anterior ({fechaAnterior} UTC): {mensajeAnterior}";
+        }
         private static string LimitarMensaje(string mensaje)
         {
             return mensaje.Length <= 500

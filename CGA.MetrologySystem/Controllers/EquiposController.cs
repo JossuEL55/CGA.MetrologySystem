@@ -1,4 +1,4 @@
-﻿using CGA.MetrologySystem.Application.Interfaces;
+using CGA.MetrologySystem.Application.Interfaces;
 using CGA.MetrologySystem.Domain.Entities;
 using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
@@ -16,6 +16,7 @@ namespace CGA.MetrologySystem.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IGoogleDriveService _googleDriveService;
+        private static readonly SemaphoreSlim SincronizacionDriveSemaphore = new(1, 1);
 
         public EquiposController(AppDbContext context, IGoogleDriveService googleDriveService)
         {
@@ -83,20 +84,71 @@ namespace CGA.MetrologySystem.Controllers
             _context.Equipos.Add(equipo);
             await _context.SaveChangesAsync();
 
-            var folderId = await _googleDriveService.EnsureEquipoFolderAsync(equipo.Codigo);
-            equipo.GoogleDriveFolderId = folderId;
-
-            if (model.FotoEquipo != null && model.FotoEquipo.Length > 0)
+            try
             {
-                await SubirFotoEquipoAsync(equipo, model.FotoEquipo);
-            }
+                await SincronizarCarpetaEquipoAsync(equipo);
+                _context.Equipos.Update(equipo);
+                await _context.SaveChangesAsync();
 
-            _context.Equipos.Update(equipo);
-            await _context.SaveChangesAsync();
+                if (model.FotoEquipo != null && model.FotoEquipo.Length > 0)
+                {
+                    await SubirFotoEquipoAsync(equipo, model.FotoEquipo);
+                }
+
+                _context.Equipos.Update(equipo);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                TempData["WarningMessage"] = "El equipo fue creado, pero la sincronización documental quedó pendiente.";
+            }
 
             return RedirectToAction(nameof(Index));
         }
 
+        // POST: Equipos/SincronizarDrive/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = RolesSistema.GestionMetrologica)]
+        public async Task<IActionResult> SincronizarDrive(int id, bool volverADetalle = false)
+        {
+            await SincronizacionDriveSemaphore.WaitAsync();
+
+            try
+            {
+                var equipo = await _context.Equipos.FindAsync(id);
+
+                if (equipo == null)
+                {
+                    return NotFound();
+                }
+
+                if (!string.IsNullOrWhiteSpace(equipo.GoogleDriveFolderId))
+                {
+                    TempData["InfoMessage"] = "El equipo ya está sincronizado con Google Drive.";
+                    return RedirigirDespuesDeSincronizar(id, volverADetalle);
+                }
+
+                try
+                {
+                    await SincronizarCarpetaEquipoAsync(equipo);
+                    _context.Equipos.Update(equipo);
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessMessage"] = "El equipo fue sincronizado correctamente con Google Drive.";
+                }
+                catch (Exception)
+                {
+                    TempData["Error"] = "No se pudo sincronizar el equipo con Google Drive. Intente nuevamente más tarde.";
+                }
+
+                return RedirigirDespuesDeSincronizar(id, volverADetalle);
+            }
+            finally
+            {
+                SincronizacionDriveSemaphore.Release();
+            }
+        }
         // GET: Equipos/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -249,6 +301,23 @@ namespace CGA.MetrologySystem.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+
+        private async Task SincronizarCarpetaEquipoAsync(Equipo equipo)
+        {
+            if (!string.IsNullOrWhiteSpace(equipo.GoogleDriveFolderId))
+                return;
+
+            var folderId = await _googleDriveService.EnsureEquipoFolderAsync(equipo.Codigo);
+            equipo.GoogleDriveFolderId = folderId;
+        }
+
+        private IActionResult RedirigirDespuesDeSincronizar(int equipoId, bool volverADetalle)
+        {
+            if (volverADetalle)
+                return RedirectToAction(nameof(Details), new { id = equipoId });
+
+            return RedirectToAction(nameof(Index));
+        }
         private async Task CargarCombos(EquipoViewModel model)
         {
             model.TiposEquipo = await _context.TiposEquipo

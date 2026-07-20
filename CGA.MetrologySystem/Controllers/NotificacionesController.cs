@@ -1,6 +1,7 @@
 using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models.Notificaciones;
+using CGA.MetrologySystem.Services.Notificaciones;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,10 +12,14 @@ namespace CGA.MetrologySystem.Controllers
     public class NotificacionesController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly INotificacionMetrologicaService _notificacionMetrologicaService;
 
-        public NotificacionesController(AppDbContext context)
+        public NotificacionesController(
+            AppDbContext context,
+            INotificacionMetrologicaService notificacionMetrologicaService)
         {
             _context = context;
+            _notificacionMetrologicaService = notificacionMetrologicaService;
         }
 
         [HttpGet]
@@ -50,7 +55,8 @@ namespace CGA.MetrologySystem.Controllers
                     FechaEnvio = n.FechaEnvio,
                     Destinatarios = n.Destinatarios ?? string.Empty,
                     Mensaje = n.Mensaje ?? string.Empty,
-                    FueExitosa = n.FueExitosa
+                    FueExitosa = n.FueExitosa,
+                    PuedeReintentar = !n.FueExitosa && n.TipoNotificacion == "Evento extraordinario"
                 })
                 .ToListAsync();
 
@@ -62,6 +68,24 @@ namespace CGA.MetrologySystem.Controllers
                 NotificacionesUltimas24Horas = resumen?.Ultimas24Horas ?? 0,
                 Notificaciones = notificaciones
             });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reintentar(int id)
+        {
+            var resultado = await _notificacionMetrologicaService.ReintentarNotificacionFallidaAsync(id);
+
+            if (resultado.FueExitosa)
+            {
+                TempData["SuccessMessage"] = resultado.Mensaje;
+            }
+            else
+            {
+                TempData["Error"] = resultado.Mensaje;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

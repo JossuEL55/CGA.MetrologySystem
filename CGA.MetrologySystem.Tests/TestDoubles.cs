@@ -218,6 +218,13 @@ internal sealed class TestNotificacionMetrologicaService : INotificacionMetrolog
 {
     public Task NotificarEventoExtraordinarioAsync(int eventoMetrologicoId) => Task.CompletedTask;
 
+    public Task<ResultadoReintentoNotificacion> ReintentarNotificacionFallidaAsync(int notificacionEnviadaId) =>
+        Task.FromResult(new ResultadoReintentoNotificacion
+        {
+            FueExitosa = true,
+            Mensaje = string.Empty
+        });
+
     public Task NotificarReemplazoCertificadoCalibracionAsync(
         int eventoCalibracionDatoId,
         string? nombreCertificadoAnterior,
