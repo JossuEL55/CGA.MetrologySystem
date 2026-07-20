@@ -13,6 +13,7 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
         }
         public DbSet<AlertaEnviada> AlertasEnviadas { get; set; }
         public DbSet<NotificacionEnviada> NotificacionesEnviadas { get; set; }
+        public DbSet<NotificacionSeguridadEnviada> NotificacionesSeguridadEnviadas { get; set; }
         public DbSet<AuditoriaUsuario> AuditoriasUsuario { get; set; }
         public DbSet<AuditoriaMetrologica> AuditoriasMetrologicas { get; set; }
         public DbSet<TipoEquipo> TiposEquipo { get; set; }
@@ -205,6 +206,31 @@ namespace CGA.MetrologySystem.Infrastructure.Persistence
                     .WithMany()
                     .HasForeignKey(n => n.EventoMetrologicoId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+            modelBuilder.Entity<NotificacionSeguridadEnviada>(entity =>
+            {
+                entity.HasKey(n => n.NotificacionSeguridadEnviadaId);
+
+                entity.Property(n => n.TipoEvento)
+                    .HasMaxLength(80)
+                    .IsRequired();
+
+                entity.Property(n => n.UsuarioAfectadoId)
+                    .HasMaxLength(450)
+                    .IsRequired();
+
+                entity.Property(n => n.UsuarioAfectadoCorreo)
+                    .HasMaxLength(256)
+                    .IsRequired();
+
+                entity.Property(n => n.UsuarioEjecutorId)
+                    .HasMaxLength(450);
+
+                entity.Property(n => n.UsuarioEjecutorCorreo)
+                    .HasMaxLength(256);
+
+                entity.Property(n => n.Mensaje)
+                    .HasMaxLength(500);
             });
             modelBuilder.Entity<EventoMetrologico>(entity =>
             {

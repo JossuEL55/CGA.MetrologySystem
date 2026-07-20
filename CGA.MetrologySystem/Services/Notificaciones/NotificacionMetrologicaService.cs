@@ -1,13 +1,9 @@
 using System.Net;
 using System.Net.Mail;
-using CGA.MetrologySystem.Configuration;
 using CGA.MetrologySystem.Domain.Entities;
-using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Services.Email;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace CGA.MetrologySystem.Services.Notificaciones
 {
@@ -16,23 +12,20 @@ namespace CGA.MetrologySystem.Services.Notificaciones
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
         private readonly IEmailTemplateService _emailTemplateService;
-        private readonly UserManager<UsuarioSistema> _userManager;
-        private readonly NotificacionesSettings _settings;
+        private readonly IDestinatariosNotificacionService _destinatariosService;
         private readonly ILogger<NotificacionMetrologicaService> _logger;
 
         public NotificacionMetrologicaService(
             AppDbContext context,
             IEmailService emailService,
             IEmailTemplateService emailTemplateService,
-            UserManager<UsuarioSistema> userManager,
-            IOptions<NotificacionesSettings> settings,
+            IDestinatariosNotificacionService destinatariosService,
             ILogger<NotificacionMetrologicaService> logger)
         {
             _context = context;
             _emailService = emailService;
             _emailTemplateService = emailTemplateService;
-            _userManager = userManager;
-            _settings = settings.Value;
+            _destinatariosService = destinatariosService;
             _logger = logger;
         }
 
@@ -58,8 +51,7 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                     return;
                 }
 
-                destinatarios = await ObtenerCorreosAdministradoresAsync();
-                destinatarios = AplicarModoPrueba(destinatarios);
+                destinatarios = await _destinatariosService.ObtenerTodosAdministradoresAsync();
 
                 if (!destinatarios.Any())
                 {
@@ -134,8 +126,7 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                 }
 
                 evento = calibracion.EventoMetrologico;
-                destinatarios = await ObtenerCorreosAdministradoresAsync();
-                destinatarios = AplicarModoPrueba(destinatarios);
+                destinatarios = await _destinatariosService.ObtenerTodosAdministradoresAsync();
 
                 if (!destinatarios.Any())
                 {
@@ -220,8 +211,7 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                 }
 
                 evento = verificacion.EventoMetrologico;
-                destinatarios = await ObtenerCorreosAdministradoresAsync();
-                destinatarios = AplicarModoPrueba(destinatarios);
+                destinatarios = await _destinatariosService.ObtenerTodosAdministradoresAsync();
 
                 if (!destinatarios.Any())
                 {
@@ -305,8 +295,7 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                 }
 
                 evento = mantenimiento.EventoMetrologico;
-                destinatarios = await ObtenerCorreosAdministradoresAsync();
-                destinatarios = AplicarModoPrueba(destinatarios);
+                destinatarios = await _destinatariosService.ObtenerTodosAdministradoresAsync();
 
                 if (!destinatarios.Any())
                 {
@@ -392,41 +381,6 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                     "No se pudo registrar la notificacion del evento extraordinario {EventoMetrologicoId}.",
                     evento.EventoMetrologicoId);
             }
-        }
-
-        private async Task<List<string>> ObtenerCorreosAdministradoresAsync()
-        {
-            var administradores = new List<UsuarioSistema>();
-
-            foreach (var rol in new[]
-            {
-                RolesSistema.AdministradorSistema,
-                RolesSistema.AdministradorMetrologico
-            })
-            {
-                administradores.AddRange(await _userManager.GetUsersInRoleAsync(rol));
-            }
-
-            return administradores
-                .Where(u => u.Activo)
-                .Select(u => u.Email)
-                .Where(EsCorreoValido)
-                .Select(c => c!.Trim().ToLower())
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-        }
-
-        private List<string> AplicarModoPrueba(List<string> destinatariosOriginales)
-        {
-            if (!_settings.ModoPrueba || !EsCorreoValido(_settings.DestinatarioPrueba))
-            {
-                return destinatariosOriginales;
-            }
-
-            return new List<string>
-            {
-                _settings.DestinatarioPrueba.Trim().ToLower()
-            };
         }
 
         private string ConstruirCuerpoEventoExtraordinario(
