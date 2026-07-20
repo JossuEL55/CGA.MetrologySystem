@@ -384,96 +384,234 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                     };
                 }
 
-                if (!string.Equals(notificacion.TipoNotificacion, "Evento extraordinario", StringComparison.OrdinalIgnoreCase))
+                return notificacion.TipoNotificacion switch
                 {
-                    return new ResultadoReintentoNotificacion
+                    "Evento extraordinario" => await ReintentarEventoExtraordinarioAsync(notificacion),
+                    "Reemplazo de certificado" => await ReintentarReemplazoCertificadoAsync(notificacion),
+                    _ => new ResultadoReintentoNotificacion
                     {
                         FueExitosa = false,
-                        Mensaje = "Solo se puede reintentar de forma segura notificaciones de eventos extraordinarios."
-                    };
-                }
-
-                var evento = notificacion.EventoMetrologico;
-                var intentoAnterior = CrearResumenIntentoAnterior(notificacion);
-                var destinatarios = await _destinatariosService.ObtenerTodosAdministradoresAsync();
-
-                if (!evento.Activo || !evento.EsExtraordinario)
-                {
-                    notificacion.FechaEnvio = DateTime.UtcNow;
-                    notificacion.Destinatarios = string.Join(", ", destinatarios);
-                    notificacion.Mensaje = LimitarMensaje(
-                        $"No se pudo reintentar: el evento ya no esta activo o no es extraordinario. {intentoAnterior}");
-                    await _context.SaveChangesAsync();
-
-                    return new ResultadoReintentoNotificacion
-                    {
-                        FueExitosa = false,
-                        Mensaje = "No se pudo reintentar la notificacion porque el evento ya no esta activo o no es extraordinario."
-                    };
-                }
-
-                if (!destinatarios.Any())
-                {
-                    notificacion.FechaEnvio = DateTime.UtcNow;
-                    notificacion.Destinatarios = string.Empty;
-                    notificacion.Mensaje = LimitarMensaje(
-                        $"Reintento fallido: no se encontraron destinatarios validos. {intentoAnterior}");
-                    await _context.SaveChangesAsync();
-
-                    return new ResultadoReintentoNotificacion
-                    {
-                        FueExitosa = false,
-                        Mensaje = "No se pudo reintentar la notificacion porque no existen destinatarios validos."
-                    };
-                }
-
-                try
-                {
-                    var tipoEvento = evento.TipoEventoMetrologico.Nombre;
-                    var asunto = $"Notificacion: evento extraordinario de {tipoEvento} para {evento.Equipo.Codigo}";
-                    var cuerpo = ConstruirCuerpoEventoExtraordinario(evento);
-
-                    await _emailService.EnviarCorreoAsync(destinatarios, asunto, cuerpo);
-
-                    notificacion.FueExitosa = true;
-                    notificacion.FechaEnvio = DateTime.UtcNow;
-                    notificacion.Destinatarios = string.Join(", ", destinatarios);
-                    notificacion.TipoEvento = tipoEvento;
-                    notificacion.FechaReferencia = DateTime.SpecifyKind(evento.FechaEvento.Date, DateTimeKind.Utc);
-                    notificacion.Mensaje = LimitarMensaje(
-                        $"Correo de evento extraordinario reenviado correctamente. {intentoAnterior}");
-                    await _context.SaveChangesAsync();
-
-                    return new ResultadoReintentoNotificacion
-                    {
-                        FueExitosa = true,
-                        Mensaje = "La notificacion fallida fue reenviada correctamente."
-                    };
-                }
-                catch (Exception ex)
-                {
-                    notificacion.FueExitosa = false;
-                    notificacion.FechaEnvio = DateTime.UtcNow;
-                    notificacion.Destinatarios = string.Join(", ", destinatarios);
-                    notificacion.Mensaje = LimitarMensaje($"Reintento fallido: {ex.Message}. {intentoAnterior}");
-                    await _context.SaveChangesAsync();
-
-                    _logger.LogError(
-                        ex,
-                        "Fallo el reintento de la notificacion {NotificacionEnviadaId}.",
-                        notificacionEnviadaId);
-
-                    return new ResultadoReintentoNotificacion
-                    {
-                        FueExitosa = false,
-                        Mensaje = "El reintento de la notificacion fallo. Revise el mensaje registrado en la bitacora."
-                    };
-                }
-
+                        Mensaje = "El tipo de notificacion seleccionado no tiene reproceso manual configurado."
+                    }
+                };
             }
             finally
             {
                 _reintentoSemaphore.Release();
+            }
+        }
+
+        private async Task<ResultadoReintentoNotificacion> ReintentarEventoExtraordinarioAsync(NotificacionEnviada notificacion)
+        {
+            var evento = notificacion.EventoMetrologico;
+            var intentoAnterior = CrearResumenIntentoAnterior(notificacion);
+            var destinatarios = await _destinatariosService.ObtenerTodosAdministradoresAsync();
+
+            if (evento == null)
+            {
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Mensaje = LimitarMensaje($"No se pudo reintentar: no se encontro el evento metrologico asociado. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = false,
+                    Mensaje = "No se pudo reintentar la notificacion porque no se encontro el evento metrologico asociado."
+                };
+            }
+
+            if (!evento.Activo || !evento.EsExtraordinario)
+            {
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Destinatarios = string.Join(", ", destinatarios);
+                notificacion.Mensaje = LimitarMensaje(
+                    $"No se pudo reintentar: el evento ya no esta activo o no es extraordinario. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = false,
+                    Mensaje = "No se pudo reintentar la notificacion porque el evento ya no esta activo o no es extraordinario."
+                };
+            }
+
+            if (!destinatarios.Any())
+            {
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Destinatarios = string.Empty;
+                notificacion.Mensaje = LimitarMensaje(
+                    $"Reintento fallido: no se encontraron destinatarios validos. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = false,
+                    Mensaje = "No se pudo reintentar la notificacion porque no existen destinatarios validos."
+                };
+            }
+
+            try
+            {
+                var tipoEvento = evento.TipoEventoMetrologico.Nombre;
+                var asunto = $"Notificacion: evento extraordinario de {tipoEvento} para {evento.Equipo.Codigo}";
+                var cuerpo = ConstruirCuerpoEventoExtraordinario(evento);
+
+                await _emailService.EnviarCorreoAsync(destinatarios, asunto, cuerpo);
+
+                notificacion.FueExitosa = true;
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Destinatarios = string.Join(", ", destinatarios);
+                notificacion.TipoEvento = tipoEvento;
+                notificacion.FechaReferencia = DateTime.SpecifyKind(evento.FechaEvento.Date, DateTimeKind.Utc);
+                notificacion.Mensaje = LimitarMensaje(
+                    $"Correo de evento extraordinario reenviado correctamente. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = true,
+                    Mensaje = "La notificacion fallida fue reenviada correctamente."
+                };
+            }
+            catch (Exception ex)
+            {
+                notificacion.FueExitosa = false;
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Destinatarios = string.Join(", ", destinatarios);
+                notificacion.Mensaje = LimitarMensaje($"Reintento fallido: {ex.Message}. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                _logger.LogError(
+                    ex,
+                    "Fallo el reintento de la notificacion {NotificacionEnviadaId}.",
+                    notificacion.NotificacionEnviadaId);
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = false,
+                    Mensaje = "El reintento de la notificacion fallo. Revise el mensaje registrado en la bitacora."
+                };
+            }
+        }
+
+        private async Task<ResultadoReintentoNotificacion> ReintentarReemplazoCertificadoAsync(NotificacionEnviada notificacion)
+        {
+            var evento = notificacion.EventoMetrologico;
+            var intentoAnterior = CrearResumenIntentoAnterior(notificacion);
+            var destinatarios = await _destinatariosService.ObtenerTodosAdministradoresAsync();
+
+            if (evento == null)
+            {
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Mensaje = LimitarMensaje($"No se pudo reintentar el reemplazo de certificado: no se encontro el evento metrologico asociado. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = false,
+                    Mensaje = "No se pudo reintentar la notificacion porque no se encontro el evento metrologico asociado."
+                };
+            }
+
+            var calibracion = await _context.EventosCalibracionDato
+                .AsNoTracking()
+                .Include(c => c.EventoMetrologico)
+                    .ThenInclude(e => e.Equipo)
+                .Include(c => c.EventoMetrologico)
+                    .ThenInclude(e => e.TipoEventoMetrologico)
+                .FirstOrDefaultAsync(c => c.EventoMetrologicoId == evento.EventoMetrologicoId);
+
+            if (calibracion == null)
+            {
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Destinatarios = string.Join(", ", destinatarios);
+                notificacion.Mensaje = LimitarMensaje($"No se pudo reintentar el reemplazo de certificado: no se encontro el detalle de calibracion asociado. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = false,
+                    Mensaje = "No se pudo reintentar la notificacion porque no se encontro el detalle de calibracion asociado."
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(calibracion.NombreArchivoCertificado))
+            {
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Destinatarios = string.Join(", ", destinatarios);
+                notificacion.Mensaje = LimitarMensaje($"No se pudo reintentar el reemplazo de certificado: no existe certificado actual registrado. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = false,
+                    Mensaje = "No se pudo reintentar la notificacion porque no existe certificado actual registrado."
+                };
+            }
+
+            if (!destinatarios.Any())
+            {
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Destinatarios = string.Empty;
+                notificacion.Mensaje = LimitarMensaje(
+                    $"Reintento fallido de reemplazo de certificado: no se encontraron destinatarios validos. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = false,
+                    Mensaje = "No se pudo reintentar la notificacion porque no existen destinatarios validos."
+                };
+            }
+
+            try
+            {
+                const string certificadoAnteriorNoDisponible = "No disponible en el historial";
+                const string usuarioNoDisponible = "No identificado en el registro historico";
+                var certificadoActual = calibracion.NombreArchivoCertificado;
+                var asunto = $"Notificacion: reproceso de reemplazo de certificado para {evento.Equipo.Codigo}";
+                var cuerpo = ConstruirCuerpoReemplazoCertificado(
+                    calibracion,
+                    certificadoAnteriorNoDisponible,
+                    certificadoActual,
+                    usuarioNoDisponible,
+                    esReprocesoReconstruido: true);
+
+                await _emailService.EnviarCorreoAsync(destinatarios, asunto, cuerpo);
+
+                notificacion.FueExitosa = true;
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Destinatarios = string.Join(", ", destinatarios);
+                notificacion.TipoEvento = evento.TipoEventoMetrologico.Nombre;
+                notificacion.FechaReferencia = DateTime.SpecifyKind(evento.FechaEvento.Date, DateTimeKind.Utc);
+                notificacion.Mensaje = LimitarMensaje(
+                    $"Correo de reemplazo de certificado reenviado como reproceso reconstruido con informacion actual disponible. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = true,
+                    Mensaje = "La notificacion de reemplazo de certificado fue reenviada como reproceso reconstruido."
+                };
+            }
+            catch (Exception ex)
+            {
+                notificacion.FueExitosa = false;
+                notificacion.FechaEnvio = DateTime.UtcNow;
+                notificacion.Destinatarios = string.Join(", ", destinatarios);
+                notificacion.Mensaje = LimitarMensaje($"Reintento fallido de reemplazo de certificado: {ex.Message}. {intentoAnterior}");
+                await _context.SaveChangesAsync();
+
+                _logger.LogError(
+                    ex,
+                    "Fallo el reintento del reemplazo de certificado en la notificacion {NotificacionEnviadaId}.",
+                    notificacion.NotificacionEnviadaId);
+
+                return new ResultadoReintentoNotificacion
+                {
+                    FueExitosa = false,
+                    Mensaje = "El reintento de la notificacion fallo. Revise el mensaje registrado en la bitacora."
+                };
             }
         }
         private async Task RegistrarNotificacionAsync(
@@ -551,7 +689,8 @@ namespace CGA.MetrologySystem.Services.Notificaciones
             EventoCalibracionDato calibracion,
             string? nombreCertificadoAnterior,
             string? nombreCertificadoNuevo,
-            string? usuarioResponsable)
+            string? usuarioResponsable,
+            bool esReprocesoReconstruido = false)
         {
             var evento = calibracion.EventoMetrologico;
             var codigoEquipo = WebUtility.HtmlEncode(evento.Equipo.Codigo);
@@ -572,6 +711,10 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                 string.IsNullOrWhiteSpace(usuarioResponsable)
                     ? "Usuario no identificado"
                     : usuarioResponsable);
+
+            var notaReproceso = esReprocesoReconstruido
+                ? @"<p style=""margin:0 0 14px; padding:12px; border-radius:10px; background:#fff7ed; color:#7c2d12;"">Esta notificacion corresponde a un reproceso manual reconstruido con la informacion actualmente disponible. El certificado anterior y el usuario responsable original no estan disponibles en el historial del registro.</p>"
+                : string.Empty;
 
             var tabla = _emailTemplateService.ConstruirTablaDatos(new[]
             {
@@ -599,6 +742,7 @@ namespace CGA.MetrologySystem.Services.Notificaciones
                 Nivel = "critico",
                 ContenidoHtml = $@"
                     <p style=""margin:0 0 14px;"">Se reemplazó el certificado PDF de una calibración registrada.</p>
+                    {notaReproceso}
                     {tabla}
                     <p style=""margin:0;"">Revise el historial del evento y la evidencia documental actual en CGA Metrology System.</p>"
             });
