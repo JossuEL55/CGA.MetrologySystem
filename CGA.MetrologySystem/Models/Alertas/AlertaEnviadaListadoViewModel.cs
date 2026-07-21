@@ -1,4 +1,4 @@
-namespace CGA.MetrologySystem.Models.Alertas
+﻿namespace CGA.MetrologySystem.Models.Alertas
 {
     public class AlertaEnviadaListadoViewModel
     {
@@ -12,5 +12,6 @@ namespace CGA.MetrologySystem.Models.Alertas
         public string Destinatarios { get; set; } = string.Empty;
         public string Mensaje { get; set; } = string.Empty;
         public bool FueExitosa { get; set; }
+        public bool PuedeReintentar { get; set; }
     }
 }

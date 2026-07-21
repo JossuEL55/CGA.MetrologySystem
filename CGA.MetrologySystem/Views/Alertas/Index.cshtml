@@ -1,4 +1,4 @@
-@model CGA.MetrologySystem.Models.Alertas.AlertasIndexViewModel
+﻿@model CGA.MetrologySystem.Models.Alertas.AlertasIndexViewModel
 
 @{
     ViewData["Title"] = "Alertas";
@@ -32,6 +32,14 @@
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         @successMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+@if (TempData["Error"] is string errorMessage)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @errorMessage
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
     </div>
 }
@@ -86,13 +94,14 @@
                     <th>Destinatarios</th>
                     <th>Estado</th>
                     <th>Mensaje</th>
+                    <th class="text-end">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Alertas.Any())
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-5">
+                        <td colspan="9" class="text-center py-5">
                             <div class="metro-empty">
                                 <i class="bi bi-inbox"></i>
                                 <h5>No hay alertas registradas</h5>
@@ -155,6 +164,21 @@
                             </td>
                             <td>
                                 <span class="metro-message-text">@alerta.Mensaje</span>
+                            </td>
+                            <td class="text-end">
+                                @if (alerta.PuedeReintentar)
+                                {
+                                    <form asp-action="Reintentar" asp-route-id="@alerta.AlertaEnviadaId" method="post" class="d-inline" onsubmit="this.querySelector('button').disabled = true;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-arrow-repeat"></i> Reintentar
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">-</span>
+                                }
                             </td>
                         </tr>
                     }

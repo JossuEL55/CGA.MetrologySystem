@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Mail;
 using CGA.MetrologySystem.Configuration;
 using CGA.MetrologySystem.Domain.Entities;
@@ -13,6 +13,7 @@ namespace CGA.MetrologySystem.Services.Alertas
     public class AlertaMetrologicaService : IAlertaMetrologicaService
     {
         private const string TipoAlertaVencido = "Vencido";
+        private static readonly SemaphoreSlim _reintentoSemaphore = new(1, 1);
         private static readonly int[] DiasPreventivosCalibracionVerificacion = { 30, 15, 7, 4, 1 };
 
         private readonly AppDbContext _context;
@@ -363,6 +364,152 @@ namespace CGA.MetrologySystem.Services.Alertas
                 : ResultadoEnvioAlerta.Error;
         }
 
+        public async Task<ResultadoReintentoAlerta> ReintentarAlertaFallidaAsync(int alertaEnviadaId)
+        {
+            await _reintentoSemaphore.WaitAsync();
+
+            try
+            {
+                var alerta = await _context.AlertasEnviadas
+                    .Include(a => a.Equipo)
+                        .ThenInclude(e => e.TipoEquipo)
+                    .Include(a => a.Equipo)
+                        .ThenInclude(e => e.ResponsableInterno)
+                    .FirstOrDefaultAsync(a => a.AlertaEnviadaId == alertaEnviadaId);
+
+                if (alerta == null)
+                {
+                    return new ResultadoReintentoAlerta
+                    {
+                        FueExitosa = false,
+                        Mensaje = "La alerta seleccionada no existe."
+                    };
+                }
+
+                if (alerta.FueExitosa)
+                {
+                    return new ResultadoReintentoAlerta
+                    {
+                        FueExitosa = false,
+                        Mensaje = "La alerta ya fue enviada correctamente y no requiere reintento."
+                    };
+                }
+
+                if (alerta.Equipo == null)
+                {
+                    return new ResultadoReintentoAlerta
+                    {
+                        FueExitosa = false,
+                        Mensaje = "No se pudo reintentar la alerta porque no se encontro el equipo asociado."
+                    };
+                }
+
+                var intentoAnterior = CrearResumenIntentoAnterior(alerta);
+                var fechaReferenciaUtc = DateTime.SpecifyKind(alerta.FechaReferencia.Date, DateTimeKind.Utc);
+
+                var yaExisteExitosa = await ExisteAlertaExitosaEquivalenteAsync(alerta, fechaReferenciaUtc);
+                if (yaExisteExitosa)
+                {
+                    return new ResultadoReintentoAlerta
+                    {
+                        FueExitosa = false,
+                        Mensaje = "Ya existe una alerta equivalente enviada correctamente. No se realizo un nuevo envio."
+                    };
+                }
+
+                var configuracionActual = await ObtenerConfiguracionActualAsync(alerta);
+                if (configuracionActual == null)
+                {
+                    alerta.FechaEnvio = DateTime.UtcNow;
+                    alerta.Mensaje = LimitarMensaje(
+                        $"No se pudo reintentar: el equipo no tiene una configuracion actual activa para este tipo de evento. {intentoAnterior}");
+                    await _context.SaveChangesAsync();
+
+                    return new ResultadoReintentoAlerta
+                    {
+                        FueExitosa = false,
+                        Mensaje = "No se pudo reintentar la alerta porque no existe una configuracion actual activa para ese control."
+                    };
+                }
+
+                var administradores = await _destinatariosService.ObtenerTodosAdministradoresAsync();
+                var esVencida = EsAlertaVencida(alerta.TipoAlerta);
+                var destinatarios = esVencida
+                    ? ObtenerDestinatariosCriticos(alerta.Equipo, administradores)
+                    : ObtenerDestinatariosPreventivos(alerta.Equipo, administradores);
+
+                if (!destinatarios.Any())
+                {
+                    alerta.FechaEnvio = DateTime.UtcNow;
+                    alerta.Destinatarios = string.Empty;
+                    alerta.Mensaje = LimitarMensaje(
+                        $"Reintento fallido: no se encontraron destinatarios validos. {intentoAnterior}");
+                    await _context.SaveChangesAsync();
+
+                    return new ResultadoReintentoAlerta
+                    {
+                        FueExitosa = false,
+                        Mensaje = "No se pudo reintentar la alerta porque no existen destinatarios validos."
+                    };
+                }
+
+                var fechaReferencia = alerta.FechaReferencia.Date;
+                var asunto = CrearAsuntoReintento(alerta, esVencida);
+                var cuerpo = ConstruirCuerpoReintento(alerta, fechaReferencia, esVencida);
+
+                if (string.IsNullOrWhiteSpace(cuerpo))
+                {
+                    alerta.FechaEnvio = DateTime.UtcNow;
+                    alerta.Destinatarios = string.Join(", ", destinatarios);
+                    alerta.Mensaje = LimitarMensaje(
+                        $"No se pudo reintentar: el tipo de alerta no es compatible con el reproceso manual. {intentoAnterior}");
+                    await _context.SaveChangesAsync();
+
+                    return new ResultadoReintentoAlerta
+                    {
+                        FueExitosa = false,
+                        Mensaje = "No se pudo reconstruir el correo de la alerta seleccionada."
+                    };
+                }
+
+                try
+                {
+                    await _emailService.EnviarCorreoAsync(destinatarios, asunto, cuerpo);
+
+                    alerta.FueExitosa = true;
+                    alerta.FechaEnvio = DateTime.UtcNow;
+                    alerta.FechaReferencia = fechaReferenciaUtc;
+                    alerta.Destinatarios = string.Join(", ", destinatarios);
+                    alerta.Mensaje = LimitarMensaje(
+                        $"Alerta reenviada correctamente con informacion actual disponible. {intentoAnterior}");
+                    await _context.SaveChangesAsync();
+
+                    return new ResultadoReintentoAlerta
+                    {
+                        FueExitosa = true,
+                        Mensaje = "La alerta fallida fue reenviada correctamente."
+                    };
+                }
+                catch (Exception ex)
+                {
+                    alerta.FueExitosa = false;
+                    alerta.FechaEnvio = DateTime.UtcNow;
+                    alerta.Destinatarios = string.Join(", ", destinatarios);
+                    alerta.Mensaje = LimitarMensaje($"Reintento fallido: {ex.Message}. {intentoAnterior}");
+                    await _context.SaveChangesAsync();
+
+                    return new ResultadoReintentoAlerta
+                    {
+                        FueExitosa = false,
+                        Mensaje = "El reintento de la alerta fallo. Revise el mensaje registrado en la bitacora."
+                    };
+                }
+            }
+            finally
+            {
+                _reintentoSemaphore.Release();
+            }
+        }
         private async Task RegistrarAlertaAsync(
             int equipoId,
             string tipoEvento,
@@ -411,6 +558,138 @@ namespace CGA.MetrologySystem.Services.Alertas
                 _alertasSettings.ReenviarDuplicadosEnModoPrueba;
         }
 
+        private async Task<bool> ExisteAlertaExitosaEquivalenteAsync(
+            AlertaEnviada alerta,
+            DateTime fechaReferenciaUtc)
+        {
+            return await _context.AlertasEnviadas.AnyAsync(a =>
+                a.AlertaEnviadaId != alerta.AlertaEnviadaId &&
+                a.EquipoId == alerta.EquipoId &&
+                a.TipoEvento == alerta.TipoEvento &&
+                a.TipoAlerta == alerta.TipoAlerta &&
+                a.FechaReferencia == fechaReferenciaUtc &&
+                a.FueExitosa);
+        }
+
+        private async Task<ConfiguracionControlEquipo?> ObtenerConfiguracionActualAsync(AlertaEnviada alerta)
+        {
+            var claveTipoEvento = ObtenerClaveTipoEvento(alerta.TipoEvento);
+            if (string.IsNullOrWhiteSpace(claveTipoEvento))
+            {
+                return null;
+            }
+
+            return await _context.ConfiguracionesControlEquipo
+                .AsNoTracking()
+                .Include(c => c.TipoEventoMetrologico)
+                .Where(c =>
+                    c.Activo &&
+                    c.RequiereControl &&
+                    c.EquipoId == alerta.EquipoId &&
+                    c.TipoEventoMetrologico.Nombre.ToLower().Contains(claveTipoEvento))
+                .FirstOrDefaultAsync();
+        }
+
+        private static string? ObtenerClaveTipoEvento(string tipoEvento)
+        {
+            var valor = tipoEvento.Trim().ToLowerInvariant();
+
+            if (valor.Contains("calibr"))
+            {
+                return "calibr";
+            }
+
+            if (valor.Contains("verific"))
+            {
+                return "verific";
+            }
+
+            if (valor.Contains("manten"))
+            {
+                return "manten";
+            }
+
+            return null;
+        }
+
+        private static bool EsAlertaVencida(string tipoAlerta)
+        {
+            return string.Equals(tipoAlerta, TipoAlertaVencido, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static int? ObtenerDiasPreventivos(string tipoAlerta)
+        {
+            if (string.Equals(tipoAlerta, "1Dia", StringComparison.OrdinalIgnoreCase))
+            {
+                return 1;
+            }
+
+            if (tipoAlerta.EndsWith("Dias", StringComparison.OrdinalIgnoreCase) &&
+                int.TryParse(tipoAlerta[..^4], out var dias))
+            {
+                return dias;
+            }
+
+            return null;
+        }
+
+        private static string CrearAsuntoReintento(AlertaEnviada alerta, bool esVencida)
+        {
+            if (esVencida)
+            {
+                return $"Alerta critica: {alerta.TipoEvento} vencida para {alerta.Equipo.Codigo}";
+            }
+
+            var dias = ObtenerDiasPreventivos(alerta.TipoAlerta);
+            return dias.HasValue
+                ? $"Alerta de {alerta.TipoEvento}: {alerta.Equipo.Codigo} vence en {dias.Value} dias"
+                : $"Alerta de {alerta.TipoEvento}: {alerta.Equipo.Codigo}";
+        }
+
+        private string? ConstruirCuerpoReintento(
+            AlertaEnviada alerta,
+            DateTime fechaReferencia,
+            bool esVencida)
+        {
+            if (esVencida)
+            {
+                var diasVencidos = Math.Max(0, (DateTime.Today - fechaReferencia).Days);
+                var regla = new ReglaAlertaVencida(ObtenerClaveTipoEvento(alerta.TipoEvento) ?? string.Empty, alerta.TipoEvento);
+                return ConstruirCuerpoVencido(alerta.Equipo, regla, fechaReferencia, diasVencidos);
+            }
+
+            var diasPreventivos = ObtenerDiasPreventivos(alerta.TipoAlerta);
+            if (!diasPreventivos.HasValue)
+            {
+                return null;
+            }
+
+            var diasRestantes = (fechaReferencia - DateTime.Today).Days;
+            var reglaPreventiva = new ReglaAlertaPreventiva(
+                ObtenerClaveTipoEvento(alerta.TipoEvento) ?? string.Empty,
+                alerta.TipoEvento,
+                alerta.TipoAlerta,
+                diasPreventivos.Value);
+
+            return ConstruirCuerpoPreventivo(alerta.Equipo, reglaPreventiva, fechaReferencia, diasRestantes);
+        }
+
+        private static string CrearResumenIntentoAnterior(AlertaEnviada alerta)
+        {
+            var fechaAnterior = alerta.FechaEnvio.ToString("yyyy-MM-dd HH:mm");
+            var mensajeAnterior = string.IsNullOrWhiteSpace(alerta.Mensaje)
+                ? "Sin mensaje previo."
+                : alerta.Mensaje;
+
+            return $"Intento anterior ({fechaAnterior} UTC): {mensajeAnterior}";
+        }
+
+        private static string LimitarMensaje(string mensaje)
+        {
+            return mensaje.Length <= 500
+                ? mensaje
+                : mensaje[..500];
+        }
         private List<string> ObtenerDestinatariosPreventivos(
             Equipo equipo,
             List<string> administradores)
