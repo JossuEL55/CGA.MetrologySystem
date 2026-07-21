@@ -56,7 +56,7 @@ namespace CGA.MetrologySystem.Controllers
                     Destinatarios = n.Destinatarios ?? string.Empty,
                     Mensaje = n.Mensaje ?? string.Empty,
                     FueExitosa = n.FueExitosa,
-                    PuedeReintentar = !n.FueExitosa && n.TipoNotificacion == "Evento extraordinario"
+                    PuedeReintentar = !n.FueExitosa && (n.TipoNotificacion == "Evento extraordinario" || n.TipoNotificacion == "Reemplazo de certificado")
                 })
                 .ToListAsync();
 
