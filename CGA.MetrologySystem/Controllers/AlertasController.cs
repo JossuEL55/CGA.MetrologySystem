@@ -1,4 +1,4 @@
-using CGA.MetrologySystem.Infrastructure.Identity;
+﻿using CGA.MetrologySystem.Infrastructure.Identity;
 using CGA.MetrologySystem.Infrastructure.Persistence;
 using CGA.MetrologySystem.Models.Alertas;
 using CGA.MetrologySystem.Services.Alertas;
@@ -55,7 +55,8 @@ namespace CGA.MetrologySystem.Controllers
                     FechaEnvio = a.FechaEnvio,
                     Destinatarios = a.Destinatarios ?? string.Empty,
                     Mensaje = a.Mensaje ?? string.Empty,
-                    FueExitosa = a.FueExitosa
+                    FueExitosa = a.FueExitosa,
+                    PuedeReintentar = !a.FueExitosa
                 })
                 .ToListAsync();
 
@@ -79,6 +80,24 @@ namespace CGA.MetrologySystem.Controllers
 
             TempData["SuccessMessage"] = resultado.CrearMensajeResumen();
             return RedirectToAction("Eventos", "ControlMetrologico");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reintentar(int id)
+        {
+            var resultado = await _alertaMetrologicaService.ReintentarAlertaFallidaAsync(id);
+
+            if (resultado.FueExitosa)
+            {
+                TempData["SuccessMessage"] = resultado.Mensaje;
+            }
+            else
+            {
+                TempData["Error"] = resultado.Mensaje;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
     }
